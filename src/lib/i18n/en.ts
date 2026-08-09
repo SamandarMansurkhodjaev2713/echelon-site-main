@@ -302,7 +302,7 @@ export const en: Dict = {
         },
         {
           q: 'How much have we spent today?',
-          a: 'Its work today cost $0.62: the briefing, 14 messages, the site report. Daily cap is $5, 12% used.',
+          a: 'My work today cost $0.62: the briefing, 14 messages, the site report. Daily cap is $5, 12% used.',
         },
         {
           q: 'Remind me what we agreed with Alisher',
