@@ -10,7 +10,7 @@ export const uz: Dict = {
     cta: 'Demo ko’rish',
   },
   hero: {
-    h1: 'Butun biznesni boshimda\nko’tarib yurishni bas qildim.',
+    h1: 'Butun biznesni boshingizda\nko’tarib yurishni bas qiling.',
     sub:
       'Echelon Desktop — biznes egasining shaxsiy yordamchisi: odamlaringiz bilan kelishuvlaringizni yodida tutadi, kundalik ishni o’zi bajaradi. Toni Starkning Jarvisi esingizdami? G’oya o’sha. Faqat Jarvis — kino, bu esa kompyuteringizda yashaydi va pastda ko’rsatilganlarni aynan qiladi.',
     cta: 'Demoni o’z biznesingizda ko’ring',

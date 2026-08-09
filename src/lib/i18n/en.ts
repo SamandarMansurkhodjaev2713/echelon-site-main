@@ -12,7 +12,7 @@ export const en: Dict = {
   },
 
   hero: {
-    h1: 'I stopped carrying\nthe whole business in my head.',
+    h1: 'Stop carrying\nthe whole business in your head.',
     sub: 'Echelon Desktop is a personal assistant for the business owner: it holds your people and agreements in memory and does the routine itself. Remember Tony Stark’s Jarvis? Same idea. Except Jarvis is a movie, and this one lives on your computer and can do exactly what this page shows.',
     cta: 'See a demo on your own business',
     ctaNote: 'A live call, 30 minutes. Nothing to install.',
