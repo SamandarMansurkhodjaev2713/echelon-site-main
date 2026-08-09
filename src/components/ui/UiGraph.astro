@@ -1,0 +1,32 @@
+---
+import type { Dict } from '../../lib/i18n';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const g = dict.ui.graph;
+const legend = [
+  { color: '#f5f4ef', label: g.legend.owner },
+  { color: '#e5a33a', label: g.legend.people },
+  { color: '#4ecb58', label: g.legend.projects },
+  { color: '#e55353', label: g.legend.memories },
+  { color: '#8a8a85', label: g.legend.themes },
+];
+---
+
+<div class="ui-graph" data-graph>
+  <canvas></canvas>
+  <span class="ui-graph__stats mono">{g.stats}</span>
+  <div class="ui-graph__legend">
+    {
+      legend.map((l) => (
+        <span>
+          <i style={`background:${l.color}`} />
+          {l.label}
+        </span>
+      ))
+    }
+  </div>
+</div>

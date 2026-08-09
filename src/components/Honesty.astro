@@ -1,0 +1,54 @@
+---
+import type { Dict } from '../lib/i18n';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const h = dict.honesty;
+---
+
+<section class="honesty">
+  <div class="narrow">
+    <p class="eyebrow">{h.eyebrow}</p>
+    <h2>{h.title}</h2>
+    <div class="honesty__body">
+      {h.paragraphs.map((p) => <p class="honesty__p reveal">{p}</p>)}
+      <p class="honesty__setup reveal">{h.setup}</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .honesty {
+    background: var(--bg-raised);
+    border-block: 1px solid var(--border-subtle);
+  }
+  .honesty__body {
+    margin-top: 2.5rem;
+  }
+  .honesty__p {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: clamp(1.25rem, 1.1rem + 0.9vw, 1.65rem);
+    line-height: 1.55;
+    color: var(--fg);
+    max-width: 26em;
+  }
+  .honesty__p + .honesty__p {
+    margin-top: 1.75rem;
+  }
+  .honesty__p:first-child::first-letter {
+    color: var(--gold);
+  }
+  .honesty__setup {
+    margin-top: 2.5rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--border-subtle);
+    color: var(--fg-muted);
+    font-size: var(--text-lead);
+    line-height: 1.55;
+    max-width: 32em;
+  }
+</style>

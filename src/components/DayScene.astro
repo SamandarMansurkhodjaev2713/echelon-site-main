@@ -1,0 +1,377 @@
+---
+import type { Dict } from '../lib/i18n';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const d = dict.day;
+---
+
+<section class="day" id="day" data-day>
+  <div class="container day__head">
+    <p class="eyebrow">{d.eyebrow}</p>
+    <h2>{d.title}</h2>
+    <p class="lead">{d.intro}</p>
+  </div>
+
+  <div class="day__stage" data-day-stage>
+    <div class="day__pin" data-day-pin>
+      <div class="container day__layout">
+        <div class="day__rail" aria-hidden="true">
+          <div class="day__clock mono" data-day-clock>07:00</div>
+          <div class="day__progress"><i data-day-bar></i></div>
+        </div>
+
+        <div class="day__scenes" data-day-scenes>
+          {
+            d.scenes.map((s, i) => (
+              <article class="day__scene" data-day-scene={i}>
+                <div class="day__scene-time mono">{s.time}</div>
+                <h3>{s.title}</h3>
+                <p class="day__scene-text">{s.text}</p>
+
+                <div class="ui day__fragment">
+                  {s.fragment.kind === 'briefing' && (
+                    <div class="frag frag--briefing">
+                      <div class="frag__head">
+                        <span class="frag__tag">{(s.fragment as any).tag}</span>
+                        <span class="frag__kind">{(s.fragment as any).label}</span>
+                        <span class="frag__time mono">{s.time}</span>
+                      </div>
+                      <div class="frag__title">{(s.fragment as any).title}</div>
+                      <ul class="frag__lines">
+                        {(s.fragment as any).lines.map((l: string) => (
+                          <li>{l}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {s.fragment.kind === 'messenger' && (
+                    <div class="frag frag--msngr">
+                      <div class="frag__bubble frag__bubble--out">{(s.fragment as any).out}</div>
+                      <div class="frag__bubble frag__bubble--in">{(s.fragment as any).in1}</div>
+                      <div class="frag__bubble frag__bubble--in">{(s.fragment as any).in2}</div>
+                      <div class="frag__note mono">{(s.fragment as any).note}</div>
+                    </div>
+                  )}
+
+                  {s.fragment.kind === 'lead' && (
+                    <div class="frag frag--lead">
+                      <div class="frag__lead-row">
+                        <span class="frag__lead-name">{(s.fragment as any).name}</span>
+                        <span class="frag__lead-src mono">{(s.fragment as any).source}</span>
+                        <span class="frag__lead-stage">{(s.fragment as any).stage}</span>
+                      </div>
+                      <div class="frag__draft">{(s.fragment as any).draft}</div>
+                      <div class="frag__note mono">{(s.fragment as any).draftLabel}</div>
+                    </div>
+                  )}
+
+                  {s.fragment.kind === 'report' && (
+                    <div class="frag frag--report">
+                      <div class="frag__title">{(s.fragment as any).title}</div>
+                      <table class="frag__table mono">
+                        {(s.fragment as any).rows.map((r: { label: string; value: string }) => (
+                          <tr>
+                            <td>{r.label}</td>
+                            <td>{r.value}</td>
+                          </tr>
+                        ))}
+                      </table>
+                      <div class="frag__note mono">{(s.fragment as any).note}</div>
+                    </div>
+                  )}
+
+                  {s.fragment.kind === 'night' && (
+                    <div class="frag frag--night">
+                      <div class="frag__title">{(s.fragment as any).task}</div>
+                      <div class="frag__workers">
+                        {(s.fragment as any).workers.map((w: string) => (
+                          <span class="frag__worker">
+                            <i class="spin-dot" />
+                            {w}
+                          </span>
+                        ))}
+                      </div>
+                      <div class="frag__cost mono">{(s.fragment as any).cost}</div>
+                    </div>
+                  )}
+                </div>
+              </article>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Pinned choreography loads only where it earns its cost.
+  const mq = window.matchMedia('(min-width: 1000px)');
+  const rm = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (mq.matches && !rm.matches) {
+    import('../lib/day').then((m) => m.initDay());
+  }
+</script>
+
+<style>
+  .day {
+    background: var(--bg-deep);
+    border-block: 1px solid var(--border-subtle);
+    padding-block: 0;
+  }
+  .day__head {
+    padding-block: calc(var(--section-gap) / 2) 2rem;
+  }
+  .day__head .lead {
+    margin-top: 1rem;
+  }
+  .day__layout {
+    display: grid;
+    grid-template-columns: minmax(180px, 260px) 1fr;
+    gap: clamp(2rem, 5vw, 4rem);
+  }
+  .day__rail {
+    display: none;
+  }
+  .day__clock {
+    font-size: clamp(3rem, 4.5vw, 4.5rem);
+    font-weight: 500;
+    color: var(--gold);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+  .day__progress {
+    margin-top: 1.5rem;
+    width: 2px;
+    flex: 1;
+    background: var(--border-subtle);
+    position: relative;
+  }
+  .day__progress i {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 0%;
+    background: var(--gold);
+  }
+  .day__scene {
+    padding-block: 3rem;
+    max-width: 620px;
+  }
+  .day__scene + .day__scene {
+    border-top: 1px solid var(--border-subtle);
+  }
+  .day__scene-time {
+    font-size: 1.6rem;
+    color: var(--gold);
+    margin-bottom: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .day__scene h3 {
+    margin-bottom: 0.6rem;
+  }
+  .day__scene-text {
+    color: var(--fg-muted);
+    max-width: 34em;
+  }
+  .day__fragment {
+    margin-top: 1.5rem;
+  }
+
+  /* — pinned mode (desktop, JS-enabled) — */
+  :global(.day--pinned) .day__stage {
+    height: 480vh;
+  }
+  :global(.day--pinned) .day__pin {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    padding-top: 60px; /* stay clear of the sticky site header */
+  }
+  :global(.day--pinned) .day__layout {
+    width: 100%;
+    height: calc(100vh - 60px);
+    align-items: stretch;
+  }
+  :global(.day--pinned) .day__rail {
+    display: flex;
+    flex-direction: column;
+    padding-block: 8vh;
+  }
+  :global(.day--pinned) .day__scenes {
+    position: relative;
+    min-height: 80vh;
+  }
+  :global(.day--pinned) .day__scene {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    opacity: 0;
+    border: 0 !important;
+    padding-block: 0;
+    pointer-events: none;
+  }
+  :global(.day--pinned) .day__scene-time {
+    display: none;
+  }
+
+  /* — fragments (product-truth UI moments) — */
+  .frag {
+    background: var(--ui-bg-elevated);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+    max-width: 460px;
+    font-size: 13.5px;
+    box-shadow: var(--shadow-window);
+  }
+  .frag--briefing {
+    border-left: 3px solid var(--ui-accent);
+  }
+  .frag__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .frag__tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ui-accent);
+    border: 1px solid var(--ui-accent);
+    border-radius: 999px;
+    padding: 1px 8px;
+  }
+  .frag__kind {
+    font-size: 11px;
+    color: var(--ui-fg-muted);
+    border: 1px solid var(--ui-border);
+    border-radius: 999px;
+    padding: 1px 8px;
+  }
+  .frag__time {
+    margin-left: auto;
+    font-size: 10px;
+    color: var(--ui-fg-subtle);
+  }
+  .frag__title {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  .frag__lines {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--ui-fg-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .frag__bubble {
+    border-radius: var(--radius-md);
+    padding: 7px 12px;
+    max-width: 85%;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .frag__bubble--out {
+    background: var(--ui-accent-soft);
+    border: 1px solid color-mix(in srgb, var(--ui-accent) 40%, transparent);
+    margin-left: auto;
+  }
+  .frag__bubble--in {
+    background: var(--ui-bg-sunken);
+    border: 1px solid var(--ui-border);
+  }
+  .frag__note {
+    margin-top: 6px;
+    font-size: 10.5px;
+    color: var(--ui-fg-subtle);
+  }
+  .frag__lead-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .frag__lead-name {
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .frag__lead-src {
+    font-size: 10px;
+    color: var(--ui-fg-subtle);
+  }
+  .frag__lead-stage {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--ui-accent);
+    border: 1px solid var(--ui-accent);
+    border-radius: 999px;
+    padding: 1px 9px;
+  }
+  .frag__draft {
+    margin-top: 10px;
+    background: var(--ui-bg-sunken);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--radius-md);
+    padding: 8px 12px;
+    color: var(--ui-fg);
+    font-size: 13px;
+  }
+  .frag__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  .frag__table td {
+    padding: 5px 0;
+    border-bottom: 1px solid var(--ui-border-subtle);
+    color: var(--ui-fg-muted);
+  }
+  .frag__table td:last-child {
+    text-align: right;
+    color: var(--ui-fg);
+  }
+  .frag__workers {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .frag__worker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--ui-fg-muted);
+  }
+  .frag__worker .spin-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--ui-accent);
+    animation: ui-pulse 1.2s ease-in-out infinite;
+  }
+  .frag__cost {
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--ui-fg-subtle);
+  }
+
+  @media (max-width: 999px) {
+    .day__layout {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

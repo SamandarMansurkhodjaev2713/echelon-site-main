@@ -1,0 +1,10 @@
+name = "echelon-voice"
+main = "worker.js"
+compatibility_date = "2026-08-01"
+
+# KV для лимитов: создаётся командой
+#   npx wrangler kv namespace create RATE
+# и сюда вставляется id из вывода:
+[[kv_namespaces]]
+binding = "RATE"
+id = "PASTE_KV_ID_HERE"

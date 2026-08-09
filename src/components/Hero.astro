@@ -1,0 +1,83 @@
+---
+import type { Dict } from '../lib/i18n';
+import AppWindow from './ui/AppWindow.astro';
+import UiChat from './ui/UiChat.astro';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const h = dict.hero;
+---
+
+<section class="hero">
+  <div class="container">
+    <h1 class="hero__h1">
+      {h.h1.split('\n').map((line) => <span class="hero__line">{line}</span>)}
+    </h1>
+    <p class="lead hero__sub">{h.sub}</p>
+    <div class="hero__cta-row">
+      <a class="btn-cta" href="#demo">{h.cta}</a>
+      <p class="cta-note">{h.ctaNote}</p>
+    </div>
+    <p class="hero__proof mono">{h.proof}</p>
+
+    <div class="hero__window reveal">
+      <AppWindow dict={dict} active="chat">
+        <UiChat dict={dict} />
+      </AppWindow>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding-top: clamp(3rem, 9vh, 6rem);
+    position: relative;
+    overflow: clip;
+  }
+  /* faint gold aurora behind the headline — depth without gradients-as-decor */
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: -20% -10% auto;
+    height: 70%;
+    background: radial-gradient(
+      ellipse 60% 45% at 50% 0%,
+      rgba(200, 169, 81, 0.07),
+      transparent 70%
+    );
+    pointer-events: none;
+  }
+  .hero__h1 {
+    max-width: 13em;
+  }
+  .hero__line {
+    display: block;
+  }
+  .hero__line:nth-child(3) {
+    color: var(--gold);
+  }
+  .hero__sub {
+    margin-top: 1.75rem;
+  }
+  .hero__cta-row {
+    margin-top: 2.25rem;
+  }
+  .hero__proof {
+    margin-top: 2.5rem;
+    font-size: var(--text-micro);
+    color: var(--fg-subtle);
+    letter-spacing: 0.04em;
+  }
+  .hero__window {
+    margin-top: 3.5rem;
+    max-width: 980px;
+  }
+  @media (max-width: 720px) {
+    .hero__window {
+      margin-inline: calc(var(--gutter) * -0.4);
+    }
+  }
+</style>

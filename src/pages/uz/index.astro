@@ -1,0 +1,37 @@
+---
+import Base from '../../layouts/Base.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import Hero from '../../components/Hero.astro';
+import Before from '../../components/Before.astro';
+import DayScene from '../../components/DayScene.astro';
+import Touch from '../../components/Touch.astro';
+import Words from '../../components/Words.astro';
+import Pillars from '../../components/Pillars.astro';
+import VoiceSection from '../../components/VoiceSection.astro';
+import Honesty from '../../components/Honesty.astro';
+import MathSection from '../../components/MathSection.astro';
+import FinalCta from '../../components/FinalCta.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+import '../../styles/ui.css';
+import { getDict } from '../../lib/i18n';
+
+const locale = 'uz' as const;
+const dict = getDict(locale);
+---
+
+<Base locale={locale} title={dict.meta.title} description={dict.meta.description}>
+  <SiteHeader dict={dict} locale={locale} />
+  <main>
+    <Hero dict={dict} />
+    <Before dict={dict} />
+    <DayScene dict={dict} />
+    <Touch dict={dict} />
+    <Words dict={dict} />
+    <Pillars dict={dict} />
+    <VoiceSection dict={dict} locale={locale} />
+    <Honesty dict={dict} />
+    <MathSection dict={dict} />
+    <FinalCta dict={dict} />
+  </main>
+  <SiteFooter dict={dict} />
+</Base>

@@ -1,0 +1,87 @@
+---
+import type { Dict } from '../../lib/i18n';
+import { icon } from './icons';
+
+interface Props {
+  dict: Dict;
+  interactive?: boolean;
+}
+
+const { dict, interactive = false } = Astro.props;
+const c = dict.ui.chat;
+---
+
+<div class="ui-chat" style="display:flex;flex-direction:column;gap:10px;flex:1;min-height:0;">
+  <div class="ui-proactive">
+    <div class="ui-proactive__head">
+      <span class="ui-proactive__tag">{c.briefingTag}</span>
+      <span class="ui-proactive__kind">{c.briefingKind}</span>
+      <span class="ui-proactive__time mono">{c.briefingTime}</span>
+    </div>
+    <div class="ui-proactive__title">{c.briefingTitle}</div>
+    <div class="ui-proactive__body">{c.briefingBody}</div>
+    <div class="ui-proactive__actions">
+      <span class="act"><Fragment set:html={icon('reply')} />{c.discuss}</span>
+      <span class="act"><Fragment set:html={icon('check')} /></span>
+      <span class="act"><Fragment set:html={icon('x')} /></span>
+    </div>
+  </div>
+
+  <div class="ui-msg-user">{c.userMsg}</div>
+
+  <div class="ui-tool-row"><span class="spin-dot"></span>{c.toolsDone}</div>
+
+  <div class="ui-msg-assistant">{c.reply}</div>
+  <div class="ui-meta">{c.replyMeta}</div>
+
+  {
+    interactive && (
+      <div class="ui-chat__thread" data-chat-thread style="display:flex;flex-direction:column;gap:10px;" />
+    )
+  }
+
+  {
+    interactive && (
+      <div class="ui-chat__chips" data-chat-chips>
+        {c.chips.map((chip, i) => (
+          <button class="ui-chip" data-chip={i} data-answer={chip.a}>
+            {chip.q}
+          </button>
+        ))}
+      </div>
+    )
+  }
+
+  <div class="ui-composer">
+    <Fragment set:html={icon('clip')} />
+    <span>{c.composer}</span>
+    <Fragment set:html={icon('mic')} />
+    <span class="ui-composer__send"><Fragment set:html={icon('send')} /></span>
+  </div>
+</div>
+
+<style>
+  .ui-chat__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .ui-chip {
+    font-size: 12px;
+    color: var(--ui-fg-muted);
+    border: 1px solid var(--ui-border);
+    border-radius: 999px;
+    padding: 5px 12px;
+    transition:
+      color var(--motion-fast) var(--ease-out),
+      border-color var(--motion-fast) var(--ease-out);
+  }
+  .ui-chip:hover {
+    color: var(--ui-fg);
+    border-color: var(--ui-accent);
+  }
+  .ui-chip[disabled] {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+</style>

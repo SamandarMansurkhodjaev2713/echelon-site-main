@@ -1,0 +1,82 @@
+---
+import type { Dict } from '../lib/i18n';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const m = dict.math;
+---
+
+<section class="mathsec">
+  <div class="container">
+    <p class="eyebrow">{m.eyebrow}</p>
+    <h2>{m.title}</h2>
+
+    <div class="mathsec__tablewrap reveal">
+      <table class="mathsec__table">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="mono">{m.humanCol}</th>
+            <th class="mono mathsec__me">{m.echelonCol}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            m.rows.map((r) => (
+              <tr>
+                <td>{r.label}</td>
+                <td class="mono">{r.human}</td>
+                <td class="mono mathsec__me">{r.echelon}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p class="mathsec__bottom reveal">{m.bottom}</p>
+  </div>
+</section>
+
+<style>
+  .mathsec__tablewrap {
+    margin-top: 2.5rem;
+    overflow-x: auto;
+  }
+  .mathsec__table {
+    width: 100%;
+    max-width: 760px;
+    border-collapse: collapse;
+    font-size: var(--text-body);
+  }
+  .mathsec__table th {
+    text-align: left;
+    font-size: var(--text-label);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+    font-weight: 500;
+    padding: 0.7rem 1rem 0.7rem 0;
+  }
+  .mathsec__table td {
+    padding: 0.85rem 1rem 0.85rem 0;
+    border-top: 1px solid var(--border-subtle);
+    color: var(--fg-muted);
+  }
+  .mathsec__table td:first-child {
+    color: var(--fg);
+    max-width: 26em;
+  }
+  .mathsec__me {
+    color: var(--gold) !important;
+  }
+  .mathsec__bottom {
+    margin-top: 2rem;
+    font-size: var(--text-lead);
+    font-weight: 560;
+    max-width: 30em;
+  }
+</style>

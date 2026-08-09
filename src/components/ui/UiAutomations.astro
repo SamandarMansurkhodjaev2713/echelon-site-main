@@ -1,0 +1,30 @@
+---
+import type { Dict } from '../../lib/i18n';
+
+interface Props {
+  dict: Dict;
+  highlightLast?: boolean;
+}
+
+const { dict, highlightLast = false } = Astro.props;
+const a = dict.ui.automations;
+---
+
+<div style="display:flex;flex-direction:column;gap:8px;">
+  {
+    a.rows.map((row, i) => (
+      <div
+        class="ui-autorow"
+        data-autorow={i}
+        style={highlightLast && i === a.rows.length - 1 ? 'border-color:var(--ui-accent)' : ''}
+      >
+        <div>
+          <div class="ui-autorow__name">{row.name}</div>
+          <div class="ui-autorow__sched">{row.schedule}</div>
+        </div>
+        <span class="ui-autorow__badge">{a.active}</span>
+        <span class={`ui-autorow__toggle${row.active ? '' : ' off'}`} />
+      </div>
+    ))
+  }
+</div>

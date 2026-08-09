@@ -1,0 +1,170 @@
+---
+import type { Dict, Locale } from '../lib/i18n';
+
+interface Props {
+  dict: Dict;
+  locale: Locale;
+}
+
+const { dict, locale } = Astro.props;
+const v = dict.voice;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const recording = `${base}/${locale === 'ru' ? 'voice_ru.mp3' : 'voice_en.mp3'}`;
+---
+
+<section class="voice" id="voice">
+  <div class="container voice__grid">
+    <div class="voice__text">
+      <p class="eyebrow">{v.eyebrow}</p>
+      <h2>{v.title}</h2>
+      <p class="lead">{v.text}</p>
+      <p class="voice__hint">{v.sphereHint}</p>
+
+      <div
+        class="voice__controls"
+        data-voice-controls
+        data-recording={recording}
+        data-locale={locale}
+        data-msg-connecting={v.connecting}
+        data-msg-listening={v.listening}
+        data-msg-thinking={v.thinking}
+        data-msg-speaking={v.speaking}
+        data-msg-mic-denied={v.micDenied}
+        data-msg-error={v.error}
+      >
+        <button class="btn-cta voice__talk" data-voice-talk hidden>{v.talkButton}</button>
+        <button class="voice__stop" data-voice-stop hidden>{v.stopButton}</button>
+        <div class="voice__fallback" data-voice-fallback>
+          <span>{v.unavailable}</span>
+          <button class="voice__play" data-voice-play>{v.playRecording}</button>
+        </div>
+        <p class="voice__status mono" data-voice-status aria-live="polite"></p>
+      </div>
+    </div>
+
+    <div class="voice__stagewrap reveal">
+      <div class="voice__stage" data-voice-stage>
+        <canvas data-voice-canvas></canvas>
+        <div class="voice__phases mono" data-voice-phases aria-hidden="true">
+          <span data-phase="idle" class="on">·</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import('../lib/voice').then((m) => m.initVoice());
+</script>
+
+<style>
+  .voice {
+    background: var(--bg-deep);
+    border-block: 1px solid var(--border-subtle);
+    overflow: clip;
+  }
+  .voice__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: clamp(2rem, 6vw, 5rem);
+    align-items: center;
+  }
+  .voice__text .lead {
+    margin-top: 1.25rem;
+  }
+  .voice__hint {
+    margin-top: 1.5rem;
+    color: var(--gold);
+    font-weight: 560;
+  }
+  .voice__controls {
+    margin-top: 1.75rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .voice__stop {
+    color: var(--fg-muted);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    padding: 0.8em 1.4em;
+    font-weight: 560;
+  }
+  .voice__stop:hover {
+    color: var(--fg);
+  }
+  .voice__fallback {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    color: var(--fg-muted);
+    font-size: var(--text-small);
+    flex-wrap: wrap;
+  }
+  .voice__play {
+    color: var(--gold);
+    border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
+    border-radius: var(--radius-md);
+    padding: 0.55em 1.1em;
+    font-weight: 600;
+    font-size: var(--text-small);
+    transition:
+      background var(--motion-fast) var(--ease-out),
+      color var(--motion-fast) var(--ease-out);
+  }
+  .voice__play:hover {
+    background: var(--gold);
+    color: #0b0b0a;
+  }
+  .voice__status {
+    width: 100%;
+    font-size: var(--text-micro);
+    color: var(--fg-subtle);
+    min-height: 1.2em;
+  }
+  .voice__stagewrap {
+    display: grid;
+    place-items: center;
+  }
+  .voice__stage {
+    position: relative;
+    width: min(100%, 520px);
+    aspect-ratio: 1;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-subtle);
+    background: radial-gradient(circle at 50% 42%, #261a0b 0%, #15100a 58%, #0c0805 100%);
+    overflow: hidden;
+  }
+  .voice__stage canvas {
+    position: absolute;
+    inset: 0;
+  }
+  .voice__phases {
+    position: absolute;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    font-size: 10.5px;
+    color: var(--fg-subtle);
+  }
+  .voice__phases span {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 10px;
+    opacity: 0.55;
+    transition: all var(--motion-fast) var(--ease-out);
+  }
+  .voice__phases span.on {
+    color: var(--gold);
+    border-color: var(--gold);
+    opacity: 1;
+  }
+  @media (max-width: 900px) {
+    .voice__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

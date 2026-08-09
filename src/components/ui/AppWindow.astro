@@ -1,0 +1,105 @@
+---
+import type { Dict } from '../../lib/i18n';
+import { icon } from './icons';
+
+interface Props {
+  dict: Dict;
+  active: 'chat' | 'graph' | 'kanban' | 'automations';
+  title?: string;
+  bell?: number;
+  class?: string;
+}
+
+const { dict, active, title, bell = 3, class: className = '' } = Astro.props;
+const nav = dict.ui.nav;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const groups: Array<{ label: string; items: Array<{ id: string; icon: string; label: string }> }> = [
+  {
+    label: nav.daily,
+    items: [
+      { id: 'chat', icon: 'chat', label: nav.chat },
+      { id: 'home', icon: 'home', label: nav.home },
+    ],
+  },
+  {
+    label: nav.memory,
+    items: [
+      { id: 'graph', icon: 'graph', label: nav.graph },
+      { id: 'vault', icon: 'vault', label: nav.vault },
+      { id: 'sessions', icon: 'sessions', label: nav.sessions },
+    ],
+  },
+  {
+    label: nav.operate,
+    items: [
+      { id: 'kanban', icon: 'kanban', label: nav.kanban },
+      { id: 'automations', icon: 'zap', label: nav.automations },
+      { id: 'skills', icon: 'sparkles', label: nav.skills },
+      { id: 'computer', icon: 'monitor', label: nav.computer },
+    ],
+  },
+  {
+    label: nav.channels,
+    items: [{ id: 'connections', icon: 'plug', label: nav.connections }],
+  },
+  {
+    label: nav.brain,
+    items: [
+      { id: 'models', icon: 'cpu', label: nav.models },
+      { id: 'analytics', icon: 'chart', label: nav.analytics },
+    ],
+  },
+];
+
+const topTitle =
+  title ??
+  (active === 'chat'
+    ? nav.chat
+    : active === 'graph'
+      ? nav.graph
+      : active === 'kanban'
+        ? nav.kanban
+        : nav.automations);
+---
+
+<div class={`ui app-window ${className}`}>
+  <div class="app-window__titlebar">
+    <span class="app-window__dots"><i></i><i></i><i></i></span>
+    <span class="app-window__title">{dict.ui.appTitle}</span>
+  </div>
+  <div class="app-window__body">
+    <nav class="ui-side" aria-hidden="true">
+      <div class="ui-side__brand">
+        <img src={`${base}/media/favicon-192.png`} alt="" loading="lazy" width="18" height="18" />
+        <span>{dict.ui.appTitle}</span>
+      </div>
+      {
+        groups.map((g) => (
+          <>
+            <div class="ui-side__group">{g.label}</div>
+            {g.items.map((it) => (
+              <div class={`ui-side__item${it.id === active ? ' active' : ''}`}>
+                <Fragment set:html={icon(it.icon)} />
+                <span>{it.label}</span>
+              </div>
+            ))}
+          </>
+        ))
+      }
+    </nav>
+    <div class="ui-main">
+      <div class="ui-topbar">
+        <span>{topTitle}</span>
+        <span class="ui-topbar__spacer"></span>
+        <span class="ui-topbar__bell">
+          <Fragment set:html={icon('bell')} />
+          {bell > 0 && <span class="ui-topbar__badge">{bell}</span>}
+        </span>
+      </div>
+      <div class="ui-content">
+        <slot />
+      </div>
+    </div>
+  </div>
+</div>

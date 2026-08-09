@@ -1,0 +1,66 @@
+---
+import type { Dict } from '../lib/i18n';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const p = dict.pillars;
+---
+
+<section class="pillars">
+  <div class="container">
+    <p class="eyebrow">{p.eyebrow}</p>
+    <h2>{p.title}</h2>
+    <ol class="pillars__list">
+      {
+        p.items.map((item, i) => (
+          <li class="pillars__item reveal">
+            <span class="pillars__num mono">{String(i + 1).padStart(2, '0')}</span>
+            <h3 class="pillars__name">{item.name}</h3>
+            <p class="pillars__text">{item.text}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .pillars__list {
+    list-style: none;
+    padding: 0;
+    margin-top: 2.5rem;
+  }
+  .pillars__item {
+    display: grid;
+    grid-template-columns: 4rem minmax(8em, 14rem) 1fr;
+    gap: 1rem 2rem;
+    align-items: baseline;
+    padding-block: 1.75rem;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .pillars__item:last-child {
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .pillars__num {
+    font-size: var(--text-label);
+    color: var(--gold);
+  }
+  .pillars__name {
+    font-size: var(--text-h3);
+  }
+  .pillars__text {
+    color: var(--fg-muted);
+    max-width: 36em;
+  }
+  @media (max-width: 760px) {
+    .pillars__item {
+      grid-template-columns: 3rem 1fr;
+    }
+    .pillars__text {
+      grid-column: 2;
+    }
+  }
+</style>

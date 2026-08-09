@@ -1,0 +1,42 @@
+---
+import type { Dict } from '../../lib/i18n';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const k = dict.ui.kanban;
+const dots = ['var(--ui-warning)', 'var(--ui-danger)', 'var(--ui-accent)', 'var(--ui-success)'];
+const cols = [
+  { name: k.columns[0], cards: k.cards.running, meta: ['⚙ 2 · 1д', '⚙ 1 · 3ч'] },
+  { name: k.columns[1], cards: k.cards.blocked, meta: ['2д'] },
+  { name: k.columns[2], cards: k.cards.review, meta: ['5ч'] },
+  { name: k.columns[3], cards: k.cards.done, meta: ['вчера'] },
+];
+---
+
+<div class="ui-kanban">
+  {
+    cols.map((col, ci) => (
+      <div class="ui-kanban__col">
+        <div class="ui-kanban__head">
+          <span class="ui-kanban__dot" style={`background:${dots[ci]}`} />
+          {col.name}
+          <span class="ui-kanban__count">{col.cards.length}</span>
+        </div>
+        {col.cards.map((card, i) => (
+          <div class="ui-card">
+            <div class="ui-card__title">
+              <span class="ui-card__pri" />
+              <span>{card}</span>
+            </div>
+            <div class="ui-card__meta">
+              <span>{col.meta[i] ?? ''}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    ))
+  }
+</div>

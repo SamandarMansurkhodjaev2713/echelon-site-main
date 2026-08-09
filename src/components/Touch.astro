@@ -1,0 +1,134 @@
+---
+import type { Dict } from '../lib/i18n';
+import AppWindow from './ui/AppWindow.astro';
+import UiChat from './ui/UiChat.astro';
+import UiGraph from './ui/UiGraph.astro';
+import UiKanban from './ui/UiKanban.astro';
+import UiAutomations from './ui/UiAutomations.astro';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const t = dict.touch;
+const tabs = [
+  { id: 'chat', label: t.tabs.chat },
+  { id: 'graph', label: t.tabs.graph },
+  { id: 'kanban', label: t.tabs.kanban },
+  { id: 'automations', label: t.tabs.automations },
+] as const;
+---
+
+<section class="touch" id="touch">
+  <div class="container">
+    <p class="eyebrow">{t.eyebrow}</p>
+    <h2>{t.title}</h2>
+    <p class="lead touch__intro">{t.intro}</p>
+
+    <div class="touch__tabs" role="tablist" data-touch-tabs>
+      {
+        tabs.map((tab, i) => (
+          <button
+            role="tab"
+            aria-selected={i === 0 ? 'true' : 'false'}
+            data-touch-tab={tab.id}
+            class={i === 0 ? 'active' : ''}
+          >
+            {tab.label}
+          </button>
+        ))
+      }
+      <span class="touch__demo-note mono">{t.demoNote}</span>
+    </div>
+
+    <div class="touch__stage reveal" data-touch-stage>
+      <div data-touch-pane="chat" class="touch__pane active">
+        <AppWindow dict={dict} active="chat">
+          <UiChat dict={dict} interactive />
+        </AppWindow>
+      </div>
+      <div data-touch-pane="graph" class="touch__pane" hidden>
+        <AppWindow dict={dict} active="graph">
+          <UiGraph dict={dict} />
+        </AppWindow>
+      </div>
+      <div data-touch-pane="kanban" class="touch__pane" hidden>
+        <AppWindow dict={dict} active="kanban">
+          <UiKanban dict={dict} />
+        </AppWindow>
+      </div>
+      <div data-touch-pane="automations" class="touch__pane" hidden>
+        <AppWindow dict={dict} active="automations">
+          <UiAutomations dict={dict} />
+        </AppWindow>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import('../lib/touch').then((m) => m.initTouch());
+</script>
+
+<style>
+  .touch__intro {
+    margin-top: 1rem;
+  }
+  .touch__tabs {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 2.25rem;
+    flex-wrap: wrap;
+  }
+  .touch__tabs [role='tab'] {
+    font-size: var(--text-small);
+    font-weight: 560;
+    color: var(--fg-muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    padding: 0.5em 1.1em;
+    transition:
+      color var(--motion-fast) var(--ease-out),
+      border-color var(--motion-fast) var(--ease-out),
+      background var(--motion-fast) var(--ease-out);
+  }
+  .touch__tabs [role='tab']:hover {
+    color: var(--fg);
+  }
+  .touch__tabs [role='tab'].active {
+    color: var(--gold);
+    border-color: color-mix(in srgb, var(--gold) 55%, transparent);
+    background: var(--gold-faint);
+  }
+  .touch__demo-note {
+    margin-left: auto;
+    font-size: var(--text-micro);
+    color: var(--fg-subtle);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 0.25em 0.7em;
+  }
+  .touch__stage {
+    margin-top: 1.25rem;
+    max-width: 980px;
+  }
+  .touch__pane[hidden] {
+    display: none;
+  }
+  .touch__pane :global(.app-window__body) {
+    height: 460px;
+  }
+  .touch__pane :global(.ui-content) {
+    overflow-y: auto;
+  }
+  @media (max-width: 720px) {
+    .touch__stage {
+      margin-inline: calc(var(--gutter) * -0.4);
+    }
+    .touch__pane :global(.app-window__body) {
+      height: 420px;
+    }
+  }
+</style>

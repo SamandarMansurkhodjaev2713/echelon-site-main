@@ -1,0 +1,219 @@
+/* Reset + base rhythm */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+html {
+  color-scheme: dark;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+section {
+  scroll-margin-top: 70px;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: var(--gold-soft);
+  color: var(--fg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+  border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+/* Typography */
+h1,
+h2,
+h3 {
+  font-weight: 620;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--text-display);
+  letter-spacing: var(--tracking-display);
+}
+
+h2 {
+  font-size: var(--text-h2);
+  letter-spacing: var(--tracking-h);
+}
+
+h3 {
+  font-size: var(--text-h3);
+  letter-spacing: var(--tracking-h);
+  line-height: 1.25;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+.lead {
+  font-size: var(--text-lead);
+  line-height: 1.55;
+  color: var(--fg-muted);
+  max-width: 34em;
+}
+
+.lead strong {
+  color: var(--fg);
+  font-weight: 560;
+}
+
+/* Mono voice — the terminal register: labels, clocks, numbers */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Layout */
+.container {
+  max-width: var(--content);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.narrow {
+  max-width: var(--narrow);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+section {
+  padding-block: calc(var(--section-gap) / 2);
+}
+
+/* Hairline separators */
+.hairline {
+  border: 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* CTA — the one action */
+.btn-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  background: var(--gold);
+  color: #0b0b0a;
+  font-weight: 600;
+  font-size: var(--text-body);
+  padding: 0.9em 1.6em;
+  border-radius: var(--radius-md);
+  transition: background var(--motion-fast) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out);
+}
+
+.btn-cta:hover {
+  background: var(--gold-bright);
+  transform: translateY(-1px);
+}
+
+.btn-cta:active {
+  transform: translateY(0);
+}
+
+.cta-note {
+  font-size: var(--text-small);
+  color: var(--fg-subtle);
+  margin-top: 0.75rem;
+}
+
+/* Scroll reveals — IO adds .in; without JS everything is visible */
+.reveal {
+  opacity: 0.001;
+  transform: translateY(14px);
+  transition: opacity var(--motion-slow) var(--ease-out),
+    transform var(--motion-slow) var(--ease-out);
+}
+
+.reveal.in,
+html.no-js .reveal {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

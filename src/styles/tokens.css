@@ -1,0 +1,105 @@
+/* ============================================================
+   Echelon Desktop — presentation site tokens
+   Law: the SITE speaks gold (the brand mark), the PRODUCT speaks
+   teal — teal exists only inside recreated product UI (.ui scope).
+   Dark cinematic charcoal, hairlines over shadows, one accent.
+   ============================================================ */
+
+:root {
+  /* Canvas */
+  --bg: #0b0b0a;            /* page ground — deep tinted charcoal */
+  --bg-raised: #111110;     /* section alternation */
+  --bg-deep: #050505;       /* cinematic stage (day scene, sphere) */
+
+  --fg: #f5f4ef;
+  --fg-muted: #a0a09b;
+  --fg-subtle: #6e6e6a;
+
+  --border: #2b2b28;
+  --border-subtle: #1f1f1d;
+  --border-strong: #3f3f3b;
+
+  /* Brand voice — gold (from the product logo / light-theme accent) */
+  --gold: #c8a951;
+  --gold-bright: #dcc06a;   /* small text on dark needs the lift */
+  --gold-deep: #b89638;
+  --gold-soft: rgba(200, 169, 81, 0.12);
+  --gold-faint: rgba(200, 169, 81, 0.05);
+
+  /* Status (product palette, used sparingly on site) */
+  --danger: #e55353;
+  --success: #4ecb58;
+  --warning: #e5a33a;
+
+  /* Type */
+  --font-sans: 'Golos Text Variable', 'Golos Text', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  --font-serif: 'Spectral', Georgia, 'Times New Roman', serif;
+
+  /* Scale — display is fluid, body fixed */
+  --text-display: clamp(2.5rem, 2rem + 4.5vw, 5.25rem);      /* 40 → 84 */
+  --text-h2: clamp(1.9rem, 1.55rem + 2.2vw, 3.25rem);        /* 30 → 52 */
+  --text-h3: clamp(1.35rem, 1.2rem + 0.9vw, 1.75rem);        /* 22 → 28 */
+  --text-lead: clamp(1.1rem, 1.02rem + 0.45vw, 1.35rem);     /* 18 → 21.6 */
+  --text-body: 1.0625rem;                                    /* 17 */
+  --text-small: 0.9375rem;                                   /* 15 */
+  --text-label: 0.8125rem;                                   /* 13 mono */
+  --text-micro: 0.75rem;                                     /* 12 */
+
+  --leading-body: 1.65;
+  --tracking-display: -0.025em;
+  --tracking-h: -0.015em;
+  --tracking-label: 0.08em;
+
+  /* Layout */
+  --content: 1120px;
+  --narrow: 720px;
+  --gutter: clamp(1.25rem, 4vw, 2.5rem);
+  --section-gap: clamp(5rem, 12vh, 10rem);
+
+  /* Radii — product scale */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  /* Motion */
+  --motion-fast: 150ms;
+  --motion-base: 280ms;
+  --motion-slow: 480ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-inout: cubic-bezier(0.83, 0, 0.17, 1);
+
+  /* Raycast-style layered glass shadow for the app window */
+  --shadow-window:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    0 12px 32px rgba(0, 0, 0, 0.5),
+    0 32px 80px rgba(0, 0, 0, 0.45);
+}
+
+/* ============================================================
+   Recreated product UI scope — the ONLY place teal lives.
+   Values mirror hermes/web/src/design/tokens.css dark theme.
+   ============================================================ */
+.ui {
+  --ui-bg: #0e0e0d;
+  --ui-bg-elevated: #181816;
+  --ui-bg-sunken: #050505;
+  --ui-fg: #f5f4ef;
+  --ui-fg-muted: #a0a09b;
+  --ui-fg-subtle: #6e6e6a;
+  --ui-fg-onaccent: #0e0e0d;
+  --ui-border: #2b2b28;
+  --ui-border-subtle: #1f1f1d;
+  --ui-border-strong: #3f3f3b;
+  --ui-accent: #14b8a6;
+  --ui-accent-soft: rgba(20, 184, 166, 0.12);
+  --ui-danger: #e55353;
+  --ui-success: #4ecb58;
+  --ui-warning: #e5a33a;
+
+  font-family: var(--font-sans);
+  color: var(--ui-fg);
+}
