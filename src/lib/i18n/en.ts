@@ -2,9 +2,9 @@ import type { Dict } from './ru';
 
 export const en: Dict = {
   meta: {
-    title: 'Echelon Desktop — the assistant that remembers your whole business',
+    title: 'Echelon Desktop — the personal assistant that remembers your whole business',
     description:
-      'A personal assistant for the business owner. Lives on your computer, remembers people and agreements, collects reports, answers clients, and works through the night. See a demo on your own business.',
+      'A personal assistant for the business owner. Lives on your computer, remembers people and agreements, collects the reports and answers clients itself. The demo is a 30-minute live call — nothing to install.',
   },
 
   nav: {
@@ -12,20 +12,20 @@ export const en: Dict = {
   },
 
   hero: {
-    h1: 'Remembers your whole business.\nDoes the work itself.\nNever sleeps.',
-    sub: 'Echelon Desktop is a personal assistant for the business owner. Remember Tony Stark’s Jarvis? Same idea. Except Jarvis is a movie, and this one runs on your computer and does exactly what you see below. It doesn’t sleep, doesn’t forget, and doesn’t quit.',
-    cta: 'See a demo on your business',
+    h1: 'I stopped carrying\nthe whole business in my head.',
+    sub: 'Echelon Desktop is a personal assistant for the business owner: it holds your people and agreements in memory and does the routine itself. Remember Tony Stark’s Jarvis? Same idea. Except Jarvis is a movie, and this one lives on your computer and can do exactly what this page shows.',
+    cta: 'See a demo on your own business',
     ctaNote: 'A live call, 30 minutes. Nothing to install.',
-    proof: 'Conceived in April 2026. In production for its first paying client since July.',
+    proof: 'Conceived in April 2026. Since July, working every day for its first paying client.',
   },
 
   before: {
     eyebrow: 'Your typical day',
-    title: 'Sound familiar?',
+    title: 'The whole business runs on your memory',
     beats: [
-      'People message you in five different chats — and every one of them expects a reply.',
-      'The day’s numbers get collected only if you chase them yourself.',
-      'Half the agreements live in your head. Nothing moves without you.',
+      'People message you in five different chats, and every one of them is waiting on you personally.',
+      'Nobody sends the day’s numbers until you ask for them yourself.',
+      'Half the agreements live only in your head. Go away for a week and everything stops.',
     ],
     chaosMessages: [
       { from: 'Accountant', text: 'I’ll send it tonight, no time today' },
@@ -39,13 +39,13 @@ export const en: Dict = {
 
   day: {
     eyebrow: 'The same day',
-    title: 'One day with Echelon Desktop',
-    intro: 'Scroll. The hours pass — it keeps working.',
+    title: 'This time you’re the owner, not the dispatcher',
+    intro: 'Scroll. The hours pass — it’s working.',
     scenes: [
       {
         time: '09:00',
-        title: 'The briefing is already in',
-        text: 'While you slept, it went through your mail and chats. What happened, what stalled, who is waiting on you — one page instead of twenty notifications. It’s already waiting in your Telegram.',
+        title: 'The brief is already waiting',
+        text: 'While you slept, it went through the mail and the chats. What happened and what stalled, who’s waiting and on what — one page instead of twenty notifications. By 9:00 it’s in your Telegram, before your first call.',
         fragment: {
           kind: 'briefing',
           tag: 'unprompted',
@@ -60,8 +60,8 @@ export const en: Dict = {
       },
       {
         time: '10:00',
-        title: 'Reports collected without you',
-        text: 'It messaged every person itself — in whatever messenger they use. Collected the answers. Where someone went quiet, it followed up. You get the whole picture: done, not done, who’s dragging.',
+        title: 'You didn’t chase a single report',
+        text: 'It wrote to each person itself, in that person’s own messenger, and collected the answers. Where there was silence, it nudged again. You got the whole picture: what’s done and who’s dragging.',
         fragment: {
           kind: 'messenger',
           out: 'Morning — where are we on the Chilanzar site today?',
@@ -73,7 +73,7 @@ export const en: Dict = {
       {
         time: '14:00',
         title: 'The lead didn’t go cold',
-        text: 'Someone wrote on Telegram while you were busy. They’re already in the pipeline, and a reply is drafted in your words. If they go quiet for two days, Echelon writes to them itself.',
+        text: 'Someone wrote on Telegram while you were busy. Echelon filed them into the lead list and drafted a reply in your words. If the client goes quiet for two days, it writes to them itself.',
         fragment: {
           kind: 'lead',
           name: 'Dilshod',
@@ -85,8 +85,8 @@ export const en: Dict = {
       },
       {
         time: '19:00',
-        title: 'The day’s numbers, reconciled',
-        text: 'The accountant has one set of numbers, the manager another, the register a third. It went around to everyone, pulled the data, and asked again for whatever was missing. You get one finished report, not ten messages.',
+        title: 'The day’s numbers add up',
+        text: 'The accountant has one set of numbers, the register another. It went around to everyone and collected the data, then asked again for whatever was missing. You got one finished report, not ten messages.',
         fragment: {
           kind: 'report',
           title: 'Numbers for the day',
@@ -101,7 +101,7 @@ export const en: Dict = {
       {
         time: '23:00',
         title: 'Night shift',
-        text: 'The big task you never have a free day for: it split the work into parts and ran several copies of itself in parallel. By morning — the result, and the exact amount it cost.',
+        text: 'The big task you never get around to. It cut the job into pieces and ran several copies of itself in parallel. By morning the result is ready, along with the exact figure for what it cost.',
         fragment: {
           kind: 'night',
           task: 'Go through two years of client records',
@@ -114,8 +114,8 @@ export const en: Dict = {
 
   touch: {
     eyebrow: 'This exists',
-    title: 'See for yourself',
-    intro: 'These aren’t screenshots or a video. Below is the live Echelon Desktop interface, exactly as you’ll see it on the demo. Click around.',
+    title: 'The interface below is real',
+    intro: 'Not screenshots and not a video: this is live Echelon Desktop, the way you’ll see it on the demo. Click around.',
     demoNote: 'Demo data',
     tabs: {
       chat: 'Chat',
@@ -125,37 +125,37 @@ export const en: Dict = {
       automations: 'Automations',
       analytics: 'Spend',
     },
-    hint: 'Walk the sections on the left — everything is live.',
+    hint: 'Walk through the sections on the left — everything works.',
   },
 
   words: {
     eyebrow: 'The point',
-    title: 'Say it in plain words — it becomes a habit',
+    title: 'Say it once and it becomes the rule',
     lead: 'No settings, no workflow builders. You say it the way you’d say it to a person:',
     instruction:
-      'Every Monday at 10 am, collect progress on each site from the foremen and send me a table.',
-    result: 'That’s it. It now runs every week.',
-    correction: '“Send it at eight, and add photos from the site” — and starting next Monday, that’s how it goes.',
+      'Every Monday at 10 in the morning, ask the foremen how much got done on each site and send me a table.',
+    result: 'That’s it. It now happens every Monday.',
+    correction: '“Send it by eight and add photos from the site” — from next Monday, that’s how it works.',
     explain:
-      'Ordinary software does what its developer thought to build in. Here you decide what it can do — in your own words. A shawarma stand and a construction firm end up with completely different assistants, and nobody designed either one in advance.',
+      'Ordinary software can do what its developer put into it. Here you decide what it can do, in ordinary words. A shawarma stand and a construction firm end up with two different assistants, and nobody designed either of them in advance.',
     switcherLabel: 'See it for your kind of business:',
     businesses: [
       {
         id: 'restaurant',
         name: 'Restaurant',
         cases: [
-          'Every evening, pull the day’s revenue from the register, dine-in, and delivery — and compare it to last week.',
-          'Watch the reviews on the map services. Draft me a reply to the bad ones, thank the good ones yourself.',
-          'Every morning, check the stock and remind the purchasing manager what’s running low.',
+          'Every evening, pull the day’s revenue from the register and the delivery apps, and set it against last week.',
+          'Watch the reviews on the map apps. Draft me replies to the bad ones, thank the good ones yourself.',
+          'Every morning, check the stock and remind the buyer what’s running low.',
         ],
       },
       {
         id: 'retail',
         name: 'Retail chain',
         cases: [
-          'By nine each morning — yesterday’s revenue for every location, in one table.',
+          'By nine each morning, yesterday’s revenue for every store, in one table.',
           'Once a week, collect shift timesheets from the managers and check them against the register.',
-          'When a new location opens, run the launch checklist and chase the people responsible on deadlines.',
+          'When a new store opens, run the launch checklist and chase whoever’s behind on deadlines.',
         ],
       },
       {
@@ -163,16 +163,16 @@ export const en: Dict = {
         name: 'Construction firm',
         cases: [
           'Every Monday, collect progress on each site from the foremen, with photos.',
-          'Track delivery deadlines. If a supplier slips, remind them and tell me.',
-          'When a contractor invoice comes in, check it against the contract and show me the discrepancies.',
+          'Track the delivery deadlines. If a supplier slips, remind him and tell me.',
+          'When a contractor invoice comes in, check it against the contract and show me what doesn’t match.',
         ],
       },
       {
         id: 'clinic',
         name: 'Clinic',
         cases: [
-          'Remind patients about appointments a day ahead — and offer to reschedule if they don’t confirm.',
-          'Every evening — how many visits, how many cancellations, how many new inquiries.',
+          'Remind patients about their appointment a day ahead, and offer to move it if they don’t confirm.',
+          'Every evening: visits, cancellations, no-shows, new inquiries.',
           'Log requests from the website and messengers into the database and draft the first reply.',
         ],
       },
@@ -181,43 +181,43 @@ export const en: Dict = {
 
   pillars: {
     eyebrow: 'What this stands on',
-    title: 'Five reasons this works',
+    title: 'It’s built like an assistant, not like a program',
     items: [
       {
         name: 'Remembers',
-        text: 'Who’s who, who promised what, what was agreed in March. Memory doesn’t vanish when a window closes and doesn’t reset in a new chat — and it belongs to you.',
+        text: 'Who promised what, and what the two of you agreed back in March. That memory doesn’t wipe when a window closes and doesn’t reset in a new chat.',
       },
       {
         name: 'Does the work',
-        text: 'It doesn’t give advice, it does the work: messages people, gathers data, sends reports, files leads into the CRM. What’s left for you is to check — not to do it yourself.',
+        text: 'It doesn’t advise, it does: writes to people, pulls the numbers, nudges the silent, files leads into the CRM. What’s left for you is checking, not doing.',
       },
       {
         name: 'Learns',
-        text: 'Correct it once — “write shorter replies to clients” — and that’s a permanent working rule. A month in, it runs things the way you want them run.',
+        text: 'Say “write shorter to clients” once, and it becomes a permanent rule. A month in, it works the way things are done at your place.',
       },
       {
-        name: 'Never sleeps',
-        text: 'By 9:00 the briefing is already in. At night it handles what your day never has room for. It keeps the schedule itself — no reminding.',
+        name: 'Works nights',
+        text: 'By 9:00 the brief is already in your Telegram. At night it does what your day never has room for. It keeps the schedule on its own; nobody reminds it.',
       },
       {
         name: 'Yours',
-        text: 'It lives on your computer. The memory, the messages, and the numbers stay with you, not in someone else’s cloud. It can’t quit and take them along.',
+        text: 'It lives on your computer. The correspondence, the memory, the numbers, the client list — all of it stays with you, not in someone else’s cloud. It can’t quit and take them along.',
       },
     ],
   },
 
   voice: {
     eyebrow: 'Just talk',
-    title: 'This is where Jarvis stops being a metaphor',
-    text: 'You’re driving, thinking about the new location — so you talk it through out loud, like you would with a person. It answers in voice, remembers your whole business, and knows how the March negotiations ended. And at the end you can say “handle it” — and it goes and does.',
-    sphereHint: 'The sphere below is live. Press it and ask about Echelon — out loud.',
+    title: 'This is where Jarvis stops being a figure of speech',
+    text: 'You’re driving, turning the new location over in your head — so you talk it through out loud, the way you would with a person. It answers in voice, and it remembers your whole business, down to how the March negotiations ended. Say “handle it” at the end, and it goes off and does.',
+    sphereHint: 'The sphere below is live. Press it and ask it about Echelon, out loud.',
     talkButton: 'Talk',
     stopButton: 'End',
     listening: 'Listening…',
     thinking: 'Thinking…',
     speaking: 'Speaking',
     connecting: 'Connecting…',
-    unavailable: 'Hear how it sounds:',
+    unavailable: 'Hear how it talks:',
     playRecording: 'Play recording',
     micDenied: 'Microphone access needed',
     error: 'Couldn’t connect. Try again later.',
@@ -225,34 +225,34 @@ export const en: Dict = {
 
   honesty: {
     eyebrow: 'No fairy tales',
-    title: 'What it doesn’t do',
+    title: 'It prepares decisions. You make them',
     paragraphs: [
-      'It doesn’t make decisions for you. It doesn’t sign contracts, doesn’t move money, doesn’t hire or fire. The routine you assign, it does on its own; decisions it prepares — you make them.',
-      'It’s set up for one person — the owner. Deliberately so: an assistant answers to one boss.',
-      'It isn’t magic. Everything on this page is what it does every day. We promise nothing beyond that.',
+      'It doesn’t sign contracts, doesn’t move money, doesn’t hire, doesn’t fire — even if you ask. The routine it carries to the end itself; the decision it brings you prepared.',
+      'It’s set up for one person — the owner. That’s a position, not a shortcoming: an assistant has one boss.',
+      'It isn’t magic. Everything on this page is what it does every day, and beyond that we promise nothing.',
     ],
     setup:
-      'Echelon Desktop installs on a regular computer — Windows, macOS, or Linux — and is configured for you personally: your business, your people, your rules. It lives on the computer — and you can message it from anywhere, including Telegram on your phone.',
+      'Echelon Desktop installs on a regular computer running Windows, macOS, or Linux, and is configured for you personally — your people, your way of doing things. It lives on the computer; you can write to it from anywhere, including Telegram on your phone.',
   },
 
   math: {
     eyebrow: 'Do the math in people',
-    title: 'What does an assistant cost?',
+    title: 'The right comparison isn’t software — it’s a person on staff',
     rows: [
       { label: 'A salary, every month', human: 'yes', echelon: 'no' },
-      { label: 'Sleeps, gets sick, takes vacation', human: 'yes', echelon: 'no' },
-      { label: 'Quits — and takes everything they remembered', human: 'yes', echelon: 'no' },
+      { label: 'Gets sick and goes on vacation', human: 'yes', echelon: 'no' },
+      { label: 'Quits — and takes everything they remember with them', human: 'yes', echelon: 'no' },
       { label: 'Remembers every agreement word for word', human: 'no', echelon: 'yes' },
       { label: 'Works nights and weekends', human: 'no', echelon: 'yes' },
     ],
-    humanCol: 'Assistant on staff',
+    humanCol: 'An assistant on staff',
     echelonCol: 'Echelon Desktop',
-    bottom: 'You’ll get the exact figure on the demo. It’s less than one more hire — noticeably less.',
+    bottom: 'The exact figure comes on the demo. It’s less than the salary of one more hire — noticeably.',
   },
 
   finalCta: {
     title: 'Watch it pull together a report on your business',
-    text: 'Write on Telegram and we’ll set up a live demo. Half an hour, nothing to install: you just watch it work on examples from your own business.',
+    text: 'Message on Telegram and we’ll set a time for a live demo. Half an hour, nothing to install: you watch it work on examples from your own business.',
     button: 'Message on Telegram',
     note: '@komrxn · Telegram',
   },
@@ -260,7 +260,7 @@ export const en: Dict = {
   footer: {
     product: 'Echelon Desktop',
     line: 'A personal assistant for the business owner. Lives on your computer.',
-    demoNote: 'All data in the examples on this page is demo data.',
+    demoNote: 'The examples on this page use demo data.',
     rights: '© 2026 Echelon Desktop',
   },
 

@@ -2,7 +2,7 @@ import type { Dict } from './ru';
 
 export const uz: Dict = {
   meta: {
-    title: 'Echelon Desktop — butun biznesingizni yodida tutadigan yordamchi',
+    title: 'Echelon Desktop — butun biznesingizni yodida tutadigan shaxsiy yordamchi',
     description:
       'Biznes egasining shaxsiy yordamchisi. Kompyuteringizda ishlaydi, odamlar-u kelishuvlarni eslab qoladi, hisobotlarni o’zi yig’adi, mijozlarga javob beradi va kechasi ham ishlaydi. Demoni o’z biznesingiz misolida ko’ring.',
   },
@@ -10,20 +10,20 @@ export const uz: Dict = {
     cta: 'Demo ko’rish',
   },
   hero: {
-    h1: 'Butun biznesingizni yodida tutadi.\nIshni o’zi bajaradi.\nUxlamaydi.',
+    h1: 'Butun biznesni boshimda\nko’tarib yurishni bas qildim.',
     sub:
-      'Echelon Desktop — biznes egasining shaxsiy yordamchisi. Toni Starkning Jarvisi esingizdami? G’oya o’sha. Faqat Jarvis — kino, bu esa sizning kompyuteringizda ishlaydi va quyida ko’rsatilgan ishlarni aynan bajaradi. U uxlamaydi, unutmaydi va ishdan bo’shab ketmaydi.',
-    cta: 'Demoni o’z biznesingiz misolida ko’ring',
-    ctaNote: 'Jonli suhbat, 30 daqiqa. Hech narsa o’rnatish shart emas.',
-    proof: '2026-yil aprelida yaratilgan. Iyuldan beri birinchi to’lovchi mijozda ishlab turibdi.',
+      'Echelon Desktop — biznes egasining shaxsiy yordamchisi: odamlaringiz bilan kelishuvlaringizni yodida tutadi, kundalik ishni o’zi bajaradi. Toni Starkning Jarvisi esingizdami? G’oya o’sha. Faqat Jarvis — kino, bu esa kompyuteringizda yashaydi va pastda ko’rsatilganlarni aynan qiladi.',
+    cta: 'Demoni o’z biznesingizda ko’ring',
+    ctaNote: 'Jonli suhbat, 30 daqiqa, hech narsa o’rnatish shart emas.',
+    proof: '2026-yil aprelida o’ylab topilgan. Iyuldan beri birinchi to’lovchi mijozda har kuni ishlab turibdi.',
   },
   before: {
     eyebrow: 'Sizning oddiy kuningiz',
-    title: 'Tanish holatmi?',
+    title: 'Biznes xotirangizga suyanib turibdi',
     beats: [
-      'Odamlar sizga beshta turli chatda yozadi — va har birida javob kutishadi.',
-      'Kunlik raqamlar faqat o’zingiz eslatsangizgina yig’iladi.',
-      'Kelishuvlarning yarmi boshingizda turadi. Sizsiz hech narsa siljimaydi.',
+      'Odamlar beshta chatdan yozadi. Javobni hammasi sizdan kutadi.',
+      'Kunlik raqamlarni so’ramaguningizcha hech kim yubormaydi.',
+      'Kelishuvlarning yarmi faqat boshingizda: bir hafta yo’q bo’lsangiz — ish to’xtaydi.',
     ],
     chaosMessages: [
       { from: 'Buxgalter', text: 'Kechqurun tashlab beraman, ulgurmayapman' },
@@ -36,14 +36,14 @@ export const uz: Dict = {
   },
   day: {
     eyebrow: 'O’sha kunning o’zi',
-    title: 'Echelon Desktop bilan bir kun',
+    title: 'Bu kunda siz dispetcher emas, egasiz',
     intro: 'Pastga suring. Soat yuryapti — u ishlayapti.',
     scenes: [
       {
         time: '09:00',
         title: 'Svodka allaqachon tayyor',
         text:
-          'Siz uxlab yotganingizda u pochta va chatlarni saralab chiqdi. Nima bo’ldi, nima to’xtab qoldi, kim javobingizni kutyapti — yigirmata bildirishnoma emas, bitta sahifa. U allaqachon Telegramingizda kutib turibdi.',
+          'Siz uxlab yotganingizda u pochta bilan chatlarni saralab chiqdi. Nima bo’ldi, qayerda to’xtab qoldi, kim javobingizni kutyapti — yigirmata bildirishnoma o’rniga bitta sahifa. 9:00gacha u Telegramingizda, birinchi qo’ng’iroqdan oldin.',
         fragment: {
           kind: 'briefing',
           tag: 'o’zi',
@@ -58,9 +58,9 @@ export const uz: Dict = {
       },
       {
         time: '10:00',
-        title: 'Hisobotlar sizsiz yig’ildi',
+        title: 'Hisobotni siz emas, u yig’di',
         text:
-          'U har bir ijrochiga o’zi yozdi — har kimning o’z messenjerida. Javoblarni yig’di. Jim qolganlarga yana bir bor eslatdi. Sizga — umumiy manzara: nima bajarildi, nima yo’q, kim orqada qolyapti.',
+          'Har bir ijrochiga o’zi yozdi — har kimga o’zining messenjerida. Javob bermaganga qayta eslatdi. Sizga umumiy manzara keldi: nima qilindi, kim orqada qolyapti.',
         fragment: {
           kind: 'messenger',
           out: 'Xayrli tong! Chilonzor bo’yicha bugungi holat qanday?',
@@ -71,9 +71,9 @@ export const uz: Dict = {
       },
       {
         time: '14:00',
-        title: 'Mijoz sovib ulgurmadi',
+        title: 'Mijoz sovib qolmadi',
         text:
-          'Siz band paytingizda bir odam Telegramda yozib qoldirdi. U allaqachon so’rovlar ro’yxatida, javob sizning so’zlaringiz bilan tayyorlab qo’yilgan. Ikki kun jim qolsa — Echelon o’zi unga yozadi.',
+          'Siz band paytingizda odam Telegramga yozdi. Echelon uni so’rovlar ro’yxatiga kiritdi, javobni sizning so’zlaringiz bilan tayyorlab qo’ydi. Mijoz ikki kun jim qolsa — o’zi yozadi.',
         fragment: {
           kind: 'lead',
           name: 'Dilshod',
@@ -86,9 +86,9 @@ export const uz: Dict = {
       },
       {
         time: '19:00',
-        title: 'Kunlik raqamlar jamlangan',
+        title: 'Kun raqamlari bir joyga tushdi',
         text:
-          'Buxgalterda bir raqam, boshqaruvchida boshqasi, kassada uchinchisi. U hammani aylanib chiqdi, ma’lumotlarni oldi, yetishmaganini qayta so’radi. Sizga o’nta xabar emas, tayyor hisobot keldi.',
+          'Buxgalterda bir raqam, kassada boshqasi. U hammani aylanib chiqdi, yetishmagan joyini qayta so’radi. Sizga o’nta xabar emas, bitta tayyor hisobot keldi.',
         fragment: {
           kind: 'report',
           title: 'Kunlik raqamlar',
@@ -104,7 +104,7 @@ export const uz: Dict = {
         time: '23:00',
         title: 'Tungi smena',
         text:
-          'Sizda hech qachon butun boshli kun topilmaydigan katta vazifa: u ishni bo’laklarga bo’lib, o’zining bir nechta nusxasini parallel ishga soldi. Ertalab — natija va bunga aniq qancha ketgani.',
+          'Qo’lingiz sira yetmay yurgan katta ish. U ishni bo’laklarga bo’ldi-da, o’zining bir necha nusxasini parallel ishga soldi. Ertalabgacha natija tayyor. Qancha ketgani ham yonida — aniq raqamda.',
         fragment: {
           kind: 'night',
           task: 'Ikki yillik mijozlar bazasini saralash',
@@ -115,10 +115,10 @@ export const uz: Dict = {
     ],
   },
   touch: {
-    eyebrow: 'Bu haqiqatan bor',
-    title: 'Ushlab ko’ring',
+    eyebrow: 'Bu rostdan bor',
+    title: 'Pastdagi interfeys — dasturning o’zi',
     intro:
-      'Bular skrinshot ham, video ham emas. Quyida — Echelon Desktopning jonli interfeysi, demoda xuddi shuni ko’rasiz. Bosib ko’ring.',
+      'Bu skrinshot ham, video ham emas — jonli Echelon Desktop. Demoda xuddi shuni ko’rasiz. Bosib ko’ring.',
     demoNote: 'Demo ma’lumotlar',
     tabs: {
       chat: 'Chat',
@@ -128,26 +128,26 @@ export const uz: Dict = {
       automations: 'Avtomatlashtirish',
       analytics: 'Xarajatlar',
     },
-    hint: 'Chapdagi bo’limlar bo’ylab yuring — hammasi jonli.',
+    hint: 'Chapdagi bo’limlarni aylanib chiqing — hammasi jonli.',
   },
   words: {
     eyebrow: 'Eng muhimi',
-    title: 'So’z bilan ayting — odatga aylanadi',
-    lead: 'Hech qanday sozlash-u konstruktor yo’q. Odamga qanday aytsangiz, shunday gapirasiz:',
+    title: 'Bir marta aytdingiz — qoida bo’ldi',
+    lead: 'Sozlama ham, konstruktor ham yo’q. Odamga qanday aytsangiz, shunday aytasiz:',
     instruction:
-      'Har dushanba ertalab soat 10da brigadirlardan obyektlar bo’yicha qancha ish qilinganini yig’ib, menga jadval qilib yubor.',
-    result: 'Tamom. Endi bu har hafta ishlaydi.',
+      'Har dushanba ertalab 10da brigadirlardan obyektlarda nima qilinganini so’rab, menga jadval qilib yubor.',
+    result: 'Tamom. Endi bu har dushanba o’zi bo’lib turadi.',
     correction:
-      '«Soat sakkizda yubor, obyekt fotolarini ham qo’sh» — va keyingi dushanbadan shunday bo’ladi.',
+      '«Sakkizda yubor, obyekt fotosini qo’sh» — keyingi dushanbadan shunday.',
     explain:
-      'Oddiy dastur faqat dasturchi oldindan ko’zda tutgan ishlarni qila oladi. Bu yerda esa u nimalarni bilishini o’zingiz hal qilasiz — o’z so’zlaringiz bilan. Shaurmaxona bilan qurilish firmasida butunlay boshqa-boshqa yordamchi shakllanadi — va ularni hech kim oldindan o’ylab qo’ymagan.',
+      'Oddiy dastur faqat dasturchi kiritgan narsani qiladi. Bu yerda esa u nimani bilishini o’zingiz hal qilasiz — oddiy so’z bilan. Shuning uchun shaurmaxona bilan qurilish firmasidan ikki xil yordamchi chiqadi: ularni hech kim oldindan o’ylab qo’ygani yo’q.',
     switcherLabel: 'O’z biznesingiz misolida ko’ring:',
     businesses: [
       {
         id: 'restaurant',
         name: 'Restoran',
         cases: [
-          'Har kuni kechqurun kassa, zal va dostavka bo’yicha tushumni yig’ib, o’tgan hafta bilan solishtir.',
+          'Kassa yopilganda administratordan tushumni, oshxonadan chiqitni so’rab ol. Raqamlar to’g’ri kelmasa — ertalabki svodkada ko’rsat.',
           'Kartalardagi sharhlarni kuzatib bor. Yomonlariga menga javob tayyorla, yaxshilariga o’zing rahmat ayt.',
           'Har kuni ertalab ombor qoldiqlarini tekshir va tugab borayotganini ta’minotchiga eslat.',
         ],
@@ -156,7 +156,7 @@ export const uz: Dict = {
         id: 'retail',
         name: 'Do’konlar tarmog’i',
         cases: [
-          'Ertalab to’qqizgacha — har bir nuqtaning kechagi tushumi, bitta jadvalda.',
+          'Har kuni 21:00da har do’kondan tushum bilan qoldiqni so’ra, bitta jadvalga jamla. Orqada ketayotgan nuqtani belgilab qo’y.',
           'Haftada bir marta boshqaruvchilardan smenalar tabelini yig’ib, kassa bilan solishtir.',
           'Yangi nuqta ochilyaptimi — ishga tushirish chek-listini yurit, muddatlar bo’yicha mas’ullarni turtkilab tur.',
         ],
@@ -167,14 +167,14 @@ export const uz: Dict = {
         cases: [
           'Har dushanba brigadirlardan obyektlar bo’yicha qancha ish qilinganini foto bilan yig’ib ol.',
           'Yetkazib berish muddatlarini kuzat. Yetkazib beruvchi kechiktirsa — unga eslat va menga ayt.',
-          'Pudratchidan hisob keldimi — shartnoma bilan solishtir va farqlarini ko’rsat.',
+          'Yetkazib beruvchidan yangi smeta kelsa, o’tgan oygi narxlar bilan solishtir. Qimmatlab ketganini menga ro’yxat qilib ber.',
         ],
       },
       {
         id: 'clinic',
         name: 'Klinika',
         cases: [
-          'Bemorlarga qabul haqida bir kun oldin eslat — tasdiqlamasa, boshqa kunga ko’chirishni taklif qil.',
+          'Ertangi qabulga yozilganlarga bugun eslatma yubor. Kimdir kelolmasa — bo’shagan vaqtga navbatdagini taklif qil.',
           'Har kuni kechqurun — nechta qabul, nechta bekor qilingan, nechta yangi murojaat.',
           'Saytdan va messenjerlardan kelgan so’rovlarni bazaga kirit, birinchi javobni tayyorlab qo’y.',
         ],
@@ -183,89 +183,89 @@ export const uz: Dict = {
   },
   pillars: {
     eyebrow: 'Bu nimaga tayanadi',
-    title: 'Nega bu ishlaydi — beshta sabab',
+    title: 'U dasturday emas, yordamchiday qurilgan',
     items: [
       {
         name: 'Eslab qoladi',
         text:
-          'Kim kimligini, kim nima va’da berganini, martda nima kelishilganini biladi. Xotira oyna yopilganda o’chmaydi, yangi chatda nolga tushmaydi — va u sizniki.',
+          'Kim nima va’da bergan, martda nima kelishilgan — hammasi yodida. Bu xotira oynani yopsangiz o’chmaydi, yangi chatda nolga tushmaydi.',
       },
       {
         name: 'Bajaradi',
         text:
-          'Maslahat bermaydi — bajaradi: odamlarga yozadi, ma’lumot yig’adi, hisobot jo’natadi, CRMga kiritadi. Sizga faqat tekshirish qoladi — o’zingiz qilish emas.',
+          'Maslahat berib o’tirmaydi — qiladi: odamlarga o’zi yozadi, raqamlarni yig’adi, jim qolganlarga eslatadi, so’rovlarni CRMga kiritadi. Sizga tekshirish qoladi — o’zingiz qilib o’tirish emas.',
       },
       {
         name: 'O’rganadi',
         text:
-          'Bir marta tuzatdingiz — «mijozlarga qisqaroq yoz» — va bu abadiy uning ish qoidasiga aylanadi. Bir oydan keyin u aynan sizga kerak bo’lganday ishlaydi.',
+          'Bir marta «mijozlarga qisqa yoz» deysiz — bu unga umrbod qoida. Bir oydan keyin ishni xuddi o’zingizday qiladi.',
       },
       {
-        name: 'Uxlamaydi',
+        name: 'Kechasi ham ishlaydi',
         text:
-          '9:00da svodka tayyor turadi. Kechasi u kunduzi qo’lingiz tegmaydigan ishlarni qiladi. Jadvalni o’zi eslab yuradi — eslatish shart emas.',
+          'Svodka 9:00gacha Telegramingizda. Kunduzi qo’l tegmaydigan ishlarni kechasi qiladi. Jadvalini o’zi eslab yuradi.',
       },
       {
         name: 'Sizniki',
         text:
-          'Sizning kompyuteringizda yashaydi. Xotira, yozishmalar va raqamlar birovning bulutida emas, o’zingizda qoladi. U ishdan bo’shab, ularni olib keta olmaydi.',
+          'Kompyuteringizda yashaydi. Yozishmalar, xotira, raqamlar o’zingizda qoladi — birovning bulutida emas. Ishdan bo’shab, bilganini olib keta olmaydi.',
       },
     ],
   },
   voice: {
     eyebrow: 'Shunchaki gaplashish',
-    title: 'Shu yerda Jarvis metafora bo’lmay qoladi',
+    title: 'Shu yerda Jarvis o’xshatish bo’lmay qoladi',
     text:
-      'Mashinada ketyapsiz, yangi nuqta haqida o’ylayapsiz — va u bilan xuddi odam bilan gaplashganday ovoz chiqarib gaplashasiz. U ovoz bilan javob beradi, butun biznesingizni yodida tutadi va martdagi muzokaralar nima bilan tugaganini biladi. Oxirida «shu bilan shug’ullan» deysiz — u ishga kirishadi.',
-    sphereHint: 'Quyidagi sfera — jonli. Bosing va undan Echelon haqida ovoz bilan so’rang.',
+      'Mashinada ketyapsiz, yangi nuqta haqida o’ylab boryapsiz — u bilan xuddi odam bilan gaplashganday ovozda gaplashasiz. U ham ovozda javob beradi: butun biznesingizni biladi, martdagi muzokara nima bilan tugaganini eslaydi. Oxirida «endi shu bilan shug’ullan» deysiz — ishga kirishadi.',
+    sphereHint: 'Pastdagi sfera jonli. Bosing-da, Echelon haqida ovozda so’rang.',
     talkButton: 'Gaplashish',
     stopButton: 'Tugatish',
     listening: 'Eshityapti…',
     thinking: 'O’ylayapti…',
     speaking: 'Gapiryapti',
     connecting: 'Ulanyapti…',
-    unavailable: 'Uning qanday gapirishini eshitib ko’ring:',
+    unavailable: 'Qanday gapirishini eshitib ko’ring:',
     playRecording: 'Yozuvni qo’yish',
     micDenied: 'Mikrofonga ruxsat kerak',
     error: 'Ulanib bo’lmadi. Keyinroq urinib ko’ring.',
   },
   honesty: {
     eyebrow: 'Ertak aytmaymiz',
-    title: 'U nimalarni qilmaydi',
+    title: 'Qarorni u tayyorlaydi. Siz qabul qilasiz',
     paragraphs: [
-      'U siz uchun qaror qabul qilmaydi. Shartnoma imzolamaydi, pul o’tkazmaydi, ishga olmaydi va ishdan bo’shatmaydi. Topshirilgan kundalik ishni o’zi bajaradi, qarorlarni esa tayyorlab beradi — qabul qilish sizniki.',
-      'U bitta odamga — egasiga moslab sozlangan. Bu cheklov emas, bu pozitsiya: yordamchining bitta xo’jayini bo’ladi.',
-      'U sehrli emas. Bu sahifada ko’rsatilganlarning bari — u har kuni qiladigan ishlar. Bundan ortig’ini va’da qilmaymiz.',
+      'Shartnoma imzolamaydi, pul o’tkazmaydi, odam yollamaydi, bo’shatmaydi — so’rasangiz ham. Kundalik ishni oxirigacha o’zi qiladi, qarorni esa tayyor holida oldingizga qo’yadi.',
+      'U bitta odamga — egasiga sozlanadi. Bu kamchilik emas, pozitsiya: yordamchining xo’jayini bitta bo’ladi.',
+      'U sehrgar emas. Bu sahifada yozilganlarning hammasi — uning har kungi ishi. Undan ortig’ini va’da qilmaymiz.',
     ],
     setup:
-      'Echelon Desktop oddiy kompyuterga o’rnatiladi — Windows, macOS yoki Linux — va shaxsan sizga moslab sozlanadi: sizning biznesingiz, sizning odamlaringiz, sizning qoidalaringiz. O’zi kompyuterda ishlaydi, unga esa istalgan joydan yozasiz — hatto telefondagi Telegramdan ham.',
+      'Echelon Desktop Windows, macOS yoki Linux kompyuteringizga o’rnatiladi va shaxsan sizga sozlanadi — odamlaringizga, tartiblaringizga. U kompyuterda yashaydi, yozish esa istalgan joydan mumkin — telefondagi Telegramdan ham.',
   },
   math: {
-    eyebrow: 'Odam hisobida sanang',
-    title: 'Yordamchi qancha turadi?',
+    eyebrow: 'Odamga chaqib ko’ring',
+    title: 'To’g’ri taqqoslash — dastur bilan emas, shtatdagi odam bilan',
     rows: [
-      { label: 'Har oy — oylik maosh', human: 'ha', echelon: 'yo’q' },
+      { label: 'Oylikni har oy oladi', human: 'ha', echelon: 'yo’q' },
       { label: 'Uxlaydi, kasal bo’ladi, ta’tilga chiqadi', human: 'ha', echelon: 'yo’q' },
-      { label: 'Ishdan bo’shaydi — eslab yurganining hammasini olib ketadi', human: 'ha', echelon: 'yo’q' },
+      { label: 'Bo’shab ketadi va eslaganini olib ketadi', human: 'ha', echelon: 'yo’q' },
       { label: 'Har bir kelishuvni so’zma-so’z eslab qoladi', human: 'yo’q', echelon: 'ha' },
       { label: 'Kechasi va dam olish kunlari ishlaydi', human: 'yo’q', echelon: 'ha' },
     ],
     humanCol: 'Shtatdagi yordamchi',
     echelonCol: 'Echelon Desktop',
     bottom:
-      'Aniq raqamni demoda eshitasiz. U shtatga yana bitta odam olishdan arzon — sezilarli darajada.',
+      'Aniq raqamni demoda aytamiz: u yana bitta xodimning oyligidan ancha kam chiqadi.',
   },
   finalCta: {
-    title: 'Biznesingiz bo’yicha hisobotni qanday yig’ishini ko’ring',
+    title: 'Hisobotni sizning biznesingizda qanday yig’ishini ko’ring',
     text:
-      'Telegramda yozing — jonli demo vaqtini kelishamiz. Yarim soat, hech narsa o’rnatilmaydi: siz shunchaki o’z ishingizdan olingan misollarda bu qanday ishlashini ko’rasiz.',
+      'Telegramda yozing — jonli demo vaqtini kelishib olamiz. Yarim soat, hech narsa o’rnatilmaydi: qanday ishlashini o’z ishingizdagi misollarda ko’rasiz.',
     button: 'Telegramda yozish',
     note: '@komrxn · Telegram',
   },
   footer: {
     product: 'Echelon Desktop',
     line: 'Biznes egasining shaxsiy yordamchisi. Sizning kompyuteringizda ishlaydi.',
-    demoNote: 'Bu sahifadagi misollarda keltirilgan barcha ma’lumotlar — namoyish uchun.',
+    demoNote: 'Bu sahifadagi misollar — namoyish uchun.',
     rights: '© 2026 Echelon Desktop',
   },
   ui: {
@@ -406,7 +406,7 @@ export const uz: Dict = {
         { label: 'dilshod', type: 'person', summary: 'Mijoz · buyurtma asosida, kechgacha raqam kutyapti', updated: 'bugun' },
         { label: 'zarina', type: 'person', summary: 'Buxgalter · ekvayringni 20:00gacha yuboradi', updated: 'kecha' },
         { label: 'chilonzor obyekti', type: 'project', summary: 'Suvoq 80% · elektrika kabel kutyapti', updated: '3 soat oldin' },
-        { label: 'yangi nuqta', type: 'project', summary: 'Ishga tushirish ro’yxati · 18tadan 12tasi yopildi', updated: 'kecha' },
+        { label: 'yangi nuqta', type: 'project', summary: 'Ishga tushirish ro’yxati · 18 tadan 12 tasi yopildi', updated: 'kecha' },
         { label: 'alisher kechiktirishi', type: 'memory', summary: '12-martdan 14 kun · yozishmadan qayd qilingan', updated: 'mart' },
         { label: 'hisobot qoidasi', type: 'memory', summary: 'Brigadirlar — dushanba 10:00, foto bilan', updated: 'iyul' },
         { label: 'mijozlarga ohang', type: 'memory', summary: 'Qisqa, rasmiyatchiliksiz, doim «siz»da', updated: 'iyun' },
