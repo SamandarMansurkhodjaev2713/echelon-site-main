@@ -1,0 +1,59 @@
+---
+import type { Dict } from '../../lib/i18n';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const v = dict.ui.vault;
+const typeColors: Record<string, string> = {
+  person: '#e5a33a',
+  project: '#4ecb58',
+  memory: '#e55353',
+  theme: '#8a8a85',
+};
+const typeNames = dict.ui.graph.card.types as Record<string, string>;
+const filters = [
+  { id: 'all', label: v.filters.all },
+  { id: 'person', label: v.filters.person },
+  { id: 'project', label: v.filters.project },
+  { id: 'memory', label: v.filters.memory },
+  { id: 'theme', label: v.filters.theme },
+];
+---
+
+<div class="ui-vault" data-vault>
+  <div class="ui-vault__filters">
+    {
+      filters.map((f, i) => (
+        <button class={`ui-vault__chip${i === 0 ? ' active' : ''}`} data-vault-filter={f.id}>
+          {f.label}
+        </button>
+      ))
+    }
+    <span class="ui-vault__note mono">{v.searchNote}</span>
+  </div>
+  <div class="ui-vault__rows">
+    {
+      v.rows.map((r) => (
+        <button
+          class="ui-vault__row"
+          data-vault-type={r.type}
+          data-summary={r.summary}
+          data-updated={r.updated}
+        >
+          <span class="ui-vault__label">{r.label}</span>
+          <span
+            class="ui-vault__type"
+            style={`color:${typeColors[r.type]};border-color:color-mix(in srgb, ${typeColors[r.type]} 55%, transparent)`}
+          >
+            {typeNames[r.type]}
+          </span>
+          <span class="ui-vault__sum">{r.summary}</span>
+          <span class="ui-vault__upd mono">{r.updated}</span>
+        </button>
+      ))
+    }
+  </div>
+</div>

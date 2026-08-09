@@ -22,7 +22,7 @@ const a = dict.ui.automations;
           <div class="ui-autorow__name">{row.name}</div>
           <div class="ui-autorow__sched">{row.schedule}</div>
         </div>
-        <span class="ui-autorow__badge">{a.active}</span>
+        <span class="ui-autorow__badge" data-paused={(a as any).paused}>{a.active}</span>
         <span class={`ui-autorow__toggle${row.active ? '' : ' off'}`} />
       </div>
     ))

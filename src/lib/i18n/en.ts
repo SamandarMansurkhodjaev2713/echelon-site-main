@@ -16,7 +16,7 @@ export const en: Dict = {
     sub: 'Echelon Desktop is a personal assistant for the business owner. Remember Tony Stark’s Jarvis? Same idea. Except Jarvis is a movie, and this one runs on your computer and does exactly what you see below. It doesn’t sleep, doesn’t forget, and doesn’t quit.',
     cta: 'See a demo on your business',
     ctaNote: 'A live call, 30 minutes. Nothing to install.',
-    proof: 'The product is a year old. It runs the author’s business every day — and is already in production for its first paying client.',
+    proof: 'Conceived in April 2026. In production for its first paying client since July.',
   },
 
   before: {
@@ -120,9 +120,12 @@ export const en: Dict = {
     tabs: {
       chat: 'Chat',
       graph: 'Memory',
+      vault: 'Vault',
       kanban: 'Tasks',
       automations: 'Automations',
+      analytics: 'Spend',
     },
+    hint: 'Walk the sections on the left — everything is live.',
   },
 
   words: {
@@ -251,7 +254,7 @@ export const en: Dict = {
     title: 'Watch it pull together a report on your business',
     text: 'Write on Telegram and we’ll set up a live demo. Half an hour, nothing to install: you just watch it work on examples from your own business.',
     button: 'Message on Telegram',
-    note: '@komrxn · the product owner replies',
+    note: '@komrxn · Telegram',
   },
 
   footer: {
@@ -328,9 +331,10 @@ export const en: Dict = {
         { name: 'Stalled tasks — follow up', schedule: 'every day, 10:00', active: true },
       ],
       active: 'running',
+      paused: 'paused',
     },
     graph: {
-      stats: 'nodes: 299 · links: 632',
+      stats: 'nodes: {n} · links: {e}',
       legend: {
         owner: 'You',
         people: 'People',
@@ -338,6 +342,81 @@ export const en: Dict = {
         memories: 'Agreements',
         themes: 'Topics',
       },
+      hint: 'Wheel to zoom · drag the canvas · click a node',
+      card: {
+        links: 'links',
+        types: {
+          owner: 'You',
+          job: 'Business',
+          person: 'Person',
+          project: 'Project',
+          memory: 'Agreement',
+          theme: 'Topic',
+          thought: 'Note',
+        },
+      },
+      data: {
+        job: 'Your business',
+        people: [
+          'Alisher · supplier', 'Dilshod · client', 'Timur · foreman', 'Rustam · foreman',
+          'Zarina · accountant', 'Otabek · manager', 'Jasur · site chief', 'Nodira · sales',
+          'Sanjar · supplier', 'Bekzod · driver', 'Umid · client', 'Gulnora · cashier',
+          'Farrukh · partner', 'Aziz · purchasing', 'Shakhnoza · sales', 'Komil · client',
+          'Madina · accountant', 'Ikrom · contractor', 'Sevara · admin', 'Bakhodir · supplier',
+          'Lola · client', 'Sherzod · foreman', 'Diyora · sales', 'Ulugbek · partner',
+        ],
+        projects: [
+          'Chilanzar site', 'Yunusabad site', 'New location', 'Cable delivery',
+          'Warehouse repair', 'Finishing tender', 'Packaging purchase', 'Company website',
+          'Office move', 'Lease contract', 'Certification', 'Shift hiring',
+        ],
+        themes: ['Supplies', 'Pricing', 'Staff', 'Clients', 'Warehouse', 'Reports', 'Rent', 'Ads'],
+        memoryTemplates: [
+          '14-day deferral — {p}',
+          'Discount from 50 blocks — {p}',
+          'Payment on delivery — {p}',
+          'Delivery at his cost — {p}',
+          'Site photos every Monday — {p}',
+          'No calls after 20:00 — {p}',
+          '30% prepayment — {p}',
+          'Check invoices against the contract — {p}',
+          'Report by 19:00 — {p}',
+          'Write in Uzbek — {p}',
+        ],
+        thoughtTemplates: [
+          'Check prices on {t}',
+          'Discuss {t} at the standup',
+          'Risk around {t}',
+          'Idea: automate {t}',
+        ],
+      },
+    },
+    vault: {
+      searchNote: 'Click a row to open the note',
+      filters: { all: 'All', person: 'People', project: 'Projects', memory: 'Agreements', theme: 'Topics' },
+      cols: { label: 'Name', type: 'Type', summary: 'Summary', updated: 'Updated' },
+      rows: [
+        { label: 'alisher', type: 'person', summary: 'Block supplier · 14-day deferral, delivery on him', updated: '2 h ago' },
+        { label: 'dilshod', type: 'person', summary: 'Client · custom order, waiting for numbers tonight', updated: 'today' },
+        { label: 'zarina', type: 'person', summary: 'Accountant · sends card totals by 20:00', updated: 'yesterday' },
+        { label: 'chilanzar site', type: 'project', summary: 'Plastering 80% · electrical waiting on cable', updated: '3 h ago' },
+        { label: 'new location', type: 'project', summary: 'Launch checklist · 12 of 18 items closed', updated: 'yesterday' },
+        { label: 'alisher deferral', type: 'memory', summary: '14 days since March 12 · recorded from the chat', updated: 'March' },
+        { label: 'reporting rule', type: 'memory', summary: 'Foremen — Monday 10:00, with photos', updated: 'July' },
+        { label: 'client tone', type: 'memory', summary: 'Short, no legalese, always polite', updated: 'June' },
+        { label: 'supplies', type: 'theme', summary: '3 suppliers · schedule and prices for each', updated: 'today' },
+        { label: 'staff', type: 'theme', summary: 'Shifts, timesheets, two open roles', updated: 'yesterday' },
+      ],
+    },
+    analytics: {
+      kpis: [
+        { label: 'Today', value: '$0.62' },
+        { label: 'This week', value: '$4.18' },
+        { label: 'Replies today', value: '27' },
+      ],
+      days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      values: [0.54, 0.71, 0.48, 0.66, 0.62, 0.31, 0.24],
+      note: 'Cost from actual billing, not estimates. Daily cap $5.',
     },
   },
 };

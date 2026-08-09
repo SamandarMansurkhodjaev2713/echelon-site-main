@@ -15,8 +15,7 @@ export const uz: Dict = {
       'Echelon Desktop — biznes egasining shaxsiy yordamchisi. Toni Starkning Jarvisi esingizdami? G’oya o’sha. Faqat Jarvis — kino, bu esa sizning kompyuteringizda ishlaydi va quyida ko’rsatilgan ishlarni aynan bajaradi. U uxlamaydi, unutmaydi va ishdan bo’shab ketmaydi.',
     cta: 'Demoni o’z biznesingiz misolida ko’ring',
     ctaNote: 'Jonli suhbat, 30 daqiqa. Hech narsa o’rnatish shart emas.',
-    proof:
-      'Mahsulotga bir yil bo’ldi. Har kuni muallifning biznesini yuritadi — va birinchi to’lovchi mijozda ham ishlab turibdi.',
+    proof: '2026-yil aprelida yaratilgan. Iyuldan beri birinchi to’lovchi mijozda ishlab turibdi.',
   },
   before: {
     eyebrow: 'Sizning oddiy kuningiz',
@@ -124,9 +123,12 @@ export const uz: Dict = {
     tabs: {
       chat: 'Chat',
       graph: 'Xotira',
+      vault: 'Ombor',
       kanban: 'Vazifalar',
       automations: 'Avtomatlashtirish',
+      analytics: 'Xarajatlar',
     },
+    hint: 'Chapdagi bo’limlar bo’ylab yuring — hammasi jonli.',
   },
   words: {
     eyebrow: 'Eng muhimi',
@@ -258,7 +260,7 @@ export const uz: Dict = {
     text:
       'Telegramda yozing — jonli demo vaqtini kelishamiz. Yarim soat, hech narsa o’rnatilmaydi: siz shunchaki o’z ishingizdan olingan misollarda bu qanday ishlashini ko’rasiz.',
     button: 'Telegramda yozish',
-    note: '@komrxn · mahsulot egasi o’zi javob beradi',
+    note: '@komrxn · Telegram',
   },
   footer: {
     product: 'Echelon Desktop',
@@ -335,9 +337,10 @@ export const uz: Dict = {
         { name: 'To’xtab qolgan vazifalar — eslatish', schedule: 'har kuni, 10:00', active: true },
       ],
       active: 'ishlayapti',
+      paused: 'pauzada',
     },
     graph: {
-      stats: 'tugunlar: 299 · bog’lanishlar: 632',
+      stats: 'tugunlar: {n} · bog’lanishlar: {e}',
       legend: {
         owner: 'Siz',
         people: 'Odamlar',
@@ -345,6 +348,81 @@ export const uz: Dict = {
         memories: 'Kelishuvlar',
         themes: 'Mavzular',
       },
+      hint: 'G’ildirak — masshtab · fonni torting · tugunni bosing',
+      card: {
+        links: 'bog’lanishlar',
+        types: {
+          owner: 'Siz',
+          job: 'Biznes',
+          person: 'Odam',
+          project: 'Loyiha',
+          memory: 'Kelishuv',
+          theme: 'Mavzu',
+          thought: 'Qayd',
+        },
+      },
+      data: {
+        job: 'Sizning biznesingiz',
+        people: [
+          'Alisher · yetkazib beruvchi', 'Dilshod · mijoz', 'Timur · brigadir', 'Rustam · brigadir',
+          'Zarina · buxgalter', 'Otabek · boshqaruvchi', 'Jasur · prorab', 'Nodira · menejer',
+          'Sanjar · yetkazib beruvchi', 'Bekzod · haydovchi', 'Umid · mijoz', 'Gulnora · kassir',
+          'Farrux · hamkor', 'Aziz · ta’minotchi', 'Shahnoza · menejer', 'Komil · mijoz',
+          'Madina · buxgalter', 'Ikrom · pudratchi', 'Sevara · administrator', 'Bahodir · yetkazib beruvchi',
+          'Lola · mijoz', 'Sherzod · brigadir', 'Diyora · menejer', 'Ulug’bek · hamkor',
+        ],
+        projects: [
+          'Chilonzor obyekti', 'Yunusobod obyekti', 'Yangi nuqta', 'Kabel yetkazish',
+          'Ombor ta’miri', 'Pardozlash tenderi', 'Qadoq xaridi', 'Kompaniya sayti',
+          'Ofis ko’chishi', 'Ijara shartnomasi', 'Sertifikatlash', 'Smena yollash',
+        ],
+        themes: ['Ta’minot', 'Narxlar', 'Xodimlar', 'Mijozlar', 'Ombor', 'Hisobotlar', 'Ijara', 'Reklama'],
+        memoryTemplates: [
+          '14 kun kechiktirish — {p}',
+          '50 blokdan chegirma — {p}',
+          'To’lov yetkazilganda — {p}',
+          'Yetkazish uning hisobidan — {p}',
+          'Dushanba kunlari obyekt fotosi — {p}',
+          '20:00dan keyin qo’ng’iroq yo’q — {p}',
+          '30% oldindan to’lov — {p}',
+          'Hisobni shartnoma bilan solishtirish — {p}',
+          'Hisobot 19:00gacha — {p}',
+          'O’zbekcha yozish — {p}',
+        ],
+        thoughtTemplates: [
+          '{t} bo’yicha narxlarni tekshirish',
+          'Planyorkada {t} masalasi',
+          '{t} bo’yicha risk',
+          'G’oya: {t}ni avtomatlashtirish',
+        ],
+      },
+    },
+    vault: {
+      searchNote: 'Qatorni bosing — yozuv ochiladi',
+      filters: { all: 'Hammasi', person: 'Odamlar', project: 'Loyihalar', memory: 'Kelishuvlar', theme: 'Mavzular' },
+      cols: { label: 'Nomi', type: 'Turi', summary: 'Qisqacha', updated: 'Yangilangan' },
+      rows: [
+        { label: 'alisher', type: 'person', summary: 'Blok yetkazib beruvchi · 14 kun kechiktirish, yetkazish undan', updated: '2 soat oldin' },
+        { label: 'dilshod', type: 'person', summary: 'Mijoz · buyurtma asosida, kechgacha raqam kutyapti', updated: 'bugun' },
+        { label: 'zarina', type: 'person', summary: 'Buxgalter · ekvayringni 20:00gacha yuboradi', updated: 'kecha' },
+        { label: 'chilonzor obyekti', type: 'project', summary: 'Suvoq 80% · elektrika kabel kutyapti', updated: '3 soat oldin' },
+        { label: 'yangi nuqta', type: 'project', summary: 'Ishga tushirish ro’yxati · 18tadan 12tasi yopildi', updated: 'kecha' },
+        { label: 'alisher kechiktirishi', type: 'memory', summary: '12-martdan 14 kun · yozishmadan qayd qilingan', updated: 'mart' },
+        { label: 'hisobot qoidasi', type: 'memory', summary: 'Brigadirlar — dushanba 10:00, foto bilan', updated: 'iyul' },
+        { label: 'mijozlarga ohang', type: 'memory', summary: 'Qisqa, rasmiyatchiliksiz, doim «siz»da', updated: 'iyun' },
+        { label: 'ta’minot', type: 'theme', summary: '3 yetkazib beruvchi · har biri bo’yicha narx va jadval', updated: 'bugun' },
+        { label: 'xodimlar', type: 'theme', summary: 'Smenalar, tabel, ikkita ochiq o’rin', updated: 'kecha' },
+      ],
+    },
+    analytics: {
+      kpis: [
+        { label: 'Bugun', value: '$0.62' },
+        { label: 'Bu hafta', value: '$4.18' },
+        { label: 'Bugungi javoblar', value: '27' },
+      ],
+      days: ['du', 'se', 'cho', 'pa', 'ju', 'sha', 'ya'],
+      values: [0.54, 0.71, 0.48, 0.66, 0.62, 0.31, 0.24],
+      note: 'Narx haqiqiy billing bo’yicha, taxmin emas. Kunlik limit — $5.',
     },
   },
 };

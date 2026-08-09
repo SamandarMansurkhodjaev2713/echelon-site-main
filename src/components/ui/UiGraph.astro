@@ -18,7 +18,8 @@ const legend = [
 
 <div class="ui-graph" data-graph>
   <canvas></canvas>
-  <span class="ui-graph__stats mono">{g.stats}</span>
+  <span class="ui-graph__stats mono" data-graph-stats></span>
+  <span class="ui-graph__hint mono">{g.hint}</span>
   <div class="ui-graph__legend">
     {
       legend.map((l) => (
@@ -30,3 +31,10 @@ const legend = [
     }
   </div>
 </div>
+
+<script
+  type="application/json"
+  id="graph-data"
+  is:inline
+  set:html={JSON.stringify({ stats: g.stats, hint: g.hint, card: g.card, data: g.data })}
+/>

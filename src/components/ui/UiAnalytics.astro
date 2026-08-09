@@ -1,0 +1,36 @@
+---
+import type { Dict } from '../../lib/i18n';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const a = dict.ui.analytics;
+const max = Math.max(...a.values);
+---
+
+<div class="ui-ana">
+  <div class="ui-ana__kpis">
+    {
+      a.kpis.map((k) => (
+        <div class="ui-ana__kpi">
+          <div class="ui-ana__kpi-label">{k.label}</div>
+          <div class="ui-ana__kpi-value mono">{k.value}</div>
+        </div>
+      ))
+    }
+  </div>
+  <div class="ui-ana__chart">
+    {
+      a.values.map((v, i) => (
+        <div class="ui-ana__col" data-ana-bar title={`$${v.toFixed(2)}`}>
+          <span class="ui-ana__val mono">${v.toFixed(2)}</span>
+          <i style={`height:${Math.round((v / max) * 100)}%`} />
+          <span class="ui-ana__day mono">{a.days[i]}</span>
+        </div>
+      ))
+    }
+  </div>
+  <p class="ui-ana__note">{a.note}</p>
+</div>
