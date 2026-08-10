@@ -1,0 +1,142 @@
+---
+import type { Dict } from '../i18n';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const l = dict.load;
+---
+
+<section class="load band" id="load" data-produces="0">
+  <div class="page">
+    <div class="load__head editorial">
+      <div>
+        <p class="label">{l.label}</p>
+        <h2 class="title load__title">{l.title}</h2>
+      </div>
+    </div>
+
+    <div class="load__body">
+      <ul class="load__beats" data-stagger>
+        {
+          l.beats.map((b) => (
+            <li class="load__beat" data-reveal="receive">
+              {b}
+            </li>
+          ))
+        }
+      </ul>
+
+      <div class="load__queue">
+        <div class="load__queue-head">
+          <span class="label">{l.queueLabel}</span>
+          <span class="load__count sys">{l.count}</span>
+          <span class="load__count-label">{l.countLabel}</span>
+        </div>
+        <ol class="load__msgs" data-stagger>
+          {
+            l.messages.map((m) => (
+              <li class="record load__msg" data-reveal="receive">
+                <span class="record__time">{m.at}</span>
+                <span class="load__msg-body">
+                  <span class="load__msg-from">{m.from}</span>
+                  <span class="load__msg-text">{m.text}</span>
+                </span>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </div>
+
+    <p class="load__closing human human--lg" data-reveal="resolve">{l.closing}</p>
+  </div>
+</section>
+
+<style>
+  .load {
+    background: var(--paper-deep);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .load__title {
+    margin-top: 0.6rem;
+    max-width: 16ch;
+  }
+
+  .load__body {
+    margin-top: clamp(2rem, 5vh, 3.5rem);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+  }
+
+  @media (min-width: 56rem) {
+    .load__body {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      align-items: start;
+    }
+  }
+
+  .load__beat {
+    padding-block: clamp(0.9rem, 2vw, 1.25rem);
+    border-top: 1px solid var(--rule);
+    font-size: var(--step-lead);
+    line-height: 1.45;
+    color: var(--ink);
+    max-width: 30ch;
+  }
+  .load__beat:last-child {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .load__queue-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    padding-bottom: 0.75rem;
+  }
+  .load__count {
+    font-size: clamp(2rem, 1.2rem + 2.6vw, 3.25rem);
+    font-weight: 500;
+    line-height: 1;
+    color: var(--signal);
+    letter-spacing: -0.03em;
+  }
+  .load__count-label {
+    font-size: var(--step-small);
+    color: var(--machine);
+  }
+
+  .load__msg {
+    grid-template-columns: max-content minmax(0, 1fr);
+  }
+  .load__msg-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+  .load__msg-from {
+    font-size: var(--step-micro);
+    font-family: var(--font-system);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--machine);
+  }
+  .load__msg-text {
+    font-family: var(--font-human);
+    font-size: 1.0625rem;
+    color: var(--ink);
+  }
+
+  .load__closing {
+    margin-top: clamp(2.5rem, 6vh, 4rem);
+    padding-top: clamp(1.25rem, 3vh, 2rem);
+    border-top: 1px solid var(--rule-strong);
+    max-width: 34ch;
+    color: var(--ink);
+  }
+</style>

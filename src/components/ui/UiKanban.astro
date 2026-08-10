@@ -1,5 +1,5 @@
 ---
-import type { Dict } from '../../lib/i18n';
+import type { Dict } from '../../i18n';
 
 interface Props {
   dict: Dict;
@@ -7,31 +7,35 @@ interface Props {
 
 const { dict } = Astro.props;
 const k = dict.ui.kanban;
+const p = dict.product;
 const dots = ['var(--ui-warning)', 'var(--ui-danger)', 'var(--ui-accent)', 'var(--ui-success)'];
+
+/* Card meta used to be hardcoded Russian inside this component, so it rendered
+   untranslated on /en/ and /uz/. It now comes from the dictionary. */
 const cols = [
-  { name: k.columns[0], cards: k.cards.running, meta: ['⚙ 2 · 1д', '⚙ 1 · 3ч'] },
-  { name: k.columns[1], cards: k.cards.blocked, meta: ['2д'] },
-  { name: k.columns[2], cards: k.cards.review, meta: ['5ч'] },
-  { name: k.columns[3], cards: k.cards.done, meta: ['вчера'] },
+  { name: k.columns[0], cards: k.cards.running, meta: k.meta.running },
+  { name: k.columns[1], cards: k.cards.blocked, meta: k.meta.blocked },
+  { name: k.columns[2], cards: k.cards.review, meta: k.meta.review },
+  { name: k.columns[3], cards: k.cards.done, meta: k.meta.done },
 ];
 ---
 
-<div class="ui-kanban">
+<div class="ui-kanban" data-grabbed={p.kanbanGrabbed} data-dropped={p.kanbanDropped}>
   {
     cols.map((col, ci) => (
       <div class="ui-kanban__col">
         <div class="ui-kanban__head">
-          <span class="ui-kanban__dot" style={`background:${dots[ci]}`} />
-          {col.name}
+          <span class="ui-kanban__dot" style={`background:${dots[ci]}`} aria-hidden="true" />
+          <span class="ui-kanban__name">{col.name}</span>
           <span class="ui-kanban__count">{col.cards.length}</span>
         </div>
         {col.cards.map((card, i) => (
-          <div class="ui-card">
+          <div class="ui-card" data-cursor="drag">
             <div class="ui-card__title">
-              <span class="ui-card__pri" />
+              <span class="ui-card__pri" aria-hidden="true" />
               <span>{card}</span>
             </div>
-            <div class="ui-card__meta">
+            <div class="ui-card__meta sys">
               <span>{col.meta[i] ?? ''}</span>
             </div>
           </div>
@@ -40,3 +44,12 @@ const cols = [
     ))
   }
 </div>
+<p class="ui-kanban__help sys">{p.kanbanHelp}</p>
+
+<style>
+  .ui-kanban__help {
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--ui-fg-subtle);
+  }
+</style>

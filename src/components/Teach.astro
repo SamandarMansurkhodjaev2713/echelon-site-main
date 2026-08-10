@@ -1,0 +1,219 @@
+---
+import type { Dict } from '../i18n';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const t = dict.teach;
+---
+
+<!--
+  SESSION MEMORY, part one (§15).
+  The visitor teaches the page one rule. Nothing visible happens afterwards —
+  the payoff is six sections later, in Client.astro, where the rule is used and
+  quietly footnoted. State is local-only (sessionStorage), never sent anywhere.
+-->
+<section class="teach band" id="teach">
+  <div class="page teach__grid">
+    <div class="teach__lede" data-reveal="resolve">
+      <p class="label">{t.label}</p>
+      <h2 class="title teach__title">{t.title}</h2>
+      <p class="lead teach__prompt">{t.prompt}</p>
+    </div>
+
+    <!--
+      Deliberately not revealed with a transform. This panel is the one control
+      the visitor is asked to press, and a control that is still sliding into
+      place when the pointer arrives moves out from under the click. The lede
+      beside it carries the section's arrival instead.
+    -->
+    <div class="teach__panel" data-teach>
+      <p class="teach__question human human--lg" id="teach-question">{t.question}</p>
+
+      <div class="teach__options" role="group" aria-labelledby="teach-question">
+        {
+          t.options.map((o) => (
+            <button
+              type="button"
+              class="teach__option"
+              data-teach-option={o.id}
+              aria-pressed="false"
+              data-cursor="approve"
+            >
+              <span class="teach__option-label">{o.label}</span>
+              <span class="teach__option-desc">{o.desc}</span>
+            </button>
+          ))
+        }
+      </div>
+
+      <!-- The stamp. Hidden until a choice is made; it is the receipt. -->
+      <div class="teach__stamp" data-teach-stamp hidden>
+        <div class="teach__stamp-id sys">
+          <span>{t.stampLabel}</span>
+          <span class="teach__stamp-num">{t.stampId}</span>
+        </div>
+        <p class="teach__stamp-name" data-teach-name></p>
+        <p class="teach__stamp-state label">{t.saved}</p>
+      </div>
+
+      <p class="note teach__after" data-teach-after hidden>
+        {t.after} <span class="teach__change">{t.changeNote}</span>
+      </p>
+    </div>
+  </div>
+
+  <script
+    type="application/json"
+    data-teach-names
+    is:inline
+    set:html={JSON.stringify(t.savedNames)}
+  />
+</section>
+
+<style>
+  .teach {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .teach__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: start;
+  }
+  @media (min-width: 56rem) {
+    .teach__grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+  }
+
+  .teach__title {
+    margin-top: 0.6rem;
+    max-width: 18ch;
+  }
+  .teach__prompt {
+    margin-top: 1.25rem;
+  }
+
+  .teach__panel {
+    border: 1px solid var(--rule-strong);
+    padding: clamp(1.25rem, 3vw, 2rem);
+    background: var(--paper);
+  }
+
+  .teach__question {
+    color: var(--ink);
+  }
+
+  .teach__options {
+    margin-top: clamp(1.25rem, 3vw, 1.75rem);
+    display: grid;
+    gap: 0;
+  }
+
+  /* Nothing here changes the option's own box: a hover that repositions the
+     element moves the label out from under the pointer mid-click. The shift is
+     applied to the label instead, so the hit area never moves. */
+  .teach__option {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    align-items: baseline;
+    gap: 0.35rem 1rem;
+    min-height: 3.25rem;
+    padding-block: 0.9rem;
+    padding-inline: 0.75rem 0;
+    margin-inline-start: -0.75rem;
+    border-top: 1px solid var(--rule);
+    transition: color var(--dur-fast) var(--ease-standard);
+  }
+  .teach__option:last-of-type {
+    border-bottom: 1px solid var(--rule);
+  }
+  .teach__option-label {
+    font-size: var(--step-lead);
+    font-weight: 580;
+    transition: transform var(--dur-normal) var(--ease-enter);
+  }
+  .teach__option-desc {
+    font-family: var(--font-system);
+    font-size: var(--step-micro);
+    color: var(--machine);
+    text-align: right;
+  }
+
+  .teach__option:hover,
+  .teach__option:focus-visible {
+    color: var(--signal);
+  }
+  .teach__option:hover .teach__option-label,
+  .teach__option:focus-visible .teach__option-label {
+    transform: translateX(0.35rem);
+  }
+
+  /* the chosen rule is the owner's — it carries the owner's colour and a mark */
+  .teach__option[aria-pressed='true'] {
+    color: var(--signal);
+    box-shadow: inset 3px 0 0 var(--signal);
+  }
+  .teach__option[aria-pressed='true'] .teach__option-label {
+    transform: translateX(0.35rem);
+  }
+  .teach__option[aria-pressed='true'] .teach__option-desc {
+    color: var(--signal);
+  }
+
+  .teach__stamp {
+    margin-top: clamp(1.25rem, 3vw, 1.75rem);
+    padding: 0.9rem 1.1rem;
+    border: 1px solid var(--signal-edge);
+    background: var(--signal-wash);
+    display: grid;
+    gap: 0.3rem;
+  }
+  .teach__stamp[hidden] {
+    display: none;
+  }
+  .teach__stamp-id {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: var(--step-micro);
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--signal);
+  }
+  .teach__stamp-num {
+    font-weight: 700;
+    letter-spacing: 0.12em;
+  }
+  .teach__stamp-name {
+    font-size: var(--step-lead);
+    font-weight: 560;
+    color: var(--ink);
+  }
+  .teach__stamp-state {
+    color: var(--signal);
+    font-size: var(--step-micro);
+  }
+
+  .teach__after {
+    margin-top: 1rem;
+    max-width: 40ch;
+  }
+  .teach__after[hidden] {
+    display: none;
+  }
+  .teach__change {
+    color: var(--machine);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .teach__option,
+    .teach__option-label {
+      transition: none;
+    }
+  }
+</style>

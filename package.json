@@ -6,13 +6,27 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "check": "astro check",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:update": "playwright test --update-snapshots",
+    "test:all": "npm run check && npm run test:unit && npm run test:e2e",
+    "contrast": "node scripts/contrast.mjs"
   },
   "dependencies": {
     "@fontsource-variable/golos-text": "^5.2.0",
     "@fontsource-variable/jetbrains-mono": "^5.2.0",
     "@fontsource/spectral": "^5.2.0",
-    "astro": "^5.13.0",
-    "gsap": "^3.13.0"
+    "astro": "^5.13.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@playwright/test": "^1.62.1",
+    "axe-core": "^4.13.0",
+    "lighthouse": "^13.4.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
   }
 }

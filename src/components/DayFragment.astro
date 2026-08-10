@@ -1,0 +1,227 @@
+---
+import type { Dict } from '../i18n';
+
+/* A discriminated union, narrowed properly — the baseline used twelve
+   `(s.fragment as any)` casts in exactly the place where the shapes differ. */
+type Fragment = Dict['day']['scenes'][number]['fragment'];
+
+interface Props {
+  fragment: Fragment;
+  time: string;
+}
+
+const { fragment, time } = Astro.props;
+---
+
+<div class="ui frag">
+  {
+    fragment.kind === 'briefing' && (
+      <div class="frag__card frag__card--brief">
+        <div class="frag__head">
+          <span class="frag__tag">{fragment.tag}</span>
+          <span class="frag__kind">{fragment.label}</span>
+          <span class="frag__time sys">{time}</span>
+        </div>
+        <p class="frag__title">{fragment.title}</p>
+        <ul class="frag__lines">
+          {fragment.lines.map((l) => (
+            <li>{l}</li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
+
+  {
+    fragment.kind === 'messenger' && (
+      <div class="frag__card">
+        <p class="frag__bubble frag__bubble--out">{fragment.out}</p>
+        <p class="frag__bubble frag__bubble--in">{fragment.in1}</p>
+        <p class="frag__bubble frag__bubble--in">{fragment.in2}</p>
+        <p class="frag__note sys">{fragment.note}</p>
+      </div>
+    )
+  }
+
+  {
+    fragment.kind === 'act' && (
+      <div class="frag__card frag__card--act">
+        <div class="frag__head">
+          <span class="frag__who">{fragment.person}</span>
+          <span class="frag__status sys">{fragment.status}</span>
+        </div>
+        {/* The one place on the site where ECHELON acts in front of you. */}
+        <ol class="frag__steps">
+          {fragment.steps.map((s) => (
+            <li class="frag__step">
+              <span class="frag__step-mark sys" aria-hidden="true">
+                [E]
+              </span>
+              <span>{s}</span>
+            </li>
+          ))}
+        </ol>
+        <p class="frag__done sys">{fragment.done}</p>
+      </div>
+    )
+  }
+
+  {
+    fragment.kind === 'report' && (
+      <div class="frag__card">
+        <p class="frag__title">{fragment.title}</p>
+        <table class="frag__table sys">
+          <tbody>
+            {fragment.rows.map((r) => (
+              <tr>
+                <th scope="row">{r.label}</th>
+                <td>{r.value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="frag__note sys">{fragment.note}</p>
+      </div>
+    )
+  }
+</div>
+
+<style>
+  /* Product fragments keep the machine's material: dark surface, teal accent.
+     They are quotations from the real interface inside a paper document. */
+  .frag {
+    max-width: 30rem;
+  }
+  .frag__card {
+    background: var(--ui-bg-elevated);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--radius-lg);
+    padding: 0.9rem 1.05rem;
+    font-size: 0.875rem;
+    color: var(--ui-fg);
+    box-shadow: var(--lift-machine);
+  }
+  .frag__card--brief {
+    border-left: 3px solid var(--ui-accent);
+  }
+  .frag__card--act {
+    border-left: 3px solid var(--ui-accent);
+  }
+
+  .frag__head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.55rem;
+  }
+  .frag__tag {
+    font-family: var(--font-system);
+    font-size: 0.6875rem;
+    color: var(--ui-accent-bright);
+    border: 1px solid var(--ui-accent);
+    border-radius: 999px;
+    padding: 0.05em 0.6em;
+  }
+  .frag__kind {
+    font-size: 0.6875rem;
+    color: var(--ui-fg-muted);
+    border: 1px solid var(--ui-border);
+    border-radius: 999px;
+    padding: 0.05em 0.6em;
+  }
+  .frag__time {
+    margin-left: auto;
+    font-size: 0.6875rem;
+    color: var(--ui-fg-subtle);
+  }
+  .frag__who {
+    font-weight: 620;
+  }
+  .frag__status {
+    margin-left: auto;
+    font-size: 0.6875rem;
+    color: var(--ui-warning);
+  }
+
+  .frag__title {
+    font-weight: 620;
+    margin-bottom: 0.35rem;
+  }
+  .frag__lines {
+    display: grid;
+    gap: 0.25rem;
+    color: var(--ui-fg-muted);
+  }
+  .frag__lines li::before {
+    content: '·';
+    color: var(--ui-accent);
+    margin-right: 0.5em;
+  }
+
+  .frag__bubble {
+    border-radius: var(--radius-md);
+    padding: 0.4rem 0.7rem;
+    max-width: 88%;
+    margin-bottom: 0.35rem;
+    font-size: 0.8125rem;
+  }
+  .frag__bubble--out {
+    background: var(--ui-accent-soft);
+    border: 1px solid color-mix(in srgb, var(--ui-accent) 40%, transparent);
+    margin-left: auto;
+  }
+  .frag__bubble--in {
+    background: var(--ui-bg-sunken);
+    border: 1px solid var(--ui-border);
+  }
+  .frag__note {
+    margin-top: 0.45rem;
+    font-size: 0.6875rem;
+    color: var(--ui-fg-subtle);
+  }
+
+  .frag__steps {
+    display: grid;
+    gap: 0.35rem;
+    margin-top: 0.2rem;
+  }
+  .frag__step {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.55rem;
+    font-size: 0.8125rem;
+    color: var(--ui-fg-muted);
+  }
+  .frag__step-mark {
+    font-size: 0.6875rem;
+    color: var(--ui-accent-bright);
+    letter-spacing: 0.04em;
+  }
+  .frag__done {
+    margin-top: 0.6rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--ui-border-subtle);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ui-success);
+  }
+
+  .frag__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+  }
+  .frag__table th,
+  .frag__table td {
+    padding: 0.3rem 0;
+    border-bottom: 1px solid var(--ui-border-subtle);
+    color: var(--ui-fg-muted);
+    font-weight: 400;
+    text-align: left;
+  }
+  .frag__table td:last-child {
+    text-align: right;
+    color: var(--ui-fg);
+  }
+</style>

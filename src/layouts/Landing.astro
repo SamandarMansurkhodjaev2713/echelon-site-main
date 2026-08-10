@@ -1,0 +1,97 @@
+---
+/*
+ * The single page composition. The three locale routes are four-line files that
+ * render this — the baseline duplicated the whole section list three times,
+ * which guaranteed drift the moment a section was added or reordered.
+ */
+import Base from './Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import WorkTape from '../components/WorkTape.astro';
+import Hero from '../components/Hero.astro';
+import Load from '../components/Load.astro';
+import Teach from '../components/Teach.astro';
+import Day from '../components/Day.astro';
+import Product from '../components/Product.astro';
+import Memory from '../components/Memory.astro';
+import Automate from '../components/Automate.astro';
+import Client from '../components/Client.astro';
+import Boundary from '../components/Boundary.astro';
+import Night from '../components/Night.astro';
+import Voice from '../components/Voice.astro';
+import Ledger from '../components/Ledger.astro';
+import Handover from '../components/Handover.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import '../styles/ui.css';
+import { getDict, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const dict = getDict(locale);
+---
+
+<Base locale={locale} title={dict.meta.title} description={dict.meta.description}>
+  <a class="skip-link" href="#main">{dict.nav.skip}</a>
+  <SiteHeader dict={dict} locale={locale} />
+  <WorkTape dict={dict} />
+  <main id="main">
+    <!-- OBSERVE -->
+    <Hero dict={dict} />
+    <!-- RECEIVE -->
+    <Load dict={dict} />
+    <!-- LEARN — the visitor teaches one rule here; it is used in <Client/> -->
+    <Teach dict={dict} />
+    <!-- ACT -->
+    <Day dict={dict} />
+    <!-- UNDERSTAND — the paper parts and the real product is underneath -->
+    <Product dict={dict} />
+    <!-- REMEMBER -->
+    <Memory dict={dict} />
+    <!-- AUTOMATE -->
+    <Automate dict={dict} />
+    <!-- the payoff for <Teach/> -->
+    <Client dict={dict} />
+    <!-- ESCALATE -->
+    <Boundary dict={dict} />
+    <Night dict={dict} />
+    <Voice dict={dict} locale={locale} />
+    <Ledger dict={dict} />
+    <!-- HANDOVER -->
+    <Handover dict={dict} locale={locale} />
+  </main>
+  <SiteFooter dict={dict} />
+
+  <script
+    type="application/json"
+    data-cursor-labels
+    is:inline
+    set:html={JSON.stringify(dict.cursor)}
+  />
+
+  <script>
+    import { initReveal } from '../motion/reveal';
+    import { initIntro } from '../motion/intro';
+    import { initTape } from '../motion/tape';
+    import { initTeach } from '../motion/teach';
+    import { initCursor, type CursorLabels } from '../motion/cursor';
+    import { initScrollRefresh } from '../motion/scroll';
+
+    initReveal();
+    initIntro();
+    initTape();
+    initTeach();
+    initScrollRefresh();
+
+    const labelsEl = document.querySelector('[data-cursor-labels]');
+    if (labelsEl?.textContent) {
+      initCursor(JSON.parse(labelsEl.textContent) as CursorLabels);
+    }
+
+    /* Everything page-level is wired. Tests wait on this instead of guessing at
+       timings, and it makes "is the page interactive yet" answerable rather
+       than inferred. */
+    document.documentElement.setAttribute('data-ready', '');
+  </script>
+</Base>

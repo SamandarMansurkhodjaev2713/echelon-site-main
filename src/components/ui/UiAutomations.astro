@@ -1,5 +1,5 @@
 ---
-import type { Dict } from '../../lib/i18n';
+import type { Dict } from '../../i18n';
 
 interface Props {
   dict: Dict;
@@ -10,7 +10,7 @@ const { dict, highlightLast = false } = Astro.props;
 const a = dict.ui.automations;
 ---
 
-<div style="display:flex;flex-direction:column;gap:8px;">
+<div class="ui-autolist">
   {
     a.rows.map((row, i) => (
       <div
@@ -20,11 +20,27 @@ const a = dict.ui.automations;
       >
         <div>
           <div class="ui-autorow__name">{row.name}</div>
-          <div class="ui-autorow__sched">{row.schedule}</div>
+          <div class="ui-autorow__sched sys">{row.schedule}</div>
         </div>
-        <span class="ui-autorow__badge" data-paused={(a as any).paused}>{a.active}</span>
-        <span class={`ui-autorow__toggle${row.active ? '' : ' off'}`} />
+        <span class="ui-autorow__badge" data-active={a.active} data-paused={a.paused}>
+          {a.active}
+        </span>
+        <button
+          type="button"
+          class={`ui-autorow__toggle${row.active ? '' : ' off'}`}
+          aria-label={`${a.toggleLabel}: ${row.name}`}
+          aria-pressed={row.active ? 'true' : 'false'}
+          data-cursor="run"
+        />
       </div>
     ))
   }
 </div>
+
+<style>
+  .ui-autolist {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+</style>

@@ -3,3 +3,11 @@ dist/
 .astro/
 .DS_Store
 _salvage_*.png
+
+# QA artefacts
+.lighthouse/
+test-results/
+playwright-report/
+blob-report/
+tests/e2e/**/*-actual.png
+tests/e2e/**/*-diff.png

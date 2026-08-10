@@ -1,0 +1,227 @@
+---
+import type { Dict } from '../i18n';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const m = dict.memory;
+---
+
+<!--
+  MEMORY (§16 / §19).
+  Not a neural graph — a business record with an editorial footnote system.
+  Entities are numbered where they first appear; later sections cite those
+  numbers. At the end of the section the page recalls a record the visitor
+  already scrolled past, by name.
+-->
+<section class="mem band" id="memory" data-fact="memory-record">
+  <div class="page">
+    <div class="mem__head">
+      <p class="label">{m.label}</p>
+      <h2 class="title mem__title">{m.title}</h2>
+      <p class="lead mem__copy">{m.copy}</p>
+    </div>
+
+    <div class="mem__table" role="table" aria-label={m.title}>
+      <div class="mem__row mem__row--head" role="row">
+        <span role="columnheader">{m.columns.entity}</span>
+        <span role="columnheader">{m.columns.kind}</span>
+        <span role="columnheader">{m.columns.detail}</span>
+        <span role="columnheader">{m.columns.when}</span>
+      </div>
+      {
+        m.entities.map((e, i) => (
+          <div class="mem__row" role="row" data-reveal="archive" id={`entity-${e.id}`}>
+            <span class="mem__name" role="cell">
+              {e.name}
+              <sup class="mem__fn">{i + 1}</sup>
+            </span>
+            <span class="mem__kind label" role="cell">
+              {m.kinds[e.kind]}
+            </span>
+            <span class="mem__detail" role="cell">
+              {e.detail}
+            </span>
+            <span class="mem__when sys" role="cell">
+              {e.when}
+            </span>
+            <span class="mem__note" role="cell">
+              <sup>{i + 1}</sup> {e.note}
+            </span>
+          </div>
+        ))
+      }
+    </div>
+
+    <!-- The recall. The answer names a record shown a moment ago. -->
+    <div class="mem__recall">
+      <p class="label mem__recall-label" data-reveal="resolve">{m.askLabel}</p>
+      <p class="mem__question human human--lg" data-reveal="resolve">{m.question}</p>
+      <div class="mem__answer">
+        <p class="mem__answer-text">{m.answer}</p>
+        <p class="mem__recall-mark">
+          <span class="label label--signal">{m.recallLabel}</span>
+          <a class="mem__recall-link" href="#entity-alisher" data-cursor="view">{m.recallNote}</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .mem {
+    background: var(--paper-deep);
+    border-bottom: 1px solid var(--rule);
+  }
+  .mem__title {
+    margin-top: 0.6rem;
+    max-width: 18ch;
+  }
+  .mem__copy {
+    margin-top: 1rem;
+  }
+
+  .mem__table {
+    margin-top: clamp(2rem, 5vh, 3.5rem);
+  }
+
+  .mem__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.2rem;
+    padding-block: 1.05rem;
+    border-top: 1px solid var(--rule);
+    align-items: baseline;
+  }
+  .mem__row:last-child {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .mem__row--head {
+    display: none;
+  }
+
+  .mem__name {
+    font-size: var(--step-lead);
+    font-weight: 580;
+    color: var(--ink);
+  }
+  .mem__fn {
+    font-family: var(--font-system);
+    font-size: 0.625rem;
+    color: var(--signal);
+    margin-left: 0.15em;
+    vertical-align: super;
+  }
+  .mem__kind {
+    font-size: var(--step-micro);
+  }
+  .mem__detail {
+    color: var(--ink-muted);
+    max-width: 48ch;
+  }
+  .mem__when {
+    font-size: var(--step-micro);
+    color: var(--machine);
+  }
+  .mem__note {
+    font-family: var(--font-human);
+    font-style: italic;
+    font-size: var(--step-small);
+    color: var(--machine);
+    max-width: 40ch;
+  }
+  .mem__note sup {
+    font-family: var(--font-system);
+    font-style: normal;
+    font-size: 0.625rem;
+    color: var(--signal);
+  }
+
+  @media (min-width: 60rem) {
+    .mem__row {
+      grid-template-columns: minmax(8rem, 0.8fr) 6rem minmax(0, 1.6fr) 5rem;
+      grid-template-areas: 'name kind detail when' '. . note note';
+      column-gap: clamp(1rem, 2.5vw, 2rem);
+      row-gap: 0.35rem;
+    }
+    .mem__row--head {
+      display: grid;
+      padding-block: 0.5rem;
+      border-top: 0;
+      grid-template-areas: 'name kind detail when';
+    }
+    .mem__row--head [role='columnheader'] {
+      font-family: var(--font-system);
+      font-size: var(--step-micro);
+      letter-spacing: var(--track-label);
+      text-transform: uppercase;
+      color: var(--machine);
+    }
+    .mem__name {
+      grid-area: name;
+    }
+    .mem__kind {
+      grid-area: kind;
+    }
+    .mem__detail {
+      grid-area: detail;
+    }
+    .mem__when {
+      grid-area: when;
+      text-align: right;
+    }
+    .mem__note {
+      grid-area: note;
+    }
+  }
+
+  .mem__recall {
+    margin-top: clamp(2.5rem, 6vh, 4rem);
+    display: grid;
+    gap: 1rem;
+    max-width: 52rem;
+  }
+  .mem__question {
+    color: var(--ink);
+    max-width: 24ch;
+  }
+  .mem__answer {
+    border-left: 2px solid var(--signal);
+    padding-left: clamp(0.9rem, 2vw, 1.4rem);
+  }
+  .mem__answer-text {
+    font-size: var(--step-lead);
+    line-height: 1.5;
+    max-width: 48ch;
+    color: var(--ink);
+  }
+  .mem__recall-mark {
+    margin-top: 0.6rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  .mem__recall-link {
+    font-family: var(--font-human);
+    font-style: italic;
+    font-size: var(--step-small);
+    color: var(--machine);
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  .mem__recall-link:hover,
+  .mem__recall-link:focus-visible {
+    color: var(--signal);
+    border-bottom-color: var(--signal);
+  }
+
+  /* the cited record lights up when you jump back to it */
+  .mem__row:target {
+    background: var(--signal-wash);
+    box-shadow: inset 3px 0 0 var(--signal);
+    padding-inline-start: 0.75rem;
+  }
+</style>

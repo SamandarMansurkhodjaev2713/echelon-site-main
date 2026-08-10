@@ -14,6 +14,9 @@ export default defineConfig({
     },
   },
   build: {
-    inlineStylesheets: 'auto',
+    /* One document fetch instead of two serialised ones. The site is three
+       static pages whose LCP is text, so the render-blocking stylesheet was the
+       single biggest thing standing between the visitor and the headline. */
+    inlineStylesheets: 'always',
   },
 });

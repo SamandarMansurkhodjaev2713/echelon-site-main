@@ -1,0 +1,418 @@
+---
+import type { Dict } from '../i18n';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const a = dict.automate;
+---
+
+<!--
+  NATURAL LANGUAGE → AUTOMATION (§18).
+  Typography-driven, not a card explosion. As the section scrolls, the sentence
+  itself is taken apart: each phrase hands over to the operational primitive it
+  became, and the primitives assemble into one standing order.
+-->
+<section class="auto band" id="automate" data-automation="order-018">
+  <div class="page">
+    <p class="label">{a.label}</p>
+    <h2 class="title auto__title">{a.title}</h2>
+    <p class="lead auto__lead">{a.lead}</p>
+  </div>
+
+  <div class="page auto__stage" data-automate>
+    <div class="auto__said">
+      <p class="auto__sentence human" data-automate-sentence>
+      {
+        a.tokens.map((t, i) => (
+          <span class="auto__tok" data-tok={i}>
+            <span class="auto__tok-src">{t.source}</span>
+            <span class="auto__tok-dst sys" aria-hidden="true">
+              {t.target}
+            </span>
+          </span>
+        ))
+        }
+      </p>
+    </div>
+
+    <div class="auto__built">
+      <p class="label auto__breakdown">{a.breakdownLabel}</p>
+
+      <ol class="auto__primitives" aria-label={a.breakdownLabel}>
+        {
+          a.tokens.map((t, i) => (
+            <li class="auto__prim" data-prim={i}>
+              <span class="auto__prim-kind label">{t.kind}</span>
+              <span class="auto__prim-target sys">{t.target}</span>
+            </li>
+          ))
+        }
+      </ol>
+
+      <div class="auto__order" data-automate-order>
+        <div class="auto__order-head">
+          <span class="label auto__order-label">{a.orderLabel}</span>
+          <span class="auto__order-id sys">{a.orderId}</span>
+        </div>
+        <p class="auto__order-line sys">{a.orderLine}</p>
+        <p class="auto__order-state label">{a.orderState}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="page auto__after">
+    <p class="auto__result">{a.result}</p>
+    <p class="auto__correction">
+      <span class="label">{a.correctionLabel}</span>
+      <span class="human">{a.correction}</span>
+    </p>
+    <p class="copy auto__explain">{a.explain}</p>
+
+    <div class="auto__switch">
+      <p class="label auto__switch-label" id="verticals-label">{a.switcherLabel}</p>
+      <div class="auto__tabs" role="tablist" aria-labelledby="verticals-label" data-biz-tabs>
+        {
+          a.businesses.map((b, i) => (
+            <button
+              type="button"
+              role="tab"
+              id={`biz-tab-${b.id}`}
+              aria-controls={`biz-panel-${b.id}`}
+              aria-selected={i === 0 ? 'true' : 'false'}
+              tabindex={i === 0 ? 0 : -1}
+              class={`auto__tab${i === 0 ? ' is-on' : ''}`}
+              data-biz={b.id}
+              data-cursor="view"
+            >
+              {b.name}
+            </button>
+          ))
+        }
+      </div>
+      {
+        /* The tabpanel role has to sit on a wrapper: putting it on the <ul>
+           overrides the list semantics and orphans every <li> inside it. */
+        a.businesses.map((b, i) => (
+          <div
+            role="tabpanel"
+            id={`biz-panel-${b.id}`}
+            aria-labelledby={`biz-tab-${b.id}`}
+            tabindex="0"
+            hidden={i !== 0}
+            data-biz-panel={b.id}
+          >
+            <ul class="auto__cases">
+              {b.cases.map((c) => (
+                <li class="auto__case">
+                  <span class="human">«{c}»</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .auto {
+    border-bottom: 1px solid var(--rule);
+  }
+  .auto__title {
+    margin-top: 0.6rem;
+    max-width: 18ch;
+  }
+  .auto__lead {
+    margin-top: 1rem;
+  }
+
+  .auto__stage {
+    margin-top: clamp(2rem, 5vh, 3.5rem);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(1.75rem, 4vh, 3rem);
+  }
+
+  /* On the stage the sentence stays put while its phrases are taken apart, so
+     you watch one thing become the other instead of scrolling between them. */
+  @media (min-width: 64rem) {
+    .auto__stage {
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+      gap: clamp(2rem, 5vw, 4.5rem);
+      align-items: start;
+    }
+    .auto__said {
+      position: sticky;
+      top: 22vh;
+    }
+  }
+
+  /* ---- the sentence ---- */
+  .auto__sentence {
+    font-size: clamp(1.35rem, 0.95rem + 1.9vw, 2.6rem);
+    line-height: 1.32;
+    max-width: 22ch;
+    color: var(--ink);
+  }
+  @media (min-width: 48rem) {
+    .auto__sentence {
+      max-width: 26ch;
+    }
+  }
+
+  .auto__tok {
+    display: inline;
+  }
+  .auto__tok::after {
+    content: ' ';
+  }
+  .auto__tok-src {
+    transition:
+      color var(--dur-expressive) var(--ease-editorial),
+      opacity var(--dur-expressive) var(--ease-editorial);
+  }
+  .auto__tok-dst {
+    display: none;
+  }
+  /* a phrase that has been converted stops being prose and becomes machine text */
+  .auto__tok[data-converted] .auto__tok-src {
+    color: var(--machine);
+    text-decoration: line-through;
+    text-decoration-color: var(--rule-strong);
+    text-decoration-thickness: 1px;
+  }
+
+  .auto__breakdown {
+    margin-top: clamp(1.75rem, 4vh, 2.75rem);
+  }
+
+  .auto__primitives {
+    margin-top: 0.75rem;
+    display: grid;
+    gap: 0;
+    max-width: 44rem;
+  }
+  /* A primitive is a slot that gets filled, not an element that fades in:
+     every row stays fully legible from the first frame — the transformation is
+     carried by colour and position, never by making text semi-transparent. */
+  .auto__prim {
+    display: grid;
+    grid-template-columns: minmax(6rem, 10rem) minmax(0, 1fr);
+    gap: 0.35rem 1.25rem;
+    align-items: baseline;
+    padding-block: 0.75rem;
+    border-top: 1px solid var(--rule);
+    transform: translate3d(-0.4rem, 0, 0);
+    transition:
+      transform var(--dur-expressive) var(--ease-enter),
+      border-color var(--dur-expressive) var(--ease-enter);
+  }
+  .auto__prim:last-child {
+    border-bottom: 1px solid var(--rule);
+  }
+  .auto__prim[data-on] {
+    transform: none;
+    border-top-color: var(--rule-strong);
+  }
+  .auto__prim-kind {
+    font-size: var(--step-micro);
+    transition: color var(--dur-expressive) var(--ease-enter);
+  }
+  .auto__prim-target {
+    font-size: var(--step-lead);
+    font-weight: 500;
+    /* unassigned: the machine is still describing itself */
+    color: var(--machine);
+    letter-spacing: -0.01em;
+    transition: color var(--dur-expressive) var(--ease-editorial);
+  }
+  /* assigned: the phrase has become part of the record */
+  .auto__prim[data-on] .auto__prim-target {
+    color: var(--ink);
+  }
+  .auto__prim[data-on] .auto__prim-kind {
+    color: var(--signal);
+  }
+
+  /* ---- the order ---- */
+  /* Pending: an empty form waiting to be issued. Issued: the owner's order. */
+  .auto__order {
+    margin-top: clamp(1.5rem, 4vh, 2.5rem);
+    max-width: 44rem;
+    border: 1px solid var(--rule);
+    background: transparent;
+    padding: clamp(1rem, 2.5vw, 1.4rem);
+    transform: translate3d(0, 0.5rem, 0);
+    transition:
+      transform var(--dur-expressive) var(--ease-snap),
+      border-color var(--dur-expressive) var(--ease-enter),
+      background var(--dur-expressive) var(--ease-enter);
+  }
+  .auto__order[data-on] {
+    transform: none;
+    border-color: var(--signal-edge);
+    background: var(--signal-wash);
+  }
+  .auto__order-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+  .auto__order-label,
+  .auto__order-id {
+    color: var(--machine);
+    transition: color var(--dur-expressive) var(--ease-enter);
+  }
+  .auto__order-id {
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    font-size: var(--step-label);
+  }
+  .auto__order[data-on] .auto__order-label,
+  .auto__order[data-on] .auto__order-id {
+    color: var(--signal);
+  }
+  .auto__order-line {
+    margin-top: 0.5rem;
+    font-size: clamp(0.9375rem, 0.85rem + 0.55vw, 1.3rem);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--machine);
+    transition: color var(--dur-expressive) var(--ease-editorial);
+  }
+  .auto__order[data-on] .auto__order-line {
+    color: var(--ink);
+  }
+  .auto__order-state {
+    margin-top: 0.4rem;
+    color: var(--machine);
+    font-size: var(--step-micro);
+    opacity: 0;
+    transition: opacity var(--dur-normal) var(--ease-standard);
+  }
+  .auto__order[data-on] .auto__order-state {
+    color: var(--signal);
+    opacity: 1;
+  }
+
+  /* ---- after ---- */
+  .auto__after {
+    margin-top: clamp(2.5rem, 6vh, 4rem);
+  }
+  .auto__result {
+    font-size: var(--step-lead);
+    font-weight: 580;
+    color: var(--ink);
+  }
+  .auto__correction {
+    margin-top: 0.85rem;
+    display: grid;
+    gap: 0.3rem;
+    max-width: 46ch;
+  }
+  .auto__correction .human {
+    color: var(--ink-muted);
+  }
+  .auto__explain {
+    margin-top: clamp(1.75rem, 4vh, 2.5rem);
+    font-size: var(--step-lead);
+    line-height: 1.5;
+  }
+
+  .auto__switch {
+    margin-top: clamp(2.5rem, 6vh, 4rem);
+  }
+  .auto__tabs {
+    margin-top: 0.85rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1.5rem;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 0.6rem;
+  }
+  .auto__tab {
+    min-height: 2.75rem;
+    padding-inline: 0;
+    font-size: var(--step-body);
+    font-weight: 520;
+    color: var(--machine);
+    border-bottom: 2px solid transparent;
+    transition: color var(--dur-fast) var(--ease-standard);
+  }
+  .auto__tab:hover {
+    color: var(--ink);
+  }
+  .auto__tab.is-on {
+    color: var(--ink);
+    border-bottom-color: var(--signal);
+  }
+  [data-biz-panel] {
+    outline-offset: 4px;
+  }
+  .auto__cases {
+    margin-top: 1.25rem;
+    max-width: 46rem;
+  }
+  .auto__case {
+    padding-block: 0.95rem;
+    border-bottom: 1px solid var(--rule);
+    font-size: 1.0625rem;
+    color: var(--ink);
+  }
+  .auto__case:first-child {
+    border-top: 1px solid var(--rule);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .auto__prim,
+    .auto__order {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+    .auto__tok[data-converted] .auto__tok-src {
+      opacity: 1;
+      color: var(--machine);
+    }
+  }
+</style>
+
+<script>
+  import { scrub } from '../motion/scroll';
+  import { initTabs } from '../motion/tabs';
+
+  const stage = document.querySelector<HTMLElement>('[data-automate]');
+  if (stage) {
+    const toks = Array.from(stage.querySelectorAll<HTMLElement>('[data-tok]'));
+    const prims = Array.from(stage.querySelectorAll<HTMLElement>('[data-prim]'));
+    const order = stage.querySelector<HTMLElement>('[data-automate-order]');
+    const n = toks.length;
+
+    // The conversion happens while the scene is in the reading zone, not
+    // during its entry or exit — hence the window rather than raw progress.
+    // Deterministic: the same scroll offset always gives the same state, which
+    // is what the visual-regression harness relies on.
+    const IN = 0.28;
+    const OUT = 0.68;
+    scrub(
+      stage,
+      (p) => {
+        const t = Math.min(1, Math.max(0, (p - IN) / (OUT - IN)));
+        const converted = Math.round(t * n);
+        for (let i = 0; i < n; i++) {
+          const on = i < converted;
+          toks[i]?.toggleAttribute('data-converted', on);
+          prims[i]?.toggleAttribute('data-on', on);
+        }
+        order?.toggleAttribute('data-on', t > 0.92);
+      },
+      { travel: 0.6 },
+    );
+  }
+
+  initTabs('[data-biz-tabs]', '[data-biz-panel]');
+</script>

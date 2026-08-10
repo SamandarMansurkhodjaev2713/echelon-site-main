@@ -1,5 +1,7 @@
 ---
-import type { Dict, Locale } from '../lib/i18n';
+import { Image } from 'astro:assets';
+import mark from '../assets/mark.png';
+import { LOCALES, LOCALE_LABELS, LOCALE_TAGS, localePath, type Dict, type Locale } from '../i18n';
 
 interface Props {
   dict: Dict;
@@ -7,103 +9,155 @@ interface Props {
 }
 
 const { dict, locale } = Astro.props;
-const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-const langs: Array<{ code: Locale; label: string; href: string }> = [
-  { code: 'ru', label: 'RU', href: `${base}/` },
-  { code: 'uz', label: 'UZ', href: `${base}/uz/` },
-  { code: 'en', label: 'EN', href: `${base}/en/` },
-];
 ---
 
-<header class="site-header">
-  <div class="container site-header__row">
-    <a class="site-header__brand" href={langs.find((l) => l.code === locale)?.href}>
-      <img src={`${base}/media/favicon-192.png`} alt="" width="26" height="26" />
-      <span>Echelon Desktop</span>
+<header class="masthead" data-masthead>
+  <div class="page masthead__row">
+    <a class="masthead__brand" href={localePath(locale)} data-cursor="return">
+      <Image src={mark} alt="" width={22} height={22} loading="eager" densities={[1, 2]} />
+      <span class="masthead__mark">Echelon</span>
+      <span class="masthead__sub">Desktop</span>
     </a>
-    <nav class="site-header__langs" aria-label="Language">
+
+    <nav class="masthead__langs" aria-label={dict.nav.langLabel}>
       {
-        langs.map((l) => (
+        LOCALES.map((l) => (
           <a
-            href={l.href}
-            class={l.code === locale ? 'active' : ''}
-            aria-current={l.code === locale ? 'page' : undefined}
+            href={localePath(l)}
+            hreflang={LOCALE_TAGS[l]}
+            lang={LOCALE_TAGS[l]}
+            class={l === locale ? 'is-current' : ''}
+            aria-current={l === locale ? 'page' : undefined}
+            data-cursor="open"
           >
-            {l.label}
+            {LOCALE_LABELS[l]}
           </a>
         ))
       }
     </nav>
-    <a class="site-header__cta" href="#demo">{dict.nav.cta}</a>
+
+    <a class="masthead__cta" href="#handover" data-cursor="approve">
+      <span>{dict.nav.cta}</span>
+    </a>
   </div>
 </header>
 
 <style>
-  .site-header {
+  .masthead {
     position: sticky;
     top: 0;
-    z-index: 50;
-    background: color-mix(in srgb, var(--bg) 82%, transparent);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border-bottom: 1px solid var(--border-subtle);
+    z-index: var(--z-header);
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    border-bottom: 1px solid var(--rule);
+    /* the header is a rule on paper, not a floating glass bar */
+    backdrop-filter: saturate(1.1) blur(8px);
+    -webkit-backdrop-filter: saturate(1.1) blur(8px);
   }
-  .site-header__row {
+
+  .masthead__row {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
-    height: 60px;
+    gap: clamp(0.75rem, 2vw, 1.5rem);
+    min-height: 3.5rem;
   }
-  .site-header__brand {
+
+  .masthead__brand {
     display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    font-weight: 620;
-    font-size: 1rem;
-    letter-spacing: -0.01em;
+    align-items: baseline;
+    gap: 0.45rem;
+    font-weight: 640;
+    letter-spacing: -0.015em;
   }
-  .site-header__brand img {
-    border-radius: 6px;
+  .masthead__brand img {
+    align-self: center;
+    border-radius: 4px;
   }
-  .site-header__langs {
+  .masthead__mark {
+    font-size: 1.0625rem;
+  }
+  .masthead__sub {
+    font-family: var(--font-system);
+    font-size: var(--step-micro);
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--machine);
+  }
+
+  .masthead__langs {
     margin-left: auto;
     display: flex;
-    gap: 0.25rem;
-    font-family: var(--font-mono);
-    font-size: var(--text-micro);
+    gap: 0.15rem;
+    font-family: var(--font-system);
+    font-size: var(--step-micro);
   }
-  .site-header__langs a {
-    padding: 0.35em 0.7em;
-    border-radius: var(--radius-sm);
-    color: var(--fg-subtle);
-    transition: color var(--motion-fast) var(--ease-out);
+  .masthead__langs a {
+    display: grid;
+    place-items: center;
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    color: var(--machine);
+    transition: color var(--dur-fast) var(--ease-standard);
   }
-  .site-header__langs a:hover {
-    color: var(--fg);
+  .masthead__langs a:hover {
+    color: var(--ink);
   }
-  .site-header__langs a.active {
-    color: var(--gold);
-    background: var(--gold-faint);
+  .masthead__langs a.is-current {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--signal);
+    text-underline-offset: 0.4em;
+    text-decoration-thickness: 2px;
   }
-  .site-header__cta {
-    font-size: var(--text-small);
-    font-weight: 600;
-    color: var(--gold);
-    border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
-    border-radius: var(--radius-md);
-    padding: 0.5em 1em;
-    transition:
-      background var(--motion-fast) var(--ease-out),
-      color var(--motion-fast) var(--ease-out);
+
+  .masthead__cta {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.5rem;
+    padding: 0.5em 1.05em;
+    font-size: var(--step-small);
+    font-weight: 580;
+    color: var(--paper);
+    background: var(--ink);
     white-space: nowrap;
+    transition: background var(--dur-fast) var(--ease-standard);
   }
-  .site-header__cta:hover {
-    background: var(--gold);
-    color: #0b0b0a;
+  .masthead__cta:hover,
+  .masthead__cta:focus-visible {
+    background: var(--signal);
   }
-  @media (max-width: 560px) {
-    .site-header__brand span {
+
+  /* The masthead is not part of the operation — it arrives with the hero. */
+  :global(html[data-intro]) .masthead {
+    opacity: 0;
+    pointer-events: none;
+  }
+  :global(html[data-intro-phase='settle']) .masthead {
+    opacity: 1;
+    transition: opacity var(--dur-expressive) var(--ease-enter) 180ms;
+  }
+
+  @media (max-width: 30rem) {
+    .masthead__sub {
       display: none;
+    }
+    .masthead__row {
+      gap: 0.4rem;
+    }
+    .masthead__langs a {
+      min-width: 2.1rem;
+    }
+    .masthead__cta {
+      font-size: var(--step-micro);
+      padding-inline: 0.75em;
+    }
+  }
+  @media (max-width: 22.5rem) {
+    /* 320 px, longest locale: the brand mark alone still identifies the page */
+    .masthead__mark {
+      font-size: 0.9375rem;
+    }
+    .masthead__langs a {
+      min-width: 1.9rem;
     }
   }
 </style>

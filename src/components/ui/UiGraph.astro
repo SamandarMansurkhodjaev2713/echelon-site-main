@@ -1,5 +1,5 @@
 ---
-import type { Dict } from '../../lib/i18n';
+import type { Dict } from '../../i18n';
 
 interface Props {
   dict: Dict;
@@ -17,14 +17,17 @@ const legend = [
 ---
 
 <div class="ui-graph" data-graph>
-  <canvas></canvas>
-  <span class="ui-graph__stats mono" data-graph-stats></span>
-  <span class="ui-graph__hint mono">{g.hint}</span>
+  <!-- The canvas is decorative to assistive tech; the same information is
+       available as text here and, in full, in the Vault pane. -->
+  <canvas aria-hidden="true"></canvas>
+  <p class="sr-only">{dict.product.graphAlt}</p>
+  <span class="ui-graph__stats sys" data-graph-stats></span>
+  <span class="ui-graph__hint sys">{g.hint}</span>
   <div class="ui-graph__legend">
     {
       legend.map((l) => (
         <span>
-          <i style={`background:${l.color}`} />
+          <i style={`background:${l.color}`} aria-hidden="true" />
           {l.label}
         </span>
       ))

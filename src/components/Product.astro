@@ -1,0 +1,267 @@
+---
+import type { Dict } from '../i18n';
+import AppWindow from './ui/AppWindow.astro';
+import UiChat from './ui/UiChat.astro';
+import UiGraph from './ui/UiGraph.astro';
+import UiVault from './ui/UiVault.astro';
+import UiKanban from './ui/UiKanban.astro';
+import UiAutomations from './ui/UiAutomations.astro';
+import UiAnalytics from './ui/UiAnalytics.astro';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const p = dict.product;
+const panes = [
+  { id: 'chat', label: p.tabs.chat },
+  { id: 'graph', label: p.tabs.graph },
+  { id: 'vault', label: p.tabs.vault },
+  { id: 'kanban', label: p.tabs.kanban },
+  { id: 'automations', label: p.tabs.automations },
+  { id: 'analytics', label: p.tabs.analytics },
+] as const;
+---
+
+<!--
+  EXPAND (§22).
+  The marketing sheet physically parts and the real product is underneath. No
+  laptop mockup, no browser chrome, no screenshot: the thing revealed is the
+  live interface, fully interactive and fully keyboard-reachable.
+-->
+<section class="prod band" id="product" data-action="opened-product">
+  <div class="page prod__head">
+    <p class="label">{p.label}</p>
+    <h2 class="title prod__title">{p.title}</h2>
+    <p class="lead prod__copy">{p.copy}</p>
+  </div>
+
+  <div class="prod__stagewrap" data-product-stage>
+    <div class="page">
+      <div class="prod__bar">
+        <div class="prod__tabs" role="tablist" aria-label={dict.nav.sections} data-prod-tabs>
+          {
+            panes.map((pane, i) => (
+              <button
+                type="button"
+                role="tab"
+                id={`prod-tab-${pane.id}`}
+                aria-controls={`prod-panel-${pane.id}`}
+                aria-selected={i === 0 ? 'true' : 'false'}
+                tabindex={i === 0 ? 0 : -1}
+                class={`prod__tab${i === 0 ? ' is-on' : ''}`}
+                data-tab={pane.id}
+                data-cursor="open"
+              >
+                {pane.label}
+              </button>
+            ))
+          }
+        </div>
+        <span class="prod__hint label">{p.hint}</span>
+        <span class="prod__demo label">{p.demoNote}</span>
+      </div>
+
+      <div class="prod__stage">
+        <!-- the paper that parts; decorative, never intercepts a pointer -->
+        <span class="prod__leaf prod__leaf--top" data-leaf aria-hidden="true"></span>
+        <span class="prod__leaf prod__leaf--bottom" data-leaf aria-hidden="true"></span>
+
+        <AppWindow dict={dict} active="chat" interactive>
+          {
+            panes.map((pane, i) => (
+              <div
+                class="prod__pane"
+                role="tabpanel"
+                id={`prod-panel-${pane.id}`}
+                aria-labelledby={`prod-tab-${pane.id}`}
+                tabindex="0"
+                data-prod-panel={pane.id}
+                hidden={i !== 0}
+              >
+                {pane.id === 'chat' && <UiChat dict={dict} interactive />}
+                {pane.id === 'graph' && <UiGraph dict={dict} />}
+                {pane.id === 'vault' && <UiVault dict={dict} />}
+                {pane.id === 'kanban' && <UiKanban dict={dict} />}
+                {pane.id === 'automations' && <UiAutomations dict={dict} />}
+                {pane.id === 'analytics' && <UiAnalytics dict={dict} />}
+              </div>
+            ))
+          }
+        </AppWindow>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .prod {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 0;
+  }
+  .prod__title {
+    margin-top: 0.6rem;
+    max-width: 20ch;
+  }
+  .prod__copy {
+    margin-top: 1rem;
+  }
+
+  .prod__stagewrap {
+    margin-top: clamp(2rem, 5vh, 3.5rem);
+    padding-bottom: clamp(3rem, 8vh, 6rem);
+    background: var(--paper);
+  }
+
+  .prod__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .prod__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 1.1rem;
+  }
+  .prod__tab {
+    min-height: 2.75rem;
+    font-size: var(--step-small);
+    font-weight: 520;
+    color: var(--machine);
+    border-bottom: 2px solid transparent;
+    transition: color var(--dur-fast) var(--ease-standard);
+  }
+  .prod__tab:hover {
+    color: var(--ink);
+  }
+  .prod__tab.is-on {
+    color: var(--ink);
+    border-bottom-color: var(--signal);
+  }
+  .prod__hint,
+  .prod__demo {
+    font-size: var(--step-micro);
+  }
+  .prod__demo {
+    margin-left: auto;
+    border: 1px solid var(--rule-strong);
+    padding: 0.25em 0.65em;
+  }
+
+  @media (min-width: 64rem) {
+    /* on the stage you walk the app by its own sidebar, as in the product */
+    .prod__tabs {
+      display: none;
+    }
+  }
+  @media (max-width: 47.999rem) {
+    .prod__hint {
+      display: none;
+    }
+  }
+
+  .prod__stage {
+    position: relative;
+    margin-top: 1rem;
+    isolation: isolate;
+  }
+
+  /* ---- the paper leaves ---- */
+  .prod__leaf {
+    position: absolute;
+    left: -2vw;
+    right: -2vw;
+    height: 52%;
+    background: var(--paper);
+    z-index: 2;
+    pointer-events: none;
+    transition: transform var(--dur-scene) var(--ease-editorial);
+  }
+  .prod__leaf--top {
+    top: 0;
+    border-bottom: 1px solid var(--rule-strong);
+    transform: translate3d(0, calc(-100% * var(--open, 0)), 0);
+  }
+  .prod__leaf--bottom {
+    bottom: 0;
+    border-top: 1px solid var(--rule-strong);
+    transform: translate3d(0, calc(100% * var(--open, 0)), 0);
+  }
+  .prod__stage[data-open] .prod__leaf {
+    /* once open the leaves are out of the way and stay there */
+    transition: transform var(--dur-scene) var(--ease-editorial);
+  }
+
+  :global(html:not(.js)) .prod__leaf {
+    display: none;
+  }
+
+  .prod__pane {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+  .prod__pane[hidden] {
+    display: none;
+  }
+  .prod__pane:focus-visible {
+    outline-offset: -3px;
+  }
+
+  .prod__stage :global(.app-window__body) {
+    height: min(34rem, 72vh);
+  }
+  @media (max-width: 47.999rem) {
+    .prod__stagewrap {
+      overflow: clip;
+    }
+    .prod__stage {
+      /* edge to edge on a phone — the product gets the whole width */
+      margin-inline: calc(var(--gutter) * -1);
+    }
+    .prod__stage :global(.app-window) {
+      border-radius: 0;
+      border-inline: 0;
+    }
+    .prod__stage :global(.app-window__body) {
+      height: min(30rem, 68vh);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .prod__leaf {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  import { scrub } from '../motion/scroll';
+  import { initTabs } from '../motion/tabs';
+  import { initProduct } from '../motion/product';
+
+  const stagewrap = document.querySelector<HTMLElement>('[data-product-stage]');
+  const stage = stagewrap?.querySelector<HTMLElement>('.prod__stage');
+
+  if (stagewrap && stage) {
+    // The sheet parts as the section arrives, and stays parted. Only a custom
+    // property changes, so this is a compositor-only transform.
+    scrub(
+      stagewrap,
+      (p) => {
+        const open = Math.min(1, Math.max(0, (p - 0.22) / 0.22));
+        stage.style.setProperty('--open', open.toFixed(3));
+        stage.toggleAttribute('data-open', open > 0.99);
+      },
+      { travel: 0.15 },
+    );
+  }
+
+  const select = initProduct();
+  initTabs('[data-prod-tabs]', '[data-prod-panel]', (id) => select?.(id));
+</script>

@@ -1,0 +1,231 @@
+---
+import type { Dict } from '../i18n';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const n = dict.night;
+---
+
+<!--
+  PARALLEL EXECUTION (§21).
+  Three tracks, deterministic progress driven by scroll position — not a fake
+  random timer. The same scroll offset always produces the same frame, which is
+  what makes this scene screenshot-stable.
+-->
+<section class="night on-ink" id="night" data-produces="7" data-action="night-shift">
+  <div class="page night__inner" data-night>
+    <div class="night__head">
+      <p class="label night__label">{n.label}</p>
+      <h2 class="title night__title">{n.title}</h2>
+      <p class="lead night__copy">{n.copy}</p>
+    </div>
+
+    <p class="night__task human human--lg">«{n.task}»</p>
+
+    <ol class="night__tracks">
+      {
+        n.tracks.map((t, i) => (
+          <li class="night__track" data-track={i}>
+            <div class="night__track-head">
+              <span class="night__track-name">{t.name}</span>
+              <span class="night__track-detail sys">{t.detail}</span>
+              <span class="night__track-state sys" data-track-state>
+                {n.running}
+              </span>
+            </div>
+            <div class="night__bar">
+              <span class="night__bar-fill" data-track-fill></span>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+
+    <div class="night__result" data-night-result>
+      <p class="label night__result-label">{n.resultLabel}</p>
+      <p class="night__result-text">{n.result}</p>
+      <p class="night__cost sys">
+        <span>{n.costLabel}</span>
+        <span class="night__cost-value">{n.cost}</span>
+      </p>
+      <p class="note night__cost-note">{n.costNote}</p>
+    </div>
+  </div>
+
+  <script
+    type="application/json"
+    data-night-copy
+    is:inline
+    set:html={JSON.stringify({ running: n.running, complete: n.complete })}
+  />
+</section>
+
+<style>
+  .night {
+    padding-block: clamp(4.5rem, 12vh, 9rem);
+    border-bottom: 1px solid var(--rule-inv);
+  }
+  .night__title {
+    margin-top: 0.6rem;
+    max-width: 14ch;
+  }
+  .night__copy {
+    margin-top: 1rem;
+  }
+
+  .night__task {
+    margin-top: clamp(2rem, 5vh, 3rem);
+    color: var(--ink);
+    max-width: 26ch;
+  }
+
+  .night__tracks {
+    margin-top: clamp(1.75rem, 4vh, 2.75rem);
+    display: grid;
+    gap: clamp(1rem, 2.5vh, 1.5rem);
+    max-width: 50rem;
+  }
+  @media (min-width: 56rem) {
+    .night__tracks {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(1.25rem, 3vw, 2.5rem);
+    }
+  }
+
+  .night__track-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  .night__track-name {
+    font-weight: 580;
+    color: var(--ink);
+  }
+  .night__track-detail {
+    font-size: var(--step-micro);
+    color: var(--machine);
+  }
+  .night__track-state {
+    margin-left: auto;
+    font-size: var(--step-micro);
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--machine);
+  }
+  .night__track[data-complete] .night__track-state {
+    color: var(--signal);
+  }
+
+  .night__bar {
+    margin-top: 0.55rem;
+    height: 2px;
+    background: var(--rule-inv);
+  }
+  .night__bar-fill {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: var(--signal);
+  }
+
+  /* Pending vs delivered is carried by colour, not by transparency: the copy
+     stays legible whether or not the visitor has scrolled the scene. */
+  .night__result {
+    margin-top: clamp(2.25rem, 6vh, 3.5rem);
+    padding-top: clamp(1.25rem, 3vh, 2rem);
+    border-top: 1px solid var(--rule-inv);
+    transform: translate3d(0, 0.4rem, 0);
+    transition:
+      transform var(--dur-expressive) var(--ease-enter),
+      border-color var(--dur-expressive) var(--ease-enter);
+  }
+  .night__result[data-on] {
+    transform: none;
+    border-top-color: var(--rule-strong);
+  }
+  .night__result-label {
+    color: var(--machine);
+  }
+  .night__result-text {
+    margin-top: 0.35rem;
+    font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.5rem);
+    font-weight: 620;
+    letter-spacing: var(--track-title);
+    color: var(--machine);
+    transition: color var(--dur-expressive) var(--ease-editorial);
+  }
+  .night__result[data-on] .night__result-text {
+    color: var(--ink);
+  }
+  .night__cost {
+    margin-top: 0.9rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    font-size: var(--step-label);
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--machine);
+  }
+  .night__cost-value {
+    font-size: var(--step-lead);
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--machine);
+    transition: color var(--dur-expressive) var(--ease-editorial);
+  }
+  .night__result[data-on] .night__cost-value {
+    color: var(--signal);
+  }
+  .night__cost-note {
+    margin-top: 0.5rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .night__result {
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  import { scrub } from '../motion/scroll';
+
+  const root = document.querySelector<HTMLElement>('[data-night]');
+  const copyEl = document.querySelector('[data-night-copy]');
+  if (root && copyEl?.textContent) {
+    const copy = JSON.parse(copyEl.textContent) as { running: string; complete: string };
+    const tracks = Array.from(root.querySelectorAll<HTMLElement>('[data-track]'));
+    const result = root.querySelector<HTMLElement>('[data-night-result]');
+
+    // Fraction of the scene at which each track finishes. Real parallel work
+    // does not finish in lockstep, but every value is fixed, so the scene is
+    // reproducible — and all three reach 1 by the end, including under reduced
+    // motion where progress is delivered as a single call with p = 1.
+    const FINISH_AT = [0.62, 0.8, 1];
+
+    scrub(
+      root,
+      (p) => {
+        const t = Math.min(1, Math.max(0, (p - 0.24) / 0.44));
+        let allDone = true;
+        tracks.forEach((track, i) => {
+          const v = Math.min(1, t / (FINISH_AT[i] ?? 1));
+          const fill = track.querySelector<HTMLElement>('[data-track-fill]');
+          const state = track.querySelector<HTMLElement>('[data-track-state]');
+          if (fill) fill.style.width = `${(v * 100).toFixed(1)}%`;
+          const done = v >= 0.999;
+          if (!done) allDone = false;
+          track.toggleAttribute('data-complete', done);
+          if (state) state.textContent = done ? copy.complete : copy.running;
+        });
+        result?.toggleAttribute('data-on', allDone);
+      },
+      { travel: 0.75 },
+    );
+  }
+</script>

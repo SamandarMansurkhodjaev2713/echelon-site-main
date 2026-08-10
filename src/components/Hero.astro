@@ -1,7 +1,5 @@
 ---
-import type { Dict } from '../lib/i18n';
-import AppWindow from './ui/AppWindow.astro';
-import UiChat from './ui/UiChat.astro';
+import type { Dict } from '../i18n';
 
 interface Props {
   dict: Dict;
@@ -9,75 +7,324 @@ interface Props {
 
 const { dict } = Astro.props;
 const h = dict.hero;
+const beats = dict.intro.beats;
+const [displayA, displayB] = h.display.split('\n');
 ---
 
-<section class="hero">
-  <div class="container">
-    <h1 class="hero__h1">
-      {h.h1.split('\n').map((line) => <span class="hero__line">{line}</span>)}
-    </h1>
-    <p class="lead hero__sub">{h.sub}</p>
-    <div class="hero__cta-row">
-      <a class="btn-cta" href="#demo">{h.cta}</a>
-      <p class="cta-note">{h.ctaNote}</p>
-    </div>
-    <p class="hero__proof mono">{h.proof}</p>
+<section class="hero" id="top">
+  <!-- The intro is not an overlay with its own content: it is a plain paper
+       scrim over everything except the operation. The operation's rows are the
+       hero's real rows, so nothing has to be matched up afterwards. -->
+  <div class="hero__scrim" aria-hidden="true"></div>
 
-    <div class="hero__window reveal">
-      <AppWindow dict={dict} active="chat">
-        <UiChat dict={dict} />
-      </AppWindow>
+  <div class="page hero__grid">
+    <div class="hero__lede">
+      <p class="label hero__status">
+        <span class="hero__status-dot" aria-hidden="true"></span>{h.status}
+      </p>
+      <h1 class="display hero__display">
+        <span class="hero__line">{displayA}</span>
+        <span class="hero__line hero__line--own">{displayB}</span>
+      </h1>
+      <p class="lead hero__sub">{h.sub}</p>
+
+      <div class="hero__actions">
+        <a class="act hero__cta" href="#handover" data-cursor="approve">
+          <span class="act__label">
+            <span>{h.cta}</span>
+            <span aria-hidden="true">{h.ctaState}</span>
+          </span>
+          <span class="act__mark" aria-hidden="true">→</span>
+        </a>
+        <p class="note hero__cta-note">{h.ctaNote}</p>
+      </div>
+
+      <p class="hero__proof">{h.proof}</p>
+    </div>
+
+    <!-- THE OPERATION -->
+    <div class="hero__op" data-intro-stage>
+      <div class="hero__op-head">
+        <span class="hero__op-mark">ECHELON</span>
+        <span class="label hero__op-label">{dict.intro.label}</span>
+      </div>
+      <ol class="hero__beats" aria-label={h.feedLabel}>
+        {
+          beats.map((b) => (
+            <li class="hero__beat" data-intro-beat>
+              <span class="hero__beat-time sys">{b.time}</span>
+              <span class="hero__beat-state sys">{b.state}</span>
+              <span class="hero__beat-detail">{b.detail}</span>
+            </li>
+          ))
+        }
+      </ol>
     </div>
   </div>
+
+  <!-- Only present while the intro is actually playing: a permanently rendered
+       but non-interactive button would still sit in the tab order. -->
+  <button class="hero__skip label" data-intro-skip type="button" hidden>{dict.intro.skip}</button>
 </section>
 
 <style>
   .hero {
-    padding-top: clamp(3rem, 9vh, 6rem);
     position: relative;
-    overflow: clip;
+    padding-block: clamp(2.5rem, 7vh, 5.5rem) clamp(3rem, 8vh, 6rem);
+    /* the operation happens on a slightly deeper sheet than the rest */
+    border-bottom: 1px solid var(--rule);
   }
-  /* faint gold aurora behind the headline — depth without gradients-as-decor */
-  .hero::before {
-    content: '';
-    position: absolute;
-    inset: -20% -10% auto;
-    height: 70%;
-    background: radial-gradient(
-      ellipse 60% 45% at 50% 0%,
-      rgba(200, 169, 81, 0.07),
-      transparent 70%
-    );
-    pointer-events: none;
+
+  .hero__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(2.5rem, 6vh, 4rem);
+    align-items: start;
   }
-  .hero__h1 {
-    max-width: 13em;
+
+  @media (min-width: 64rem) {
+    .hero__grid {
+      grid-template-columns: minmax(0, 1.35fr) minmax(19rem, 0.65fr);
+      gap: clamp(2rem, 5vw, 5rem);
+    }
+  }
+
+  /* ---------- the lede ---------- */
+  .hero__status {
+    display: flex;
+    align-items: center;
+    gap: 0.55em;
+    color: var(--machine);
+  }
+  .hero__status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--machine);
+  }
+
+  .hero__display {
+    margin-top: clamp(1rem, 2.5vh, 1.75rem);
   }
   .hero__line {
     display: block;
   }
-  .hero__line:last-child {
-    color: var(--gold);
+  /* Both lines are the fact. The muted register belongs to the status line
+     above them — the owner being away is the condition, not the headline. */
+  .hero__line--own {
+    color: var(--ink);
   }
+
   .hero__sub {
-    margin-top: 1.75rem;
+    margin-top: clamp(1.25rem, 3vh, 2rem);
+    max-width: 46ch;
   }
-  .hero__cta-row {
-    margin-top: 2.25rem;
+
+  .hero__actions {
+    margin-top: clamp(1.75rem, 4vh, 2.5rem);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.9rem 1.75rem;
   }
+  .hero__cta-note {
+    max-width: 34ch;
+  }
+
   .hero__proof {
-    margin-top: 2.5rem;
-    font-size: var(--text-micro);
-    color: var(--fg-subtle);
-    letter-spacing: 0.04em;
+    margin-top: clamp(2rem, 5vh, 3rem);
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule);
+    font-family: var(--font-system);
+    font-size: var(--step-micro);
+    line-height: 1.6;
+    color: var(--machine);
+    max-width: 52ch;
   }
-  .hero__window {
-    margin-top: 3.5rem;
-    max-width: 980px;
+
+  /* ---------- the operation ---------- */
+  .hero__op {
+    position: relative;
+    z-index: 2;
+    border: 1px solid var(--rule-strong);
+    background: var(--paper);
+    padding: clamp(1rem, 2.5vw, 1.4rem);
+    transform-origin: 50% 40%;
+    will-change: transform;
   }
-  @media (max-width: 720px) {
-    .hero__window {
-      margin-inline: calc(var(--gutter) * -0.4);
+
+  .hero__op-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .hero__op-mark {
+    font-family: var(--font-system);
+    font-weight: 700;
+    font-size: var(--step-label);
+    letter-spacing: 0.28em;
+    color: var(--ink);
+  }
+  .hero__op-label {
+    font-size: var(--step-micro);
+  }
+
+  .hero__beats {
+    margin: 0;
+  }
+  .hero__beat {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    grid-template-areas: 'time state' 'time detail';
+    gap: 0.1rem 0.9rem;
+    padding-block: 0.7rem;
+    border-bottom: 1px solid var(--rule-soft);
+    align-items: baseline;
+  }
+  .hero__beat:last-child {
+    border-bottom: 0;
+    padding-bottom: 0.15rem;
+  }
+  .hero__beat-time {
+    grid-area: time;
+    font-size: var(--step-micro);
+    color: var(--machine);
+  }
+  .hero__beat-state {
+    grid-area: state;
+    font-size: var(--step-label);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+  }
+  .hero__beat-detail {
+    grid-area: detail;
+    font-size: var(--step-small);
+    color: var(--ink-soft);
+  }
+  /* the last beat is the one that produced an action — the owner's colour */
+  .hero__beat:last-child .hero__beat-state {
+    color: var(--signal);
+  }
+
+  /* ---------- intro choreography — transform + opacity only, so CLS is 0 ---------- */
+  .hero__scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    background: var(--paper);
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  :global(html[data-intro]) .hero__scrim {
+    opacity: 1;
+    visibility: visible;
+  }
+  :global(html[data-intro-phase='settle']) .hero__scrim {
+    opacity: 0;
+    transition:
+      opacity var(--dur-scene) var(--ease-editorial),
+      visibility 0s linear var(--dur-scene);
+  }
+
+  /* operate: the record is raised toward the middle of an otherwise empty sheet */
+  :global(html[data-intro]) .hero__op {
+    transform: translate3d(var(--intro-x, 0), var(--intro-y, 14vh), 0)
+      scale(var(--intro-scale, 1.06));
+  }
+  :global(html[data-intro-phase='settle']) .hero__op {
+    transform: none;
+    transition: transform var(--dur-scene) var(--ease-editorial);
+  }
+
+  @media (min-width: 64rem) {
+    :global(html[data-intro]) .hero__op {
+      --intro-x: -26vw;
+      --intro-y: 16vh;
+      --intro-scale: 1.1;
+    }
+  }
+
+  /* beats type themselves in, one operational step at a time */
+  :global(html[data-intro]) .hero__beat {
+    opacity: 0;
+    transform: translate3d(-0.6rem, 0, 0);
+  }
+  :global(html[data-intro]) .hero__beat[data-shown] {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--dur-normal) var(--ease-enter),
+      transform var(--dur-normal) var(--ease-enter);
+  }
+
+  /* the lede waits for the operation to resolve */
+  :global(html[data-intro]) .hero__lede > * {
+    opacity: 0;
+    transform: translate3d(0, 0.9rem, 0);
+  }
+  :global(html[data-intro-phase='settle']) .hero__lede > * {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--dur-expressive) var(--ease-enter),
+      transform var(--dur-expressive) var(--ease-enter);
+  }
+  :global(html[data-intro-phase='settle']) .hero__lede > :nth-child(1) {
+    transition-delay: 60ms;
+  }
+  :global(html[data-intro-phase='settle']) .hero__lede > :nth-child(2) {
+    transition-delay: 120ms;
+  }
+  :global(html[data-intro-phase='settle']) .hero__lede > :nth-child(3) {
+    transition-delay: 220ms;
+  }
+  :global(html[data-intro-phase='settle']) .hero__lede > :nth-child(4) {
+    transition-delay: 300ms;
+  }
+  :global(html[data-intro-phase='settle']) .hero__lede > :nth-child(5) {
+    transition-delay: 360ms;
+  }
+
+  .hero__skip {
+    position: fixed;
+    right: var(--gutter);
+    bottom: 1.5rem;
+    z-index: 3;
+    min-height: 2.75rem;
+    padding: 0.5em 1em;
+    border: 1px solid var(--rule-strong);
+    background: var(--paper);
+    color: var(--machine);
+  }
+  .hero__skip[hidden] {
+    display: none;
+  }
+  .hero__skip:hover {
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+
+  /* No JS, reduced motion, or intro already finished: everything is simply there. */
+  :global(html:not(.js)) .hero__scrim {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero__scrim,
+    .hero__skip {
+      display: none !important;
+    }
+    .hero__op,
+    .hero__lede > *,
+    .hero__beat {
+      opacity: 1 !important;
+      transform: none !important;
     }
   }
 </style>

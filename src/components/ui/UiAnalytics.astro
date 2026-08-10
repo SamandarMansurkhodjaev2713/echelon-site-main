@@ -1,5 +1,5 @@
 ---
-import type { Dict } from '../../lib/i18n';
+import type { Dict } from '../../i18n';
 
 interface Props {
   dict: Dict;
@@ -16,18 +16,18 @@ const max = Math.max(...a.values);
       a.kpis.map((k) => (
         <div class="ui-ana__kpi">
           <div class="ui-ana__kpi-label">{k.label}</div>
-          <div class="ui-ana__kpi-value mono">{k.value}</div>
+          <div class="ui-ana__kpi-value sys">{k.value}</div>
         </div>
       ))
     }
   </div>
-  <div class="ui-ana__chart">
+  <div class="ui-ana__chart" role="img" aria-label={`${a.chartLabel}: ${a.days.map((d, i) => `${d} $${a.values[i]}`).join(', ')}`}>
     {
       a.values.map((v, i) => (
-        <div class="ui-ana__col" data-ana-bar title={`$${v.toFixed(2)}`}>
-          <span class="ui-ana__val mono">${v.toFixed(2)}</span>
+        <div class="ui-ana__col" aria-hidden="true">
+          <span class="ui-ana__val sys">${v.toFixed(2)}</span>
           <i style={`height:${Math.round((v / max) * 100)}%`} />
-          <span class="ui-ana__day mono">{a.days[i]}</span>
+          <span class="ui-ana__day sys">{a.days[i]}</span>
         </div>
       ))
     }

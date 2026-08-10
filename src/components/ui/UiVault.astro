@@ -1,5 +1,5 @@
 ---
-import type { Dict } from '../../lib/i18n';
+import type { Dict } from '../../i18n';
 
 interface Props {
   dict: Dict;
@@ -23,25 +23,33 @@ const filters = [
 ];
 ---
 
-<div class="ui-vault" data-vault>
-  <div class="ui-vault__filters">
+<div class="ui-vault" data-vault data-close-label={v.close}>
+  <div class="ui-vault__filters" role="group" aria-label={v.cols.type}>
     {
       filters.map((f, i) => (
-        <button class={`ui-vault__chip${i === 0 ? ' active' : ''}`} data-vault-filter={f.id}>
+        <button
+          type="button"
+          class={`ui-vault__chip${i === 0 ? ' active' : ''}`}
+          data-vault-filter={f.id}
+          aria-pressed={i === 0 ? 'true' : 'false'}
+          data-cursor="view"
+        >
           {f.label}
         </button>
       ))
     }
-    <span class="ui-vault__note mono">{v.searchNote}</span>
+    <span class="ui-vault__note sys">{v.searchNote}</span>
   </div>
   <div class="ui-vault__rows">
     {
       v.rows.map((r) => (
         <button
+          type="button"
           class="ui-vault__row"
           data-vault-type={r.type}
           data-summary={r.summary}
           data-updated={r.updated}
+          data-cursor="open"
         >
           <span class="ui-vault__label">{r.label}</span>
           <span
@@ -51,7 +59,7 @@ const filters = [
             {typeNames[r.type]}
           </span>
           <span class="ui-vault__sum">{r.summary}</span>
-          <span class="ui-vault__upd mono">{r.updated}</span>
+          <span class="ui-vault__upd sys">{r.updated}</span>
         </button>
       ))
     }

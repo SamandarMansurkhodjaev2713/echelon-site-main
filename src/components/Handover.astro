@@ -1,0 +1,276 @@
+---
+import type { Dict, Locale } from '../i18n';
+
+interface Props {
+  dict: Dict;
+  locale: Locale;
+}
+
+const { dict, locale } = Astro.props;
+const h = dict.handover;
+const ROWS = ['rule', 'facts', 'automations', 'actions', 'escalations'] as const;
+---
+
+<!--
+  SHIFT HANDOVER (§24).
+  The last screen is a report of this visit: what the visitor taught, what the
+  page remembered, what it completed, what it handed back. Rows that did not
+  happen are absent, not zeroed — an honest report, not a scoreboard.
+-->
+<section class="hand band" id="handover">
+  <div class="page hand__inner">
+    <div class="hand__head">
+      <p class="label">{h.label}</p>
+      <p class="hand__session sys">
+        <span>{h.sessionLabel}</span>
+        <span class="hand__elapsed" data-hand-elapsed>00:00</span>
+      </p>
+    </div>
+
+    <h2 class="title hand__title">{h.title}</h2>
+
+    <!-- A <div> inside <dl> may contain only <dt>/<dd>, so the rule name lives
+         inside its own <dd> rather than as a sibling paragraph. -->
+    <dl class="hand__report" data-hand-report>
+      {
+        ROWS.map((key) => (
+          <div class="hand__row" data-hand-row={key} hidden>
+            <dt>{h.lines[key]}</dt>
+            <dd class="hand__count">
+              <span class="hand__n sys" data-hand-value>
+                00
+              </span>
+              <span class="hand__unit" data-hand-unit>
+                {h.units[key][1]}
+              </span>
+            </dd>
+            {key === 'rule' && <dd class="hand__rule" data-hand-rule />}
+          </div>
+        ))
+      }
+    </dl>
+
+    <p class="note hand__empty" data-hand-empty hidden>{h.emptyNote}</p>
+
+    <p class="hand__closing human human--lg" data-reveal="handover">{h.closing}</p>
+
+    <div class="hand__cta">
+      <a
+        class="act hand__act"
+        href="https://t.me/komrxn"
+        target="_blank"
+        rel="noopener"
+        data-cursor="approve"
+      >
+        <span class="act__label">
+          <span>{h.cta}</span>
+          <span aria-hidden="true">{h.ctaState}</span>
+        </span>
+        <span class="act__mark" aria-hidden="true">↗</span>
+      </a>
+      <p class="note hand__note">{h.note}</p>
+    </div>
+  </div>
+
+  <script
+    type="application/json"
+    data-hand-copy
+    is:inline
+    set:html={JSON.stringify({
+      locale,
+      ruleLearnedLabel: h.ruleLearnedLabel,
+      savedNames: dict.teach.savedNames,
+      units: h.units,
+    })}
+  />
+</section>
+
+<style>
+  .hand {
+    background: var(--paper-deep);
+    padding-block: clamp(4rem, 11vh, 8rem);
+  }
+  .hand__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  .hand__session {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    font-size: var(--step-micro);
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--machine);
+  }
+  .hand__elapsed {
+    color: var(--ink);
+    font-size: var(--step-label);
+    letter-spacing: 0;
+  }
+
+  .hand__title {
+    margin-top: clamp(1.5rem, 4vh, 2.5rem);
+    max-width: 20ch;
+  }
+
+  .hand__report {
+    margin-top: clamp(2rem, 5vh, 3rem);
+    max-width: 46rem;
+  }
+  .hand__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    align-items: baseline;
+    gap: 0.3rem 1.5rem;
+    padding-block: 1rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .hand__row[hidden] {
+    display: none;
+  }
+  .hand__row dt {
+    font-size: var(--step-lead);
+    color: var(--ink-muted);
+  }
+  .hand__count {
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  .hand__n {
+    font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.75rem);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .hand__unit {
+    font-size: var(--step-small);
+    color: var(--machine);
+  }
+  .hand__rule {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-family: var(--font-human);
+    font-style: italic;
+    font-size: var(--step-small);
+    color: var(--signal);
+  }
+  .hand__rule:empty {
+    display: none;
+  }
+  /* the row the visitor caused personally */
+  .hand__row[data-hand-row='rule'] .hand__n,
+  .hand__row[data-hand-row='escalations'] .hand__n {
+    color: var(--signal);
+  }
+
+  .hand__empty {
+    margin-top: 1.25rem;
+  }
+  .hand__empty[hidden] {
+    display: none;
+  }
+
+  .hand__closing {
+    margin-top: clamp(2.25rem, 6vh, 3.5rem);
+    max-width: 36ch;
+    color: var(--ink);
+  }
+
+  .hand__cta {
+    margin-top: clamp(2rem, 5vh, 3rem);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.75rem;
+  }
+  .hand__act {
+    font-size: var(--step-lead);
+    min-height: 3.75rem;
+  }
+</style>
+
+<script>
+  import { session, formatElapsed } from '../session/state';
+  import { register } from '../motion/lifecycle';
+  import { plural, type Locale } from '../i18n';
+
+  const report = document.querySelector<HTMLElement>('[data-hand-report]');
+  const copyEl = document.querySelector('[data-hand-copy]');
+  const elapsedEl = document.querySelector<HTMLElement>('[data-hand-elapsed]');
+  const emptyEl = document.querySelector<HTMLElement>('[data-hand-empty]');
+
+  if (report && copyEl?.textContent) {
+    const copy = JSON.parse(copyEl.textContent) as {
+      locale: Locale;
+      ruleLearnedLabel: string;
+      savedNames: Record<string, string>;
+      units: Record<string, string[]>;
+    };
+    const store = session();
+    const pad = (n: number) => String(n).padStart(2, '0');
+
+    const rowEl = (k: string) => report.querySelector<HTMLElement>(`[data-hand-row="${k}"]`);
+
+    const paint = () => {
+      const s = store.get();
+      const counts: Record<string, number> = {
+        rule: s.rule && s.rule !== 'skip' ? 1 : 0,
+        facts: s.facts.length,
+        automations: s.automations.length,
+        actions: s.actions.length,
+        escalations: s.escalations.length,
+      };
+
+      let any = false;
+      for (const [key, n] of Object.entries(counts)) {
+        const row = rowEl(key);
+        if (!row) continue;
+        row.hidden = n === 0;
+        if (n === 0) continue;
+        any = true;
+        const value = row.querySelector<HTMLElement>('[data-hand-value]');
+        if (value) value.textContent = pad(n);
+        const unit = row.querySelector<HTMLElement>('[data-hand-unit]');
+        if (unit) unit.textContent = plural(copy.locale, n, copy.units[key] ?? []);
+      }
+
+      const ruleRow = rowEl('rule');
+      const ruleText = ruleRow?.querySelector<HTMLElement>('[data-hand-rule]');
+      if (ruleText) {
+        ruleText.textContent =
+          s.rule && s.rule !== 'skip'
+            ? `${copy.ruleLearnedLabel}: ${copy.savedNames[s.rule] ?? ''}`
+            : '';
+      }
+
+      if (emptyEl) emptyEl.hidden = any;
+      if (elapsedEl) elapsedEl.textContent = formatElapsed(store.elapsed());
+    };
+
+    register(store.subscribe(paint));
+
+    // The clock only ticks while the report is on screen.
+    let timer = 0;
+    const io = new IntersectionObserver(([e]) => {
+      window.clearInterval(timer);
+      if (e?.isIntersecting) {
+        paint();
+        timer = window.setInterval(paint, 1000);
+      }
+    });
+    io.observe(report);
+    register(() => {
+      window.clearInterval(timer);
+      io.disconnect();
+    });
+  }
+</script>

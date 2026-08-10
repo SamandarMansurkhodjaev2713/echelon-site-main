@@ -1,0 +1,213 @@
+---
+import { asset, type Dict, type Locale } from '../i18n';
+
+interface Props {
+  dict: Dict;
+  locale: Locale;
+}
+
+const { dict, locale } = Astro.props;
+const v = dict.voice;
+/* Only RU and EN recordings exist; UZ falls back to the Russian one, which is
+   what a Tashkent owner would hear on the call anyway. */
+const recording = asset(locale === 'en' ? 'voice_en.mp3' : 'voice_ru.mp3');
+
+const mark = (text: string, marks: readonly string[]) => {
+  if (!marks.length) return [{ text, marked: false }];
+  const pattern = marks
+    .map((m) => m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .sort((a, b) => b.length - a.length)
+    .join('|');
+  const re = new RegExp(`(${pattern})`, 'gi');
+  return text
+    .split(re)
+    .filter(Boolean)
+    .map((part) => ({ text: part, marked: marks.some((m) => m.toLowerCase() === part.toLowerCase()) }));
+};
+---
+
+<!--
+  VOICE (§23).
+  No glowing orb. A quiet tape running along a baseline, a transcript set large
+  enough to actually read, and the entities it knows from memory marked the way
+  a document marks a citation. The recorded voice and the (currently dormant)
+  live session both drive the same tape.
+-->
+<section class="voice band" id="voice">
+  <div class="page">
+    <p class="label">{v.label}</p>
+    <h2 class="title voice__title">{v.title}</h2>
+    <p class="lead voice__copy">{v.copy}</p>
+
+    <div
+      class="voice__console"
+      data-voice
+      data-recording={recording}
+      data-locale={locale}
+      data-msg-connecting={v.connecting}
+      data-msg-listening={v.listening}
+      data-msg-thinking={v.thinking}
+      data-msg-speaking={v.speaking}
+      data-msg-idle={v.idle}
+      data-msg-mic-denied={v.micDenied}
+      data-msg-error={v.error}
+      data-label-play={v.playRecording}
+      data-label-stop={v.stopRecording}
+    >
+      <div class="voice__controls">
+        <button type="button" class="act-quiet voice__play" data-voice-play data-cursor="speak">
+          <span class="voice__play-glyph" aria-hidden="true">▶</span>
+          <span data-voice-play-label>{v.playRecording}</span>
+        </button>
+        <button type="button" class="act-quiet voice__talk" data-voice-talk hidden data-cursor="speak">
+          {v.talkButton}
+        </button>
+        <button type="button" class="act-quiet voice__stop" data-voice-stop hidden data-cursor="hold">
+          {v.stopButton}
+        </button>
+        <p class="voice__state label" data-voice-state role="status">{v.idle}</p>
+      </div>
+
+      <div class="voice__tape">
+        <canvas class="voice__wave" data-voice-wave aria-hidden="true"></canvas>
+        <span class="voice__baseline" aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <div class="voice__transcript">
+      <p class="label voice__transcript-label">{v.transcriptLabel}</p>
+      <ol class="voice__lines">
+        {
+          v.transcript.map((line) => (
+            <li class={`voice__line voice__line--${line.who}`} data-reveal="receive">
+              <span class="voice__who label">{v.speakers[line.who]}</span>
+              <p class="voice__said">
+                {mark(line.text, ('marks' in line ? line.marks : undefined) ?? []).map((part) =>
+                  part.marked ? <mark class="voice__mem">{part.text}</mark> : <>{part.text}</>,
+                )}
+              </p>
+            </li>
+          ))
+        }
+      </ol>
+      <p class="note voice__marks-note">{v.marksNote}</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .voice {
+    border-bottom: 1px solid var(--rule);
+  }
+  .voice__title {
+    margin-top: 0.6rem;
+    max-width: 18ch;
+  }
+  .voice__copy {
+    margin-top: 1rem;
+  }
+
+  .voice__console {
+    margin-top: clamp(2rem, 5vh, 3rem);
+  }
+  .voice__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.75rem;
+  }
+  .voice__play-glyph {
+    font-size: 0.7em;
+    color: var(--signal);
+  }
+  .voice__state {
+    margin-left: auto;
+    color: var(--machine);
+  }
+
+  /* the tape: a quiet trace on the page, not a light source */
+  .voice__tape {
+    position: relative;
+    margin-top: 1.1rem;
+    height: clamp(4.5rem, 11vh, 7.5rem);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .voice__wave {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .voice__baseline {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  .voice__transcript {
+    margin-top: clamp(2.25rem, 6vh, 3.5rem);
+  }
+  .voice__lines {
+    margin-top: 1rem;
+    max-width: 46rem;
+  }
+  .voice__line {
+    display: grid;
+    grid-template-columns: minmax(4.5rem, max-content) minmax(0, 1fr);
+    gap: 0.3rem 1.25rem;
+    padding-block: clamp(0.9rem, 2vh, 1.35rem);
+    border-top: 1px solid var(--rule);
+    align-items: baseline;
+  }
+  .voice__line:last-of-type {
+    border-bottom: 1px solid var(--rule);
+  }
+  .voice__who {
+    font-size: var(--step-micro);
+  }
+  .voice__line--you .voice__who {
+    color: var(--signal);
+  }
+  .voice__said {
+    font-size: clamp(1.125rem, 1rem + 0.75vw, 1.6rem);
+    line-height: 1.4;
+    color: var(--ink);
+    max-width: 34ch;
+  }
+  .voice__line--you .voice__said {
+    font-family: var(--font-human);
+    font-style: italic;
+  }
+
+  /* what it knows from memory, marked the way a document marks a citation */
+  .voice__mem {
+    background: none;
+    color: inherit;
+    border-bottom: 2px solid var(--signal-edge);
+    padding-bottom: 0.05em;
+  }
+
+  .voice__marks-note {
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 35.999rem) {
+    .voice__line {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.25rem;
+    }
+    .voice__state {
+      margin-left: 0;
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  import { initVoice } from '../motion/voice';
+  initVoice();
+</script>

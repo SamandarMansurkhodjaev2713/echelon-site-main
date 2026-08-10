@@ -20,7 +20,7 @@
 .app-window {
   background: var(--ui-bg);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-window);
+  box-shadow: var(--lift-machine);
   overflow: hidden;
   font-size: 14px;
   line-height: 1.45;
@@ -93,8 +93,8 @@
 }
 
 .ui-side__group {
-  font-family: var(--font-mono);
-  font-size: 9px;
+  font-family: var(--font-system);
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -178,7 +178,7 @@
   right: -7px;
   background: var(--ui-danger);
   color: #fff;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   min-width: 14px;
   height: 14px;
@@ -259,8 +259,8 @@
 
 .ui-meta {
   align-self: flex-end;
-  font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-family: var(--font-system);
+  font-size: 11.5px;
   color: var(--ui-fg-subtle);
   font-variant-numeric: tabular-nums;
 }
@@ -284,8 +284,8 @@
 }
 
 .ui-proactive__tag {
-  font-family: var(--font-mono);
-  font-size: 10px;
+  font-family: var(--font-system);
+  font-size: 11px;
   color: var(--ui-accent);
   border: 1px solid var(--ui-accent);
   border-radius: 999px;
@@ -302,8 +302,8 @@
 
 .ui-proactive__time {
   margin-left: auto;
-  font-family: var(--font-mono);
-  font-size: 10px;
+  font-family: var(--font-system);
+  font-size: 11px;
   color: var(--ui-fg-subtle);
 }
 
@@ -394,8 +394,8 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  font-family: var(--font-mono);
-  font-size: 10px;
+  font-family: var(--font-system);
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -442,8 +442,8 @@
 
 .ui-card__meta {
   margin-top: 6px;
-  font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-family: var(--font-system);
+  font-size: 11px;
   color: var(--ui-fg-subtle);
   display: flex;
   justify-content: space-between;
@@ -467,15 +467,15 @@
 }
 
 .ui-autorow__sched {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-family: var(--font-system);
+  font-size: 11.5px;
   color: var(--ui-fg-subtle);
   margin-top: 2px;
 }
 
 .ui-autorow__badge {
   margin-left: auto;
-  font-size: 10.5px;
+  font-size: 11.5px;
   color: var(--ui-success);
   border: 1px solid rgba(78, 203, 88, 0.35);
   border-radius: 999px;
@@ -534,8 +534,8 @@
   top: 10px;
   left: 50%;
   transform: translateX(-50%);
-  font-family: var(--font-mono);
-  font-size: 10px;
+  font-family: var(--font-system);
+  font-size: 11px;
   color: var(--ui-fg-muted);
   background: rgba(14, 14, 13, 0.8);
   border: 1px solid var(--ui-border-subtle);
@@ -551,7 +551,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px 12px;
-  font-size: 10.5px;
+  font-size: 11.5px;
   color: var(--ui-fg-muted);
   background: rgba(14, 14, 13, 0.8);
   border: 1px solid var(--ui-border-subtle);
@@ -585,8 +585,8 @@
 .ui-side__item--link {
   cursor: pointer;
   transition:
-    background var(--motion-fast) var(--ease-out),
-    color var(--motion-fast) var(--ease-out);
+    background var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
   width: 100%;
   text-align: left;
 }
@@ -605,7 +605,7 @@
   position: absolute;
   right: 10px;
   top: 10px;
-  font-size: 9.5px;
+  font-size: 11px;
   color: var(--ui-fg-subtle);
   background: rgba(14, 14, 13, 0.8);
   border: 1px solid var(--ui-border-subtle);
@@ -627,8 +627,8 @@
 }
 
 .ui-graph__card-type {
-  font-size: 9.5px;
-  font-family: var(--font-mono);
+  font-size: 11px;
+  font-family: var(--font-system);
   border: 1px solid;
   border-radius: 999px;
   padding: 1px 7px;
@@ -649,7 +649,7 @@
 }
 
 .ui-graph__card-links {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--ui-fg-subtle);
   margin-top: 6px;
 }
@@ -677,8 +677,8 @@
   border-radius: 999px;
   padding: 3px 10px;
   transition:
-    color var(--motion-fast) var(--ease-out),
-    border-color var(--motion-fast) var(--ease-out);
+    color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard);
 }
 
 .ui-vault__chip:hover {
@@ -693,7 +693,7 @@
 
 .ui-vault__note {
   margin-left: auto;
-  font-size: 9.5px;
+  font-size: 11px;
   color: var(--ui-fg-subtle);
 }
 
@@ -712,7 +712,7 @@
   font-size: 12.5px;
   text-align: left;
   cursor: pointer;
-  transition: background var(--motion-fast) var(--ease-out);
+  transition: background var(--dur-fast) var(--ease-standard);
 }
 
 .ui-vault__row:hover {
@@ -728,7 +728,7 @@
 }
 
 .ui-vault__type {
-  font-size: 10px;
+  font-size: 11px;
   border: 1px solid;
   border-radius: 999px;
   padding: 1px 8px;
@@ -743,7 +743,7 @@
 }
 
 .ui-vault__upd {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--ui-fg-subtle);
   white-space: nowrap;
 }
@@ -787,7 +787,7 @@
 }
 
 .ui-vault__card-upd {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--ui-fg-subtle);
   margin-top: 8px;
 }
@@ -864,7 +864,7 @@
   max-width: 46px;
   background: color-mix(in srgb, var(--ui-accent) 55%, transparent);
   border-radius: 3px 3px 0 0;
-  transition: background var(--motion-fast) var(--ease-out);
+  transition: background var(--dur-fast) var(--ease-standard);
 }
 
 .ui-ana__col:hover i {
@@ -872,10 +872,10 @@
 }
 
 .ui-ana__val {
-  font-size: 9.5px;
+  font-size: 11px;
   color: var(--ui-fg-subtle);
   opacity: 0;
-  transition: opacity var(--motion-fast) var(--ease-out);
+  transition: opacity var(--dur-fast) var(--ease-standard);
 }
 
 .ui-ana__col:hover .ui-ana__val {
@@ -883,7 +883,7 @@
 }
 
 .ui-ana__day {
-  font-size: 9.5px;
+  font-size: 11px;
   color: var(--ui-fg-subtle);
 }
 
@@ -896,8 +896,8 @@
 .ui-kanban .ui-card {
   cursor: grab;
   transition:
-    border-color var(--motion-fast) var(--ease-out),
-    opacity var(--motion-fast) var(--ease-out);
+    border-color var(--dur-fast) var(--ease-standard),
+    opacity var(--dur-fast) var(--ease-standard);
   touch-action: none;
 }
 

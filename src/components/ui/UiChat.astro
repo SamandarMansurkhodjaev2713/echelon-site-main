@@ -1,5 +1,5 @@
 ---
-import type { Dict } from '../../lib/i18n';
+import type { Dict } from '../../i18n';
 import { icon } from './icons';
 
 interface Props {
@@ -11,16 +11,16 @@ const { dict, interactive = false } = Astro.props;
 const c = dict.ui.chat;
 ---
 
-<div class="ui-chat" style="display:flex;flex-direction:column;gap:10px;flex:1;min-height:0;">
+<div class="ui-chat">
   <div class="ui-proactive">
     <div class="ui-proactive__head">
       <span class="ui-proactive__tag">{c.briefingTag}</span>
       <span class="ui-proactive__kind">{c.briefingKind}</span>
-      <span class="ui-proactive__time mono">{c.briefingTime}</span>
+      <span class="ui-proactive__time sys">{c.briefingTime}</span>
     </div>
     <div class="ui-proactive__title">{c.briefingTitle}</div>
     <div class="ui-proactive__body">{c.briefingBody}</div>
-    <div class="ui-proactive__actions">
+    <div class="ui-proactive__actions" aria-hidden="true">
       <span class="act"><Fragment set:html={icon('reply')} />{c.discuss}</span>
       <span class="act"><Fragment set:html={icon('check')} /></span>
       <span class="act"><Fragment set:html={icon('x')} /></span>
@@ -28,23 +28,17 @@ const c = dict.ui.chat;
   </div>
 
   <div class="ui-msg-user">{c.userMsg}</div>
-
   <div class="ui-tool-row"><span class="spin-dot"></span>{c.toolsDone}</div>
-
   <div class="ui-msg-assistant">{c.reply}</div>
-  <div class="ui-meta">{c.replyMeta}</div>
+  <div class="ui-meta sys">{c.replyMeta}</div>
+
+  {interactive && <div class="ui-chat__thread" data-chat-thread />}
 
   {
     interactive && (
-      <div class="ui-chat__thread" data-chat-thread style="display:flex;flex-direction:column;gap:10px;" />
-    )
-  }
-
-  {
-    interactive && (
-      <div class="ui-chat__chips" data-chat-chips>
+      <div class="ui-chat__chips">
         {c.chips.map((chip, i) => (
-          <button class="ui-chip" data-chip={i} data-answer={chip.a}>
+          <button type="button" class="ui-chip" data-chip={i} data-answer={chip.a} data-cursor="run">
             {chip.q}
           </button>
         ))}
@@ -52,7 +46,7 @@ const c = dict.ui.chat;
     )
   }
 
-  <div class="ui-composer">
+  <div class="ui-composer" aria-hidden="true">
     <Fragment set:html={icon('clip')} />
     <span>{c.composer}</span>
     <Fragment set:html={icon('mic')} />
@@ -61,20 +55,33 @@ const c = dict.ui.chat;
 </div>
 
 <style>
+  .ui-chat {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+  }
+  .ui-chat__thread {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
   .ui-chat__chips {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
   }
   .ui-chip {
+    min-height: 2rem;
     font-size: 12px;
     color: var(--ui-fg-muted);
     border: 1px solid var(--ui-border);
     border-radius: 999px;
     padding: 5px 12px;
     transition:
-      color var(--motion-fast) var(--ease-out),
-      border-color var(--motion-fast) var(--ease-out);
+      color var(--dur-fast) var(--ease-standard),
+      border-color var(--dur-fast) var(--ease-standard);
   }
   .ui-chip:hover {
     color: var(--ui-fg);

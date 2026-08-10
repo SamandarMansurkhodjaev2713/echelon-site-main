@@ -1,0 +1,217 @@
+---
+import type { Dict } from '../i18n';
+import DayFragment from './DayFragment.astro';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const d = dict.day;
+---
+
+<!--
+  TEMPORAL SCENE (§17).
+  The clock is sticky, not pinned: the page scrolls normally and the time in the
+  margin follows what you are actually reading. No scroll-jacking, no 480vh
+  stage, and — unlike the baseline — no way for the clock to show an hour that
+  no scene has.
+-->
+<section class="day band" id="day">
+  <div class="page">
+    <p class="label">{d.label}</p>
+    <h2 class="title day__title">{d.title}</h2>
+    <p class="lead day__intro">{d.intro}</p>
+  </div>
+
+  <div class="page day__stage" data-day>
+    <div class="day__clockwrap" aria-hidden="true">
+      <div class="day__clock sys" data-day-clock>{d.scenes[0]?.time}</div>
+      <div class="day__state label" data-day-state>{d.scenes[0]?.state}</div>
+      <div class="day__track">
+        <span class="day__track-fill" data-day-fill></span>
+      </div>
+    </div>
+
+    <ol class="day__scenes">
+      {
+        d.scenes.map((s, i) => (
+          <li
+            class="day__scene"
+            data-day-scene={i}
+            data-produces={i + 1}
+            data-action={`day-${s.time}`}
+          >
+            <div class="day__scene-head">
+              <span class="day__scene-time sys">{s.time}</span>
+              <span class="day__scene-state label">{s.state}</span>
+            </div>
+            <h3 class="head day__scene-title" data-reveal="receive">
+              {s.title}
+            </h3>
+            <p class="copy day__scene-text" data-reveal="receive">
+              {s.text}
+            </p>
+            <div class="day__fragment" data-reveal="resolve">
+              <DayFragment fragment={s.fragment} time={s.time} />
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .day {
+    border-bottom: 1px solid var(--rule);
+  }
+  .day__title {
+    margin-top: 0.6rem;
+    max-width: 20ch;
+  }
+  .day__intro {
+    margin-top: 1rem;
+  }
+
+  .day__stage {
+    margin-top: clamp(2rem, 5vh, 3.5rem);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  /* ---------- the clock ---------- */
+  .day__clockwrap {
+    position: sticky;
+    top: 5.25rem; /* masthead + compact tape */
+    z-index: 5;
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding-block: 0.5rem;
+    background: color-mix(in srgb, var(--paper) 92%, transparent);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--rule);
+  }
+  .day__clock {
+    font-size: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .day__state {
+    color: var(--signal);
+  }
+  .day__track {
+    margin-left: auto;
+    align-self: center;
+    width: clamp(3rem, 18vw, 8rem);
+    height: 2px;
+    background: var(--rule);
+  }
+  .day__track-fill {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: var(--signal);
+    transition: width var(--dur-expressive) var(--ease-editorial);
+  }
+
+  @media (min-width: 64rem) {
+    .day__stage {
+      grid-template-columns: 13rem minmax(0, 1fr);
+      column-gap: clamp(2rem, 5vw, 4.5rem);
+      align-items: start;
+    }
+    .day__clockwrap {
+      position: sticky;
+      top: 38vh;
+      display: block;
+      background: none;
+      backdrop-filter: none;
+      border-bottom: 0;
+      padding-block: 0;
+    }
+    .day__clock {
+      font-size: clamp(3rem, 1.5rem + 3.4vw, 4.75rem);
+    }
+    .day__state {
+      display: block;
+      margin-top: 0.35rem;
+    }
+    .day__track {
+      margin-left: 0;
+      margin-top: 1.25rem;
+      width: 100%;
+    }
+  }
+
+  /* ---------- the moments ---------- */
+  .day__scene {
+    padding-block: clamp(2.5rem, 7vh, 5rem);
+    border-top: 1px solid var(--rule);
+    max-width: 44rem;
+  }
+  .day__scene:first-child {
+    border-top: 0;
+    padding-top: clamp(1.5rem, 4vh, 2.5rem);
+  }
+
+  .day__scene-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+  }
+  .day__scene-time {
+    font-size: var(--step-label);
+    color: var(--machine);
+  }
+  .day__scene-state {
+    font-size: var(--step-micro);
+    color: var(--machine);
+  }
+  @media (min-width: 64rem) {
+    /* on the stage the sticky clock already says the time */
+    .day__scene-head {
+      display: none;
+    }
+  }
+
+  .day__scene-title {
+    max-width: 22ch;
+  }
+  .day__scene-text {
+    margin-top: 0.85rem;
+  }
+  .day__fragment {
+    margin-top: clamp(1.25rem, 3vh, 2rem);
+  }
+</style>
+
+<script>
+  import { steps } from '../motion/scroll';
+
+  const root = document.querySelector<HTMLElement>('[data-day]');
+  if (root) {
+    const clock = root.querySelector<HTMLElement>('[data-day-clock]');
+    const state = root.querySelector<HTMLElement>('[data-day-state]');
+    const fill = root.querySelector<HTMLElement>('[data-day-fill]');
+    const scenes = Array.from(root.querySelectorAll<HTMLElement>('[data-day-scene]'));
+
+    // The visible time is read from the scene itself, so it can never disagree
+    // with the copy next to it.
+    const times = scenes.map((s) => s.querySelector('.day__scene-time')?.textContent ?? '');
+    const states = scenes.map((s) => s.querySelector('.day__scene-state')?.textContent ?? '');
+
+    steps(scenes, (i) => {
+      if (clock && times[i]) clock.textContent = times[i]!;
+      if (state && states[i]) state.textContent = states[i]!;
+      if (fill) fill.style.width = `${((i + 1) / scenes.length) * 100}%`;
+    });
+  }
+</script>

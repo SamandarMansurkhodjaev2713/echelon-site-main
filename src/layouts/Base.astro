@@ -6,38 +6,59 @@ import '@fontsource/spectral/500.css';
 import '../styles/tokens.css';
 import '../styles/base.css';
 
+import golosCyrillic from '@fontsource-variable/golos-text/files/golos-text-cyrillic-wght-normal.woff2?url';
+import golosLatin from '@fontsource-variable/golos-text/files/golos-text-latin-wght-normal.woff2?url';
+
+import {
+  LOCALES,
+  LOCALE_TAGS,
+  OG_LOCALES,
+  asset,
+  localePath,
+  type Locale,
+} from '../i18n';
+
 export interface Props {
-  locale: 'ru' | 'en' | 'uz';
+  locale: Locale;
   title: string;
   description: string;
 }
 
 const { locale, title, description } = Astro.props;
-const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const site = 'https://komrxn.github.io';
-
-const localePath = (l: string) => (l === 'ru' ? `${base}/` : `${base}/${l}/`);
 const canonical = `${site}${localePath(locale)}`;
-const ogImage = `${site}${base}/og/og-${locale}.png`;
-const ogLocale = locale === 'ru' ? 'ru_RU' : locale === 'uz' ? 'uz_UZ' : 'en_US';
+const ogImage = `${site}${asset(`og/og-${locale}.png`)}`;
+
+/* The display face is the LCP element on every locale. Preload only the one
+   subset that locale actually renders: Cyrillic for RU, Latin for EN and UZ
+   (Uzbek is written in Latin script here). Preloading both would waste ~20 KB
+   of critical bandwidth on every visit. */
+const criticalFont = locale === 'ru' ? golosCyrillic : golosLatin;
 ---
 
 <!doctype html>
-<html lang={locale} class="no-js">
+<html lang={LOCALE_TAGS[locale]} data-locale={locale}>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#0b0b0a" />
+    <meta name="theme-color" content="#f4f1e8" />
+    <meta name="color-scheme" content="light" />
+
+    <link rel="preload" as="font" type="font/woff2" href={criticalFont} crossorigin />
+
     <link rel="canonical" href={canonical} />
-    <link rel="alternate" hreflang="ru" href={`${site}${localePath('ru')}`} />
-    <link rel="alternate" hreflang="en" href={`${site}${localePath('en')}`} />
-    <link rel="alternate" hreflang="uz" href={`${site}${localePath('uz')}`} />
+    {
+      LOCALES.map((l) => (
+        <link rel="alternate" hreflang={LOCALE_TAGS[l]} href={`${site}${localePath(l)}`} />
+      ))
+    }
     <link rel="alternate" hreflang="x-default" href={`${site}${localePath('ru')}`} />
-    <link rel="icon" type="image/png" sizes="32x32" href={`${base}/media/favicon-32.png`} />
-    <link rel="icon" type="image/png" sizes="192x192" href={`${base}/media/favicon-192.png`} />
-    <link rel="apple-touch-icon" href={`${base}/media/favicon-192.png`} />
+
+    <link rel="icon" type="image/png" sizes="32x32" href={asset('media/favicon-32.png')} />
+    <link rel="icon" type="image/png" sizes="192x192" href={asset('media/favicon-192.png')} />
+    <link rel="apple-touch-icon" href={asset('media/favicon-192.png')} />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Echelon Desktop" />
@@ -47,30 +68,56 @@ const ogLocale = locale === 'ru' ? 'ru_RU' : locale === 'uz' ? 'uz_UZ' : 'en_US'
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:locale" content={ogLocale} />
+    <meta property="og:locale" content={OG_LOCALES[locale]} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={ogImage} />
 
+    <script
+      type="application/ld+json"
+      is:inline
+      set:html={JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: 'Echelon Desktop',
+        applicationCategory: 'BusinessApplication',
+        operatingSystem: 'Windows, macOS, Linux',
+        description,
+        url: canonical,
+        inLanguage: LOCALE_TAGS[locale],
+      })}
+    />
+
     <script is:inline>
-      document.documentElement.classList.remove('no-js');
+      /* Runs before first paint.
+         - `js` unlocks the motion patterns; without it every reveal is already
+           in its final state, so a no-JS visitor sees the full page.
+         - `data-intro` puts the hero in its operational entry state. A failsafe
+           removes it after 3.5 s so a failed module load can never leave the
+           page half-drawn. */
+      (function () {
+        var d = document.documentElement;
+        d.classList.add('js');
+        try {
+          var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+          var off = location.search.indexOf('intro=off') > -1;
+          if (!reduced && !off) {
+            d.setAttribute('data-intro', '');
+            d.setAttribute('data-intro-phase', 'operate');
+            setTimeout(function () {
+              d.removeAttribute('data-intro');
+              d.setAttribute('data-intro-done', '');
+            }, 3500);
+          } else {
+            d.setAttribute('data-intro-done', '');
+          }
+        } catch (e) {
+          d.removeAttribute('data-intro');
+        }
+      })();
     </script>
+    <slot name="head" />
   </head>
   <body>
     <slot />
-    <script>
-      // Scroll reveals: IO adds .in once. Everything readable without JS.
-      const io = new IntersectionObserver(
-        (entries) => {
-          for (const e of entries) {
-            if (e.isIntersecting) {
-              e.target.classList.add('in');
-              io.unobserve(e.target);
-            }
-          }
-        },
-        { rootMargin: '0px 0px -8% 0px', threshold: 0.05 },
-      );
-      document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
-    </script>
   </body>
 </html>

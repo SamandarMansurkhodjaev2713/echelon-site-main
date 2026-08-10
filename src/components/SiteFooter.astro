@@ -1,5 +1,7 @@
 ---
-import type { Dict } from '../lib/i18n';
+import { Image } from 'astro:assets';
+import mark from '../assets/mark.png';
+import type { Dict } from '../i18n';
 
 interface Props {
   dict: Dict;
@@ -7,68 +9,108 @@ interface Props {
 
 const { dict } = Astro.props;
 const f = dict.footer;
-const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
-<footer class="footer">
-  <div class="container footer__row">
-    <div class="footer__brand">
-      <img src={`${base}/media/favicon-192.png`} alt="" width="22" height="22" loading="lazy" />
+<footer class="foot">
+  <div class="page foot__row">
+    <div class="foot__brand">
+      <Image src={mark} alt="" width={20} height={20} loading="lazy" densities={[1, 2]} />
       <div>
-        <div class="footer__name">{f.product}</div>
-        <div class="footer__line">{f.line}</div>
+        <p class="foot__name">{f.product}</p>
+        <p class="foot__line">{f.line}</p>
       </div>
     </div>
-    <div class="footer__meta mono">
-      <a href="https://t.me/komrxn" target="_blank" rel="noopener">t.me/komrxn</a>
-      <span>{f.demoNote}</span>
-      <span>{f.rights}</span>
+    <div class="foot__meta">
+      <a href="https://t.me/komrxn" target="_blank" rel="noopener" data-cursor="open">t.me/komrxn</a>
+      <p>{f.demoNote}</p>
+      <p>{f.rights}</p>
+      <button type="button" class="foot__reset" data-session-reset>{dict.nav.reset}</button>
     </div>
   </div>
 </footer>
 
 <style>
-  .footer {
-    border-top: 1px solid var(--border-subtle);
+  .foot {
+    border-top: 1px solid var(--rule-strong);
     padding-block: 2.5rem 3rem;
   }
-  .footer__row {
+  .foot__row {
     display: flex;
     justify-content: space-between;
     gap: 2rem;
     flex-wrap: wrap;
   }
-  .footer__brand {
+  .foot__brand {
     display: flex;
-    gap: 0.8rem;
+    gap: 0.75rem;
     align-items: flex-start;
   }
-  .footer__brand img {
-    border-radius: 5px;
+  .foot__brand img {
     margin-top: 0.2rem;
+    border-radius: 4px;
   }
-  .footer__name {
+  .foot__name {
     font-weight: 620;
   }
-  .footer__line {
-    color: var(--fg-subtle);
-    font-size: var(--text-small);
-    margin-top: 0.2rem;
+  .foot__line {
+    color: var(--machine);
+    font-size: var(--step-small);
+    margin-top: 0.15rem;
+    max-width: 34ch;
   }
-  .footer__meta {
+  .foot__meta {
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
-    font-size: var(--text-micro);
-    color: var(--fg-subtle);
-    text-align: right;
+    align-items: flex-start;
+    gap: 0.4rem;
+    font-family: var(--font-system);
+    font-size: var(--step-micro);
+    color: var(--machine);
   }
-  .footer__meta a {
-    color: var(--gold);
+  .foot__meta a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.75rem;
+    color: var(--signal);
+    border-bottom: 1px solid transparent;
   }
-  @media (max-width: 640px) {
-    .footer__meta {
-      text-align: left;
+  .foot__meta a:hover {
+    border-bottom-color: var(--signal);
+  }
+  .foot__reset {
+    min-height: 2.25rem;
+    color: var(--machine);
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  .foot__reset:hover {
+    color: var(--ink);
+  }
+  @media (min-width: 48rem) {
+    .foot__meta {
+      align-items: flex-end;
+      text-align: right;
     }
   }
 </style>
+
+<script>
+  import { session } from '../session/state';
+  import { register } from '../motion/lifecycle';
+
+  const btn = document.querySelector<HTMLElement>('[data-session-reset]');
+  if (btn) {
+    const handler = () => {
+      session().reset();
+      // A reset must be visible, and it must also clear the intro flag so the
+      // next load genuinely starts over. Deterministic for tests (§35).
+      try {
+        sessionStorage.removeItem('echelon_intro_v1');
+      } catch {
+        /* storage unavailable — the reset above still applied */
+      }
+      location.href = location.pathname + '?session=reset';
+    };
+    btn.addEventListener('click', handler);
+    register(() => btn.removeEventListener('click', handler));
+  }
+</script>

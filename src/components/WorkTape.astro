@@ -1,0 +1,195 @@
+---
+import type { Dict } from '../i18n';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const t = dict.tape;
+---
+
+<!--
+  THE WORK TAPE (§10).
+  One ordered event list, shown as a persistent operations rail. It is not a
+  marquee: nothing loops, nothing scrolls on its own. A row is added when the
+  section that produced that event has been read, so the rail is a record of
+  what ECHELON did while you were on the page — the same list the handover
+  report at the bottom is built from.
+-->
+<aside class="tape" data-tape aria-label={t.ariaLabel}>
+  <p class="tape__title label">{t.label}</p>
+  <ol class="tape__list">
+    {
+      t.events.map((e, i) => (
+        <li class="tape__row" data-tape-row={i}>
+          <span class="tape__time sys">{e.time}</span>
+          <span class="tape__code sys">{e.code}</span>
+          <span class="tape__text">{e.text}</span>
+        </li>
+      ))
+    }
+  </ol>
+</aside>
+
+<style>
+  .tape {
+    position: fixed;
+    z-index: var(--z-tape);
+    pointer-events: none;
+  }
+
+  .tape__row {
+    display: grid;
+    align-items: baseline;
+    opacity: 0;
+  }
+  .tape__row[data-on] {
+    opacity: 1;
+  }
+
+  .tape__time {
+    color: var(--machine);
+  }
+  .tape__code {
+    color: var(--ink);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+  .tape__text {
+    color: var(--ink-soft);
+  }
+
+  /* ---------- compact: one line under the masthead ---------- */
+  @media (max-width: 74.999rem) {
+    .tape {
+      top: 3.5rem;
+      left: 0;
+      right: 0;
+      height: 1.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding-inline: var(--gutter);
+      /* Before the shift has produced anything the strip is invisible, so the
+         top of the page is not given over to an empty bar. */
+      background: transparent;
+      border-bottom: 1px solid transparent;
+      overflow: hidden;
+      font-size: var(--step-micro);
+      transition:
+        background var(--dur-normal) var(--ease-standard),
+        border-color var(--dur-normal) var(--ease-standard);
+    }
+    .tape[data-live] {
+      background: color-mix(in srgb, var(--paper-deep) 94%, transparent);
+      border-bottom-color: var(--rule);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    .tape__title {
+      display: none;
+    }
+    .tape__list {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      height: 100%;
+    }
+    /* only the most recent event is shown; the rest are stacked underneath */
+    .tape__row {
+      position: absolute;
+      inset: 0;
+      grid-template-columns: max-content max-content minmax(0, 1fr);
+      gap: 0.55rem;
+      align-content: center;
+      white-space: nowrap;
+      transform: translateY(60%);
+      transition:
+        opacity var(--dur-normal) var(--ease-standard),
+        transform var(--dur-normal) var(--ease-enter);
+    }
+    .tape__row[data-on] {
+      transform: none;
+    }
+    /* an earlier row that has been superseded moves up and out */
+    .tape__row[data-on][data-past] {
+      opacity: 0;
+      transform: translateY(-60%);
+    }
+    .tape__text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  /* ---------- stage: a real rail in the reserved right margin ---------- */
+  @media (min-width: 75rem) {
+    .tape {
+      top: 50%;
+      right: 0;
+      translate: 0 -50%;
+      width: var(--rail);
+      padding-inline: 1rem 0.75rem;
+      border-left: 1px solid var(--rule);
+      font-size: var(--step-micro);
+      opacity: 0;
+      transition: opacity var(--dur-expressive) var(--ease-standard);
+    }
+    .tape[data-live] {
+      opacity: 1;
+    }
+    .tape__title {
+      font-size: var(--step-micro);
+      margin-bottom: 0.6rem;
+    }
+    .tape__row {
+      grid-template-columns: max-content minmax(0, 1fr);
+      grid-template-areas: 'time code' '. text';
+      gap: 0 0.5rem;
+      padding-block: 0.28rem;
+      transform: translateX(-0.4rem);
+      transition:
+        opacity var(--dur-expressive) var(--ease-enter),
+        transform var(--dur-expressive) var(--ease-enter);
+    }
+    .tape__row[data-on] {
+      transform: none;
+    }
+    .tape__time {
+      grid-area: time;
+      font-size: var(--step-micro);
+    }
+    .tape__code {
+      grid-area: code;
+      font-size: var(--step-micro);
+    }
+    .tape__text {
+      grid-area: text;
+      font-size: var(--step-micro);
+      color: var(--machine);
+    }
+    /* the newest row is the one currently true */
+    .tape__row[data-on]:not([data-past]) .tape__code {
+      color: var(--signal);
+    }
+  }
+
+  /* Very short viewports: the rail would crowd the content. */
+  @media (min-width: 75rem) and (max-height: 39rem) {
+    .tape {
+      display: none;
+    }
+  }
+
+  :global(html[data-intro]) .tape {
+    opacity: 0 !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tape__row {
+      transition: opacity 120ms linear !important;
+      transform: none !important;
+    }
+  }
+</style>

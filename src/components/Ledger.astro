@@ -1,0 +1,101 @@
+---
+import type { Dict } from '../i18n';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const l = dict.ledger;
+---
+
+<!--
+  ECONOMICS (§10 "ledger" projection).
+  Tabular information gets a table — with a caption, header scope and a labelled
+  scroll region — not a grid of rounded cards.
+-->
+<section class="ledger band" id="ledger">
+  <div class="page">
+    <p class="label">{l.label}</p>
+    <h2 class="title ledger__title" data-reveal="handover">{l.title}</h2>
+
+    <div class="ledger__scroll" tabindex="0" role="region" aria-label={l.caption}>
+      <table class="ledger__table">
+        <caption class="sr-only">{l.caption}</caption>
+        <thead>
+          <tr>
+            <th scope="col"><span class="sr-only">{l.caption}</span></th>
+            <th scope="col" class="label">{l.humanCol}</th>
+            <th scope="col" class="label ledger__us">{l.echelonCol}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            l.rows.map((r) => (
+              <tr>
+                <th scope="row">{r.label}</th>
+                <td class="sys">{r.human}</td>
+                <td class="sys ledger__us">{r.echelon}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p class="ledger__bottom" data-reveal="resolve">{l.bottom}</p>
+  </div>
+</section>
+
+<style>
+  .ledger {
+    border-bottom: 1px solid var(--rule);
+  }
+  .ledger__title {
+    margin-top: 0.6rem;
+    max-width: 22ch;
+  }
+  .ledger__scroll {
+    margin-top: clamp(2rem, 5vh, 3.5rem);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+  .ledger__table {
+    width: 100%;
+    min-width: 32rem;
+    max-width: 52rem;
+    border-collapse: collapse;
+    text-align: left;
+  }
+  .ledger__table th,
+  .ledger__table td {
+    padding: 0.9rem 1rem 0.9rem 0;
+    vertical-align: baseline;
+  }
+  .ledger__table thead th {
+    font-size: var(--step-micro);
+    padding-bottom: 0.6rem;
+    color: var(--machine);
+  }
+  .ledger__table tbody th {
+    font-weight: 500;
+    color: var(--ink);
+    border-top: 1px solid var(--rule);
+    max-width: 30ch;
+  }
+  .ledger__table tbody td {
+    border-top: 1px solid var(--rule);
+    color: var(--machine);
+    width: 9rem;
+  }
+  .ledger__us {
+    color: var(--signal) !important;
+  }
+  .ledger__bottom {
+    margin-top: clamp(1.5rem, 4vh, 2.25rem);
+    font-size: var(--step-lead);
+    font-weight: 560;
+    max-width: 34ch;
+    color: var(--ink);
+  }
+</style>
