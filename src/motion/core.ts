@@ -58,7 +58,12 @@ const POINTS_WIDE = 560;
 const POINTS_COMPACT = 240;
 /** Points per latitude ring polyline. */
 const RING_STEPS = 72;
-const RINGS = [-0.62, -0.32, 0, 0.32, 0.62];
+/* Three, not five. Five parallel latitudes at a shallow tilt stack into contour
+   lines — the eye reads a globe diagram and stops looking for anything else,
+   however hard the lattice between them is working. Three keep the object legible
+   as a body with an equator while leaving the deformation, and the spectrum ring
+   around it, as the loudest thing on the canvas. */
+const RINGS = [-0.5, 0, 0.5];
 
 const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
 
@@ -311,13 +316,47 @@ export function initCore(
     /* The owner's attention: a ring that tightens while it listens. */
     if (open > 0.01) {
       const listening = phase === 'listening';
-      const rr = radius * (listening ? 1.16 - level * 0.1 : 1.24 + level * 0.06);
+      /* Tight enough that the loudest excursion still fits the canvas. The ring
+         sits at up to `base * 1.16`, and at the previous 1.24 that put the peaks
+         past the top and bottom edges, where they were sliced flat — a clipped
+         waveform is a lie about the sound. It also reads better close in: a
+         contour around the body, not a distant orbit. */
+      const base = radius * (listening ? 1.06 - level * 0.08 : 1.12 + level * 0.05);
+
+      /*
+       * Not a circle any more.
+       *
+       * This was the largest and cleanest mark on the core, and it was the one
+       * doing the most damage: a perfect outline states "diagram" far more
+       * loudly than a deforming lattice inside it states "voice". Every other
+       * element could answer to the audio and the eye would still land on the
+       * circle and file the whole object under figure.
+       *
+       * Its radius now follows the spectrum around the circumference, so the
+       * outermost thing on the object *is* the shape of the sound. Mirrored
+       * across both axes on purpose: an outline that varies freely reads as a
+       * wobble, one that is symmetric reads as a voice. And when nothing is
+       * playing the spectrum is flat and it relaxes back into exactly the circle
+       * it always was — the honest resting state, not a fake idle animation.
+       */
+      const STEPS = 180;
+      ctx.beginPath();
+      for (let s = 0; s <= STEPS; s++) {
+        const a = (s / STEPS) * Math.PI * 2;
+        // 0 at the poles, 1 at the widest point — low bands move the most surface
+        const u = Math.abs(Math.cos(a));
+        const b = Math.min(CORE_BANDS - 1, Math.round((1 - u) * (CORE_BANDS - 1)));
+        const rr = base * (1 + (spec[b] ?? 0) * (0.05 + open * 0.16));
+        const x = cx + Math.cos(a) * rr;
+        const y = cy + Math.sin(a) * rr;
+        if (s === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
       ctx.strokeStyle = `rgba(${signal[0]},${signal[1]},${signal[2]},${
         open * (listening ? 0.55 : 0.24)
       })`;
       ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(cx, cy, rr, 0, Math.PI * 2);
       ctx.stroke();
     }
 
