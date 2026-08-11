@@ -58,12 +58,20 @@ const POINTS_WIDE = 560;
 const POINTS_COMPACT = 240;
 /** Points per latitude ring polyline. */
 const RING_STEPS = 72;
-/* Three, not five. Five parallel latitudes at a shallow tilt stack into contour
-   lines — the eye reads a globe diagram and stops looking for anything else,
-   however hard the lattice between them is working. Three keep the object legible
-   as a body with an equator while leaving the deformation, and the spectrum ring
-   around it, as the loudest thing on the canvas. */
-const RINGS = [-0.5, 0, 0.5];
+/*
+ * One, and it is the equator.
+ *
+ * Five parallel latitudes at a shallow tilt stack into contour lines and the eye
+ * files the object under "globe diagram", however hard the lattice between them
+ * is working. Cutting to three did not fix that — three read as three plates.
+ *
+ * The rings turned out not to be needed at all: since the outer contour started
+ * following the spectrum it does the work of structure better than any fixed
+ * horizontal can, because it is alive. What is left is a single equator, which
+ * gives the body an axis and a sense of which way it is turning without
+ * proposing that it is a diagram of anything.
+ */
+const RINGS = [0];
 
 const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
 
@@ -114,7 +122,12 @@ export function initCore(
   // Entity anchors. Spread over longitude *and* latitude: placing them all near
   // the equator put two labels on the same baseline the moment the sphere turned,
   // and overlapping type is worse than no label at all.
-  const LATS = [0.34, -0.16, 0.06, -0.4, 0.2, -0.28];
+  /* None of them within reach of the equator: with a single ring left, a name
+     anchored near latitude zero has the ring drawn straight through its own
+     letters. Keeping the anchors clear of that band solves it by construction,
+     which is better than nudging a label away from a line at draw time and
+     hoping the two never meet again. */
+  const LATS = [0.34, -0.22, 0.52, -0.42, 0.24, -0.34];
   const eIndex = new Uint16Array(entities.length);
   for (let k = 0; k < entities.length; k++) {
     const wantTh = ((k + 0.5) / entities.length) * Math.PI * 2;
@@ -168,10 +181,15 @@ export function initCore(
   let ink: [number, number, number] = [21, 20, 15];
   let signal: [number, number, number] = [176, 52, 26];
   let machine: [number, number, number] = [85, 82, 74];
+  /* The ground the core is drawn on, so a name can be haloed out of it. Read
+     rather than assumed, because the ambient light moves the paper through the
+     day and a halo mixed from yesterday's value would ring faintly at dusk. */
+  let paper: [number, number, number] = [247, 243, 231];
   const readPalette = () => {
     ink = readRgb(canvas, '--ink', ink);
     signal = readRgb(canvas, '--signal', signal);
     machine = readRgb(canvas, '--machine', machine);
+    paper = readRgb(canvas, '--paper', paper);
   };
   readPalette();
 
@@ -390,6 +408,23 @@ export function initCore(
       ctx.fill();
 
       ctx.textAlign = dirX > 0 ? 'left' : 'right';
+
+      /*
+       * A halo of the ground, drawn under the name.
+       *
+       * Separating the anchors by latitude did not stop the equator being drawn
+       * through the middle of a word, and could not: the ring projects as an
+       * ellipse occupying a wide band of the canvas, so any label inside that
+       * band meets the line wherever it is anchored. Haloing the text is what a
+       * map does for exactly this reason, and it holds against the lattice and
+       * the spectrum contour too, not only against the ring it was noticed on.
+       */
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = `rgba(${paper[0]},${paper[1]},${paper[2]},${fade * 0.9})`;
+      ctx.strokeText(entities[k]!.label, lx + dirX * 4, ly - 5);
+      ctx.strokeText(entities[k]!.kind, lx + dirX * 4, ly + 7);
+
       ctx.fillStyle = `rgba(${ink[0]},${ink[1]},${ink[2]},${fade * 0.95})`;
       ctx.fillText(entities[k]!.label, lx + dirX * 4, ly - 5);
       ctx.fillStyle = `rgba(${machine[0]},${machine[1]},${machine[2]},${fade * 0.8})`;
