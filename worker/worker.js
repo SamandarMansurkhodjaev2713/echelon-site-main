@@ -11,7 +11,17 @@
  * Limits (tune here): 5 sessions/IP/day, 60 sessions/day total.
  */
 
+/*
+ * The live site moved to `echelon-site-main` and this list did not follow it, so
+ * the one origin that actually needs a token was the one origin refused. The
+ * worker would have deployed cleanly, answered `curl` from the old domain, and
+ * returned 403 to every real visitor pressing «Поговорить».
+ *
+ * The deployed origin is first because it is also the CORS fallback below when a
+ * request arrives with an origin that is not on this list.
+ */
 const ALLOWED_ORIGINS = [
+  'https://samandarmansurkhodjaev2713.github.io',
   'https://komrxn.github.io',
   'http://localhost:4321',
   'http://127.0.0.1:4321',

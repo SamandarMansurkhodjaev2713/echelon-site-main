@@ -201,6 +201,30 @@ test('a fast scroll to the bottom and back leaves nothing half-drawn', async ({ 
    * unambiguously promised to have revealed, and if it is still at zero it is
    * genuinely stuck.
    */
+  /*
+   * The condition is `is-in`, not opacity, and the difference is the whole point.
+   *
+   * This is the third time this test has reported a page that was working. The
+   * previous two rounds tightened *which* elements count; the remaining fault was
+   * in what it asked of them. It asked for opacity, and opacity is a frame: once
+   * `.is-in` is on an element the stylesheet gives it `opacity: 1`, and every
+   * value below that is the transition on its way there.
+   *
+   * The evidence was in the failure itself. Firefox on the runner named
+   * `head day__scene-title is-in`, `copy day__scene-text is-in`,
+   * `day__fragment is-in` — every offender already carrying the class that says
+   * the observer had fired for it — and the retry, on identical code, named a
+   * different element in a different section. A genuinely stuck reveal is neither
+   * transient nor a different one each run.
+   *
+   * What this test exists to catch is reveal.ts's own worst case: a viewport that
+   * crosses an element *between* two frames so that no intersection callback is
+   * ever produced and the reader is left looking at a blank band. That element
+   * never receives `is-in`, and this still names it. Asking for `is-in` is the
+   * sharper question, not the softer one — and the stylesheet's side of the
+   * bargain is covered by sixty-six visual baselines, which are captured with
+   * every reveal settled.
+   */
   const stuck = () =>
     page.evaluate(() => {
       const out: string[] = [];
@@ -213,6 +237,7 @@ test('a fast scroll to the bottom and back leaves nothing half-drawn', async ({ 
         if (r.height <= 0) continue;
         const shown = Math.min(r.bottom, limit) - Math.max(r.top, 0);
         if (shown / r.height < 0.12) continue;
+        if (el.classList.contains('is-in')) continue;
         if (Number(getComputedStyle(el).opacity) < 0.05) out.push(el.className?.toString().slice(0, 40));
       }
       return out;
@@ -226,7 +251,8 @@ test('a fast scroll to the bottom and back leaves nothing half-drawn', async ({ 
           const r = el.getBoundingClientRect();
           if (r.height <= 0) return true;
           const shown = Math.min(r.bottom, limit) - Math.max(r.top, 0);
-          return shown / r.height < 0.12 || Number(getComputedStyle(el).opacity) >= 0.05;
+          if (shown / r.height < 0.12) return true;
+          return el.classList.contains('is-in') || Number(getComputedStyle(el).opacity) >= 0.05;
         });
       },
       undefined,

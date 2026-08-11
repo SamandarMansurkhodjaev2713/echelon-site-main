@@ -12,7 +12,7 @@
 2. В терминале:
 
 ```sh
-cd ~/Projects/echelon-site/worker
+cd C:\Users\sam4k\echelon-site\worker
 npx wrangler login          # откроется браузер, войди в Cloudflare (бесплатный план ок)
 npx wrangler kv namespace create RATE
 ```
@@ -37,12 +37,18 @@ npx wrangler deploy
 
 ```sh
 curl -s -X POST https://echelon-voice.<твой-акк>.workers.dev/token \
-  -H 'content-type: application/json' -H 'Origin: https://komrxn.github.io' \
+  -H 'content-type: application/json' \
+  -H 'Origin: https://samandarmansurkhodjaev2713.github.io' \
   -d '{"locale":"ru"}'
 ```
 
 Должен вернуться JSON с `"token": "auth_tokens/..."`. Пришли мне вывод — я
 проверю остальное сам.
+
+Origin здесь не для красоты: воркер отдаёт токен только тем доменам, что
+перечислены в `ALLOWED_ORIGINS` в `worker.js`, и на всё остальное отвечает 403.
+Там сейчас живой домен, старый `komrxn.github.io` и локальный `4321`. Если
+адрес сайта когда-нибудь снова сменится — правится это в одном месте, там же.
 
 ## Сколько это стоит
 

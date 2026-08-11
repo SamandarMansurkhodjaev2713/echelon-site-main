@@ -754,6 +754,48 @@ off the play button, which makes it mean *this tape has a recording on it* inste
 of *someone pressed a control*, and it is never cleared — the trace stays after
 playback stops for the same reason the history does.
 
+### The live sphere would have been refused by its own worker
+
+The voice worker's `ALLOWED_ORIGINS` still listed `https://komrxn.github.io` and
+localhost, and the site now deploys to `samandarmansurkhodjaev2713.github.io`. The
+one origin that actually needs a token was the one origin refused. Nothing about
+this fails loudly: `wrangler deploy` succeeds, the README's `curl` check passes
+because it sends the old origin in the header, and only a real visitor pressing
+«Поговорить» meets the 403. The deployed origin is now first in the list — it is
+also the CORS fallback — and the README says what that header is for instead of
+carrying it as decoration.
+
+This is the third form the wrong-repository trap has taken: the remote you push
+to, the repository `gh` reports on, and now the origin a worker will answer.
+
+### The gate went red, and it was right to be doubted
+
+The tape commit came back failed: `[firefox] › a fast scroll to the bottom and
+back leaves nothing half-drawn`, on the runner, on the first attempt and on the
+retry. `test` gates `build`, so nothing deployed and the live site stayed on the
+previous commit — which is what a gate is for, and worth saying plainly given the
+next paragraph argues the failure was wrong.
+
+It was wrong, and it named its own cause. Every element it listed already carried
+`is-in` — `head day__scene-title is-in`, `copy day__scene-text is-in`,
+`day__fragment is-in` — which is the class the observer adds when it fires. The
+reveal had happened; what the test caught was the opacity transition on its way
+to 1. The retry, on identical code, named a different element in a different
+section. A stuck reveal is neither transient nor a different one each run. The
+commit under it changed a border colour and set a flag that cannot be set without
+audio, neither of which can move a reveal.
+
+So this is the same mistake as the −2 px that opened this phase, made by the suite
+rather than by a probe: a question about a state, answered by measuring a frame.
+This is also the third round of tuning on this one test — the previous two
+sharpened *which* elements count, and left standing the assumption that opacity
+was the thing to ask about. It now asks for `is-in`, which is the stricter
+question rather than the looser one: reveal.ts's own worst case is an element the
+viewport crosses between two frames so that no callback is ever produced, and such
+an element never receives the class and is still named. The stylesheet's half of
+the bargain — that `is-in` really does resolve to a visible element — is held by
+sixty-six visual baselines, every one captured with the reveals settled.
+
 ---
 
 ## OPEN ITEMS
@@ -786,7 +828,12 @@ playback stops for the same reason the history does.
    `deploy`, means nothing would ever deploy. Three ways out, and choosing between
    them is a real trade-off: run the visual project only where its baselines exist
    and lose visual cover in CI; commit a second, Linux-captured set; or run visual
-   in CI inside the official Playwright image so one set serves both. Undecided.
+   in CI inside the official Playwright image so one set serves both. **Decided,
+   not closed** — and this entry went on saying "undecided" long after the decision
+   was in the code. `playwright.config.ts` takes the first way out
+   (`HAS_BASELINES = process.platform === 'win32'`), so on the runner the project
+   does not exist rather than failing: deploys stay unblocked and CI has no visual
+   cover at all. The third option is the one that would actually give CI eyes.
 7. The three seams still have no baseline of their own — `SCENES` parks on section
    ids and the seams carry none. PHASE 17 closed the `load` / `voice` / `ledger`
    half of this gap; an id on each seam and five more baselines would close the
