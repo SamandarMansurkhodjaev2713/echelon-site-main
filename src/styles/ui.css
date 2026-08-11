@@ -74,6 +74,21 @@
   flex-direction: column;
   gap: 2px;
   background: var(--ui-bg);
+  /*
+   * The list is taller than the window, and it was simply cut — the last group
+   * heading sliced through the middle of its own letters. That does not read as
+   * "the list continues", it reads as a broken render, which is the one thing
+   * this section cannot afford: its whole claim is that this is the real product
+   * and not a picture of one.
+   *
+   * A real desktop sidebar scrolls. The fade is what says so, and it earns its
+   * place over a scrollbar because a scrollbar drawn inside a demo window on a
+   * landing page reads as a page scrollbar in the wrong position. Kept to 22 px
+   * so the last item is still legible when you reach it.
+   */
+  overflow-y: auto;
+  scrollbar-width: thin;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent);
 }
 
 .ui-side__brand {

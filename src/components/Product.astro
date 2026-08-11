@@ -261,6 +261,30 @@ const panes = [
     .prod__stage :global(.app-window__body) {
       height: min(30rem, 68vh);
     }
+
+    /*
+     * The sheet opens nearly three times faster on a phone, and that is not a
+     * tuning preference — it is what makes the section usable.
+     *
+     * `--open` is scrubbed across the whole section, which is right on a tall
+     * desktop stage where the parting is a long, deliberate gesture. On a 390 px
+     * screen the stage is short, so the *half-open* state is what a reader is
+     * looking at for most of the section: a window with the top leaf still over
+     * its title bar and the bottom leaf still over its last line. Measured at one
+     * ordinary scroll position it stood at 0.78 — the word "Чат" sliced through
+     * the middle and a sentence ending in "Таблица будет к". That is the
+     * unreadable interactive the section was reported for.
+     *
+     * Fully open by 38 % of the scrub instead of 100 %. The gesture survives —
+     * you still watch the paper part — and then the product is simply there,
+     * readable and operable, for the rest of the section.
+     */
+    .prod__leaf--top {
+      transform: translate3d(0, calc(-100% * min(1, var(--open, 0) * 2.6)), 0);
+    }
+    .prod__leaf--bottom {
+      transform: translate3d(0, calc(100% * min(1, var(--open, 0) * 2.6)), 0);
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
