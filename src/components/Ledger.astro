@@ -91,6 +91,40 @@ const l = dict.ledger;
   .ledger__us {
     color: var(--signal) !important;
   }
+
+  /*
+   * Both columns, on a phone, without a sideways scroll nobody discovers.
+   *
+   * `min-width: 32rem` forced the table 512 px wide inside a 390 px screen. The
+   * wrapper scrolls, so nothing was technically lost — but the column that was
+   * off the edge was the ECHELON one, which is the entire point of the
+   * comparison. What a reader actually saw was a single column of да · да · да ·
+   * нет · нет against "помощник в штате", with no sign that a second column
+   * existed. That is worse than unreadable: those answers describe the human,
+   * and read alone they invite exactly the opposite conclusion.
+   *
+   * Not restacked into blocks, which is the usual answer and the wrong one here:
+   * `display: block` on rows and cells strips the table its semantics, and this
+   * is a real comparison table that a screen reader should keep announcing as
+   * one. The values are two or three characters wide; they only needed to stop
+   * being told to occupy 9 rem each.
+   */
+  @media (max-width: 47.999rem) {
+    .ledger__table {
+      min-width: 0;
+    }
+    .ledger__table th,
+    .ledger__table td {
+      padding-right: 0.6rem;
+    }
+    .ledger__table tbody td {
+      width: auto;
+      white-space: nowrap;
+    }
+    .ledger__table tbody th {
+      max-width: none;
+    }
+  }
   .ledger__bottom {
     margin-top: clamp(1.5rem, 4vh, 2.25rem);
     font-size: var(--step-lead);
