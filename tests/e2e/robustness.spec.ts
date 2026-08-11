@@ -184,34 +184,57 @@ test('a fast scroll to the bottom and back leaves nothing half-drawn', async ({ 
    * names the offender, while a slow engine no longer fails a page that is
    * behaving correctly.
    */
+  /*
+   * "On screen" has to mean what the page means by it.
+   *
+   * motion/reveal.ts fires at `threshold: 0.06` with `rootMargin: 0 0 -6% 0`: an
+   * element appears once six per cent of its own area has entered a viewport
+   * whose bottom six per cent does not count. This test was asking a different
+   * question — it counted a single visible pixel as "on screen" and then
+   * demanded the element be revealed. A one-pixel sliver at the top edge is an
+   * element that is correctly still waiting, and which elements end up as slivers
+   * depends on viewport and document height, which is why this only ever bit one
+   * engine on one runner.
+   *
+   * So the check is measured against the same geometry the observer uses, at
+   * double its trigger fraction. Anything counted here is an element the page has
+   * unambiguously promised to have revealed, and if it is still at zero it is
+   * genuinely stuck.
+   */
+  const stuck = () =>
+    page.evaluate(() => {
+      const out: string[] = [];
+      const limit = window.innerHeight * 0.94; // the observer's own root, bottom margin included
+      for (const el of document.querySelectorAll<HTMLElement>('[data-reveal]')) {
+        const r = el.getBoundingClientRect();
+        if (r.height <= 0) continue;
+        const shown = Math.min(r.bottom, limit) - Math.max(r.top, 0);
+        if (shown / r.height < 0.12) continue;
+        if (Number(getComputedStyle(el).opacity) < 0.05) out.push(el.className?.toString().slice(0, 40));
+      }
+      return out;
+    });
+
   await page
     .waitForFunction(
-      () =>
-        [...document.querySelectorAll<HTMLElement>('[data-reveal]')].every((el) => {
+      () => {
+        const limit = window.innerHeight * 0.94;
+        return [...document.querySelectorAll<HTMLElement>('[data-reveal]')].every((el) => {
           const r = el.getBoundingClientRect();
-          const onScreen = r.top < window.innerHeight && r.bottom > 0;
-          return !onScreen || Number(getComputedStyle(el).opacity) >= 0.05;
-        }),
+          if (r.height <= 0) return true;
+          const shown = Math.min(r.bottom, limit) - Math.max(r.top, 0);
+          return shown / r.height < 0.12 || Number(getComputedStyle(el).opacity) >= 0.05;
+        });
+      },
       undefined,
       { timeout: 5_000 },
     )
     .catch(() => {
-      /* fall through: the assertion below reports which element is stuck, which
-         is more use than a bare timeout */
+      /* fall through: the assertion below names the offender, which is more use
+         than a bare timeout */
     });
 
-  const invisible = await page.evaluate(() => {
-    const out: string[] = [];
-    for (const el of document.querySelectorAll<HTMLElement>('[data-reveal]')) {
-      const r = el.getBoundingClientRect();
-      const onScreen = r.top < window.innerHeight && r.bottom > 0;
-      if (onScreen && Number(getComputedStyle(el).opacity) < 0.05) {
-        out.push(el.className?.toString().slice(0, 40));
-      }
-    }
-    return out;
-  });
-  expect(invisible).toEqual([]);
+  expect(await stuck()).toEqual([]);
   expect(errors()).toEqual([]);
 });
 
