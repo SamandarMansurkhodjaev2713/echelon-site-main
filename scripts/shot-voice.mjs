@@ -8,7 +8,7 @@ const errors = [];
 page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
 page.on('pageerror', (e) => errors.push(String(e)));
 
-await page.goto('http://localhost:4321/echelon-site/', { waitUntil: 'networkidle' });
+await page.goto('http://localhost:4321/echelon-site-main/', { waitUntil: 'networkidle' });
 await page.waitForTimeout(1500);
 mkdirSync('.shots', { recursive: true });
 

@@ -10,7 +10,7 @@ import path from 'node:path';
 import zlib from 'node:zlib';
 
 const ROOT = path.join(process.cwd(), 'dist');
-const BASE = '/echelon-site';
+const BASE = '/echelon-site-main';
 const PORT = Number(process.env.PORT || 4321);
 
 const TYPES = {

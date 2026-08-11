@@ -8,7 +8,7 @@ import { chromium } from '@playwright/test';
 import lighthouse from 'lighthouse';
 import fs from 'node:fs';
 
-const URL = process.argv[2] || 'http://localhost:4321/echelon-site/';
+const URL = process.argv[2] || 'http://localhost:4321/echelon-site-main/';
 const FORM_FACTOR = process.env.FORM_FACTOR || 'mobile';
 const PORT = 9222;
 

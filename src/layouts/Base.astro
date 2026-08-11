@@ -25,7 +25,13 @@ export interface Props {
 }
 
 const { locale, title, description } = Astro.props;
-const site = 'https://komrxn.github.io';
+/* Taken from `site` in astro.config.mjs rather than repeated here. It was a
+   literal, and a literal is a second source of truth: moving the project site to
+   another repository changed the config, the sitemap and robots.txt, and left the
+   canonical link and every OG image still pointing at the old origin — with
+   nothing failing until an SEO assertion caught it. `Astro.site` cannot be unset,
+   because the build needs it to emit absolute URLs at all. */
+const site = Astro.site!.origin;
 const canonical = `${site}${localePath(locale)}`;
 const ogImage = `${site}${asset(`og/og-${locale}.png`)}`;
 

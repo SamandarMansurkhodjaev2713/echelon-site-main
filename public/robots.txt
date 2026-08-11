@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://komrxn.github.io/echelon-site/sitemap.xml
+Sitemap: https://samandarmansurkhodjaev2713.github.io/echelon-site-main/sitemap.xml

@@ -4,7 +4,7 @@ Presentation site for **Echelon Desktop**, a personal assistant for the owner of
 a business: it lives on their computer, remembers their people and agreements,
 runs the routine and finishes it, and leaves the decisions to them.
 
-**Live:** https://komrxn.github.io/echelon-site/ · RU · EN · UZ
+**Live:** https://samandarmansurkhodjaev2713.github.io/echelon-site-main/ · RU · EN · UZ
 
 ---
 
@@ -95,6 +95,6 @@ session also exists but is dormant: `src/lib/config.ts` has an empty
 ## Deployment
 
 Pushing to `main` builds and deploys to GitHub Pages via
-`.github/workflows/deploy.yml`. The site is served from `/echelon-site/`, so
+`.github/workflows/deploy.yml`. The site is served from `/echelon-site-main/`, so
 every asset URL is built through `asset()` / `localePath()` in `src/i18n` —
 never hardcode a leading `/`.

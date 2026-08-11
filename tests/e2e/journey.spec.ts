@@ -448,10 +448,10 @@ test('every route works under the GitHub Pages base path', async ({ page }) => {
     const bad = await page.evaluate(() => {
       const out: string[] = [];
       for (const el of document.querySelectorAll<HTMLImageElement>('img[src]')) {
-        if (!el.getAttribute('src')!.startsWith('/echelon-site/')) out.push(el.getAttribute('src')!);
+        if (!el.getAttribute('src')!.startsWith('/echelon-site-main/')) out.push(el.getAttribute('src')!);
       }
       for (const el of document.querySelectorAll<HTMLLinkElement>('link[rel="icon"]')) {
-        if (!el.getAttribute('href')!.startsWith('/echelon-site/')) out.push(el.getAttribute('href')!);
+        if (!el.getAttribute('href')!.startsWith('/echelon-site-main/')) out.push(el.getAttribute('href')!);
       }
       return out;
     });
@@ -476,9 +476,9 @@ test('SEO head survives the redesign', async ({ page }) => {
     h1s: document.querySelectorAll('h1').length,
   }));
   expect(head.description?.length).toBeGreaterThan(80);
-  expect(head.canonical).toBe('https://komrxn.github.io/echelon-site/');
+  expect(head.canonical).toBe('https://samandarmansurkhodjaev2713.github.io/echelon-site-main/');
   expect(head.hreflang).toEqual(['ru', 'en', 'uz', 'x-default']);
-  expect(head.ogImage).toContain('/echelon-site/og/og-ru.png');
+  expect(head.ogImage).toContain('/echelon-site-main/og/og-ru.png');
   expect(head.ogTitle).toBeTruthy();
   expect(head.twitter).toBe('summary_large_image');
   expect(JSON.parse(head.jsonLd!)['@type']).toBe('SoftwareApplication');

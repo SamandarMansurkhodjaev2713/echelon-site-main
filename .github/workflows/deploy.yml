@@ -16,8 +16,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Types, unit tests and the behaviour/accessibility suites gate the deploy.
-  # Visual regression runs too, but on Chromium only — see playwright.config.ts.
+  # Types, unit tests and the behaviour/accessibility suites gate the deploy, on
+  # Chromium, Firefox, WebKit and two phone profiles. Visual regression is not in
+  # this gate: its baselines carry the platform in their file name and only the
+  # win32 set is committed, so on this runner every one of them would fail as a
+  # missing snapshot and nothing would ever deploy. See playwright.config.ts.
   test:
     runs-on: ubuntu-latest
     steps:

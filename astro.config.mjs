@@ -1,10 +1,10 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 
-// Deployed to GitHub Pages project site: https://komrxn.github.io/echelon-site/
+// Deployed to GitHub Pages project site: https://samandarmansurkhodjaev2713.github.io/echelon-site-main/
 export default defineConfig({
-  site: 'https://komrxn.github.io',
-  base: '/echelon-site',
+  site: 'https://samandarmansurkhodjaev2713.github.io',
+  base: '/echelon-site-main',
   trailingSlash: 'ignore',
   i18n: {
     locales: ['ru', 'en', 'uz'],

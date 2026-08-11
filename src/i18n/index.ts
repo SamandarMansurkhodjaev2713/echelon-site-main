@@ -49,7 +49,7 @@ export function isLocale(value: string): value is Locale {
   return (LOCALES as readonly string[]).includes(value);
 }
 
-/** Deployment base without a trailing slash, e.g. `/echelon-site`. */
+/** Deployment base without a trailing slash, e.g. `/echelon-site-main`. */
 export const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 /** Absolute in-site path for a locale's landing page. */

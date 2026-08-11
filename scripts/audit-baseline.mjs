@@ -2,7 +2,7 @@ import { chromium, devices } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const BASE = 'http://localhost:4321/echelon-site';
+const BASE = 'http://localhost:4321/echelon-site-main';
 const OUT = process.argv[2] || 'C:/Users/sam4k/AppData/Local/Temp/claude/C--Users-sam4k/219c013c-7451-4514-9a7a-1f27d9873222/scratchpad/baseline';
 fs.mkdirSync(OUT, { recursive: true });
 

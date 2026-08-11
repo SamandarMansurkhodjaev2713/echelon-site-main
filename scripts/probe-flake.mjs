@@ -1,6 +1,6 @@
 import { firefox } from '@playwright/test';
 
-const BASE = 'http://localhost:4321/echelon-site/';
+const BASE = 'http://localhost:4321/echelon-site-main/';
 const RUNS = Number(process.env.RUNS || 10);
 const browser = await firefox.launch();
 

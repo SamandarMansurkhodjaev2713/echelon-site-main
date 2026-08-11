@@ -1,7 +1,7 @@
 /* Find exactly which element widens the page at a given viewport. */
 import { chromium, devices } from '@playwright/test';
 
-const BASE = 'http://localhost:4321/echelon-site/';
+const BASE = 'http://localhost:4321/echelon-site-main/';
 const W = Number(process.env.W || 360);
 const H = Number(process.env.H || 800);
 const PANE = process.env.PANE || '';

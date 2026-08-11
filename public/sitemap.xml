@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://komrxn.github.io/echelon-site/</loc>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://komrxn.github.io/echelon-site/"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://komrxn.github.io/echelon-site/en/"/>
-    <xhtml:link rel="alternate" hreflang="uz" href="https://komrxn.github.io/echelon-site/uz/"/>
+    <loc>https://samandarmansurkhodjaev2713.github.io/echelon-site-main/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://samandarmansurkhodjaev2713.github.io/echelon-site-main/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://samandarmansurkhodjaev2713.github.io/echelon-site-main/en/"/>
+    <xhtml:link rel="alternate" hreflang="uz" href="https://samandarmansurkhodjaev2713.github.io/echelon-site-main/uz/"/>
   </url>
-  <url><loc>https://komrxn.github.io/echelon-site/en/</loc></url>
-  <url><loc>https://komrxn.github.io/echelon-site/uz/</loc></url>
+  <url><loc>https://samandarmansurkhodjaev2713.github.io/echelon-site-main/en/</loc></url>
+  <url><loc>https://samandarmansurkhodjaev2713.github.io/echelon-site-main/uz/</loc></url>
 </urlset>

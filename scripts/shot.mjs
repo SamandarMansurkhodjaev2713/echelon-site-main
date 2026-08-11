@@ -7,7 +7,7 @@
 import { chromium } from '@playwright/test';
 import { mkdirSync, rmSync } from 'node:fs';
 
-const url = process.argv[2] ?? 'http://localhost:4321/echelon-site/';
+const url = process.argv[2] ?? 'http://localhost:4321/echelon-site-main/';
 const out = process.argv[3] ?? '.shots';
 const width = Number(process.argv[4] ?? 1440);
 const height = Number(process.argv[5] ?? 900);

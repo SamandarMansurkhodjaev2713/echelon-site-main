@@ -16,7 +16,7 @@
  */
 import { chromium } from '@playwright/test';
 
-const url = process.argv[2] ?? 'http://localhost:4321/echelon-site/';
+const url = process.argv[2] ?? 'http://localhost:4321/echelon-site-main/';
 const throttle = Number(process.argv[3] ?? 1);
 
 const browser = await chromium.launch();
