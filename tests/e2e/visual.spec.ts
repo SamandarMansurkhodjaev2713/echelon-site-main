@@ -20,9 +20,28 @@ const VIEWPORTS = [
   { name: 'mobile-360', width: 360, height: 800 },
 ];
 
-/** Scenes worth protecting, with the scroll fraction that defines their frame. */
+/*
+ * Scenes worth protecting, with the scroll fraction that defines their frame.
+ *
+ * `load`, `voice` and `ledger` were absent, and their absence has a history. The
+ * worst defect found in this page so far — the ECHELON column of the comparison
+ * table sitting off the right edge of a phone, so the section read as proving the
+ * opposite of what it says — was in `ledger`, and no baseline was looking at it.
+ * The gate was green throughout. It was found by a person scrolling a narrow
+ * screen, which is not a repeatable process and does not run in CI.
+ *
+ * `voice` was the other blind spot, and the largest: the section with the most
+ * machinery on the page had no pixel protecting any of it.
+ *
+ * The core canvas inside `voice` is still masked with the other canvases. Its
+ * type is gated instead by `npm run contrast`, which checks the label alphas
+ * against every ground the ambient ramp reaches — a stronger guarantee for a
+ * colour than one frozen frame, and one that does not depend on the FFT driver
+ * being deterministic at rest.
+ */
 const SCENES = [
   { id: 'top', at: 0 },
+  { id: 'load', at: 0.3 },
   { id: 'teach', at: 0.15 },
   { id: 'day', at: 0.2 },
   { id: 'product', at: 0.55 },
@@ -31,6 +50,12 @@ const SCENES = [
   { id: 'client', at: 0.25 },
   { id: 'boundary', at: 0.2 },
   { id: 'night', at: 0.6 },
+  /* Far enough down the section to land on the transcript rather than on the
+     core: the core is masked, so a frame taken over it is mostly a magenta
+     rectangle, and what can actually break here is the row grid, the marked
+     citations and the italic that separates the owner's line from the machine's. */
+  { id: 'voice', at: 0.78 },
+  { id: 'ledger', at: 0.35 },
   { id: 'handover', at: 0.3 },
 ];
 

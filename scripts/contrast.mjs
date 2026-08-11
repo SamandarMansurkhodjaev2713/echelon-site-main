@@ -98,6 +98,31 @@ for (const [when, stop] of Object.entries(RAMP)) {
   }
 }
 
+/* ---------------------------------------------------------------------------
+   CORE LABELS (motion/core.ts). The entity names on the voice core are the only
+   type on the page that no other gate can reach: they are painted into a canvas
+   at a computed alpha rather than declared as a colour, so the palette checks
+   above never see them and axe-core has no element to inspect.
+
+   They were carried by the same alpha as the dots and the rings, which rests at
+   0.45 while nothing is playing — the state every visitor arrives in. That drew
+   the name at 2.7:1 and the kind under it at 1.7:1, and the kind cleared AA in
+   no state at all, not even mid-sentence at full brightness. The two constants
+   below are the ones the module actually uses; lowering either one fails this
+   file rather than quietly dimming the thing the section exists to show.
+   --------------------------------------------------------------------------- */
+const CORE = { label: 0.72, kind: 0.92 };
+
+for (const [when, stop] of Object.entries(RAMP)) {
+  for (const [which, base] of Object.entries(stop)) {
+    const ground = over(base, BEHIND, VEIL);
+    checks.push(
+      [`core name — ink @${CORE.label} on ${which} @${when}`, over(P.ink, ground, CORE.label), ground, 4.5],
+      [`core kind — machine @${CORE.kind} on ${which} @${when}`, over(P.machine, ground, CORE.kind), ground, 4.5],
+    );
+  }
+}
+
 let fails = 0;
 for (const [name, fg, bg, min] of checks) {
   const r = ratio(fg, bg);

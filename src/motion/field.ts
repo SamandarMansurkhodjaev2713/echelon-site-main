@@ -383,6 +383,31 @@ export function initField(opts: FieldOptions = {}): () => void {
   let signalNight: [number, number, number] = [226, 103, 63];
   let machineNight: [number, number, number] = [168, 164, 150];
 
+  /*
+   * The same six colours, opaque, as strings — and the reason this module has
+   * them twice.
+   *
+   * The budget rule at the top of this file says nothing is allocated or
+   * stringified inside the loop, and the draw code broke it in the most
+   * expensive way available: a fresh `rgba(…)` template per mark, on the order
+   * of 380 of them a frame, each one built and then re-parsed by the canvas.
+   * Under the compositing rules an opaque colour drawn at `globalAlpha = a` is
+   * pixel-identical to that colour written as `rgba(…, a)`, so the alpha moves
+   * to a number and the colour becomes one of these six constants.
+   *
+   * One difference is not cosmetic and is why the call sites clamp: `rgba()`
+   * clamps an out-of-range alpha to 1, while the `globalAlpha` setter *ignores*
+   * a value outside 0..1 and silently keeps the previous one. A station at full
+   * hit asks for 1.4.
+   */
+  const rgb = (c: readonly [number, number, number]) => `rgb(${c[0]},${c[1]},${c[2]})`;
+  let sInkDay = rgb(inkDay);
+  let sSignalDay = rgb(signalDay);
+  let sMachineDay = rgb(machineDay);
+  let sInkNight = rgb(inkNight);
+  let sSignalNight = rgb(signalNight);
+  let sMachineNight = rgb(machineNight);
+
   const readPalette = () => {
     const root = document.documentElement;
     inkDay = readRgb(root, '--field-ink', inkDay);
@@ -391,6 +416,12 @@ export function initField(opts: FieldOptions = {}): () => void {
     inkNight = readRgb(root, '--field-ink-inv', inkNight);
     signalNight = readRgb(root, '--field-signal-inv', signalNight);
     machineNight = readRgb(root, '--field-machine-inv', machineNight);
+    sInkDay = rgb(inkDay);
+    sSignalDay = rgb(signalDay);
+    sMachineDay = rgb(machineDay);
+    sInkNight = rgb(inkNight);
+    sSignalNight = rgb(signalNight);
+    sMachineNight = rgb(machineNight);
   };
 
   /* ---------- shift state ---------- */
@@ -487,6 +518,8 @@ export function initField(opts: FieldOptions = {}): () => void {
     const last = Math.ceil((tick + h) / TICK_GAP) + 1;
 
     ctx.lineWidth = 1;
+    ctx.fillStyle = sSignalDay; //  only the flagged ticks fill, and only in signal
+    let stroke = '';
     for (let i = first; i <= last; i++) {
       const y = Math.round(i * TICK_GAP - tick) + 0.5;
       if (y < -TICK_GAP || y > h + TICK_GAP) continue;
@@ -503,15 +536,19 @@ export function initField(opts: FieldOptions = {}): () => void {
       const a = alpha * (0.22 + r1 * 0.5) * clamp01(Math.min(y, h - y) / (h * 0.16));
       if (a <= 0.01) continue;
 
-      const c = isSignal ? signalDay : machineDay;
-      ctx.strokeStyle = `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+      const c = isSignal ? sSignalDay : sMachineDay;
+      if (c !== stroke) {
+        ctx.strokeStyle = c;
+        stroke = c;
+      }
+      ctx.globalAlpha = a;
       ctx.beginPath();
       ctx.moveTo(cx, y);
       ctx.lineTo(cx + len, y);
       ctx.stroke();
 
       if (isSignal) {
-        ctx.fillStyle = `rgba(${signalDay[0]},${signalDay[1]},${signalDay[2]},${Math.min(1, a * 1.6)})`;
+        ctx.globalAlpha = Math.min(1, a * 1.6);
         ctx.fillRect(cx - 3.5, y - 1.5, 3, 3);
       }
     }
@@ -521,12 +558,14 @@ export function initField(opts: FieldOptions = {}): () => void {
     const headY = Math.round(h * 0.34) + 0.5;
     const headLen = hasLog && headY > logA && headY < logB ? squeezed : maxLen + 6;
     if (headLen >= 2) {
-      ctx.strokeStyle = `rgba(${inkDay[0]},${inkDay[1]},${inkDay[2]},${alpha * 0.5})`;
+      ctx.strokeStyle = sInkDay;
+      ctx.globalAlpha = alpha * 0.5;
       ctx.beginPath();
       ctx.moveTo(cx - 4, headY);
       ctx.lineTo(cx + headLen, headY);
       ctx.stroke();
     }
+    ctx.globalAlpha = 1;
   }
 
   /** Corner of route `r` — the single turn an orthogonal run is allowed. */
@@ -577,14 +616,16 @@ export function initField(opts: FieldOptions = {}): () => void {
   function drawSwitchboard(
     ctx: CanvasRenderingContext2D,
     alpha: number,
-    cInk: [number, number, number],
-    cSignal: [number, number, number],
-    cMachine: [number, number, number],
+    cInk: string,
+    cSignal: string,
+    cMachine: string,
   ): void {
     if (alpha <= 0.01) return;
 
     /* runs */
     ctx.lineWidth = 1;
+    ctx.strokeStyle = cInk; //  every run is ink; only the alpha differs
+    let fill = '';
     for (let r = 0; r < routeCount; r++) {
       const ax = sx[rA[r]!]!;
       const ay = sy[rA[r]!]!;
@@ -599,14 +640,14 @@ export function initField(opts: FieldOptions = {}): () => void {
       const g2 = clear((cx + bx) / 2, (cy + by) / 2, originY);
 
       if (g1 > 0.02) {
-        ctx.strokeStyle = `rgba(${cInk[0]},${cInk[1]},${cInk[2]},${alpha * 0.34 * g1})`;
+        ctx.globalAlpha = alpha * 0.34 * g1;
         ctx.beginPath();
         ctx.moveTo(Math.round(ax) + 0.5, Math.round(ay) + 0.5);
         ctx.lineTo(Math.round(cx) + 0.5, Math.round(cy) + 0.5);
         ctx.stroke();
       }
       if (g2 > 0.02) {
-        ctx.strokeStyle = `rgba(${cInk[0]},${cInk[1]},${cInk[2]},${alpha * 0.34 * g2})`;
+        ctx.globalAlpha = alpha * 0.34 * g2;
         ctx.beginPath();
         ctx.moveTo(Math.round(cx) + 0.5, Math.round(cy) + 0.5);
         ctx.lineTo(Math.round(bx) + 0.5, Math.round(by) + 0.5);
@@ -621,6 +662,10 @@ export function initField(opts: FieldOptions = {}): () => void {
       const r = evRoute[e]!;
       if (r < 0) continue;
       const c = evKind[e] === 1 ? cSignal : cInk;
+      if (c !== fill) {
+        ctx.fillStyle = c;
+        fill = c;
+      }
 
       for (let j = 0; j < TRAIL; j++) {
         const u = evT[e]! - j * 0.045;
@@ -636,7 +681,7 @@ export function initField(opts: FieldOptions = {}): () => void {
         if (a <= 0.015) continue;
         // A square: this is a packet of work, not a spark.
         const s = j === 0 ? 3 : 2;
-        ctx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+        ctx.globalAlpha = a;
         ctx.fillRect(Math.round(x) - s / 2, Math.round(y) - s / 2, s, s);
       }
     }
@@ -655,7 +700,14 @@ export function initField(opts: FieldOptions = {}): () => void {
       const a = alpha * g * ((owner ? 0.9 : 0.38) + hit * 0.5);
       if (a <= 0.01) continue;
 
-      ctx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+      if (c !== fill) {
+        ctx.fillStyle = c;
+        fill = c;
+      }
+      // A station at full hit asks for 1.4. The old string went through the CSS
+      // colour parser, which clamped it; the globalAlpha setter would instead
+      // have thrown the assignment away and kept the previous station's value.
+      ctx.globalAlpha = a > 1 ? 1 : a;
       if (k === 1) {
         // Projects are squares: a thing with edges and a deadline.
         ctx.fillRect(Math.round(x) - 2, Math.round(y) - 2, 4, 4);
@@ -667,12 +719,15 @@ export function initField(opts: FieldOptions = {}): () => void {
 
       if (owner) {
         // Everything reports here, so the owner is the one station with a ring.
-        ctx.strokeStyle = `rgba(${cSignal[0]},${cSignal[1]},${cSignal[2]},${a * 0.42})`;
+        // Off the *unclamped* `a`, because that is what the old string computed.
+        ctx.strokeStyle = cSignal;
+        ctx.globalAlpha = Math.min(1, a * 0.42);
         ctx.beginPath();
         ctx.arc(x, y, 8.5 + Math.sin(t * 0.9) * 1.4, 0, Math.PI * 2);
         ctx.stroke();
       }
     }
+    ctx.globalAlpha = 1;
   }
 
   function spawn(dt: number): void {
@@ -738,9 +793,9 @@ export function initField(opts: FieldOptions = {}): () => void {
     drawSwitchboard(
       ctx,
       Math.min(1, lerp(0.14, 0.9, surface) * (0.4 + night * 1.1)),
-      inkDay,
-      signalDay,
-      machineDay,
+      sInkDay,
+      sSignalDay,
+      sMachineDay,
     );
     drawStratum(0.55 + night * 0.45);
 
@@ -778,7 +833,7 @@ export function initField(opts: FieldOptions = {}): () => void {
       bctx.setTransform(bdpr, 0, 0, bdpr, 0, 0);
       bctx.clearRect(0, 0, bw, bh);
       layout(bw, bh, docTop);
-      drawSwitchboard(bctx, 1, inkNight, signalNight, machineNight);
+      drawSwitchboard(bctx, 1, sInkNight, sSignalNight, sMachineNight);
     };
 
     // Resizing the canvas clears it, so the frozen path has to redraw. The

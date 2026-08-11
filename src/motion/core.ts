@@ -85,6 +85,29 @@ function readRgb(el: Element, prop: string, fallback: [number, number, number]) 
   return fallback;
 }
 
+/*
+ * The one piece of type on this page that no gate could see.
+ *
+ * `scripts/contrast.mjs` validates every colour in the palette and axe-core
+ * checks every rendered element, and neither of them can reach a string painted
+ * into a canvas at a computed alpha. The entity names were carried by the same
+ * `fade` as the dots and the rings — which drops to 0.45 whenever nothing is
+ * playing, and nothing is playing until the visitor presses play. Measured
+ * against every ground the ambient ramp can reach, that put the name at 2.7:1
+ * and the kind beneath it at 1.7:1, where AA asks for 4.5. The kind label did
+ * not clear AA in *any* state, including mid-sentence at full brightness.
+ *
+ * So the type no longer shares the ornament's alpha. These two floors are the
+ * minimum that clears AA on the darkest ground, taken from the CORE LABELS block
+ * in scripts/contrast.mjs, which now gates them the way it gates the ramp.
+ *
+ * Losing the `open` term here is a gain, not a compromise: the comment below
+ * insists these labels are never timed to the audio, and brightening them when
+ * the voice starts was the one place that claim leaked.
+ */
+const LABEL_ALPHA = 0.72; //  ink — needs ≥ 0.615
+const KIND_ALPHA = 0.92; //  machine — needs ≥ 0.895
+
 export function initCore(
   canvas: HTMLCanvasElement,
   driver: CoreDriver,
@@ -388,8 +411,14 @@ export function initCore(
       const i = eIndex[k]!;
       project(ux[i]!, uy[i]!, uz[i]!, ca, sa, ct, st, p3);
       if (p3[2]! < 0.08) continue; //  only when facing the reader
-      const fade = clamp01((p3[2]! - 0.08) / 0.35) * (0.45 + open * 0.55);
-      if (fade <= 0.02) continue;
+      /* `depth` is the spatial cue and is all the type answers to: a name still
+         fades as its point turns away from the reader, and is at full strength
+         while it faces them. `fade` keeps the resting dimness, and now carries
+         only the leader line and the anchor dot — ornament, where being quiet at
+         rest is the intended reading. */
+      const depth = clamp01((p3[2]! - 0.08) / 0.35);
+      if (depth <= 0.02) continue;
+      const fade = depth * (0.45 + open * 0.55);
 
       const dirX = p3[0]! >= cx ? 1 : -1;
       const lx = p3[0]! + dirX * 14;
@@ -421,13 +450,13 @@ export function initCore(
        */
       ctx.lineJoin = 'round';
       ctx.lineWidth = 3;
-      ctx.strokeStyle = `rgba(${paper[0]},${paper[1]},${paper[2]},${fade * 0.9})`;
+      ctx.strokeStyle = `rgba(${paper[0]},${paper[1]},${paper[2]},${depth * 0.9})`;
       ctx.strokeText(entities[k]!.label, lx + dirX * 4, ly - 5);
       ctx.strokeText(entities[k]!.kind, lx + dirX * 4, ly + 7);
 
-      ctx.fillStyle = `rgba(${ink[0]},${ink[1]},${ink[2]},${fade * 0.95})`;
+      ctx.fillStyle = `rgba(${ink[0]},${ink[1]},${ink[2]},${depth * LABEL_ALPHA})`;
       ctx.fillText(entities[k]!.label, lx + dirX * 4, ly - 5);
-      ctx.fillStyle = `rgba(${machine[0]},${machine[1]},${machine[2]},${fade * 0.8})`;
+      ctx.fillStyle = `rgba(${machine[0]},${machine[1]},${machine[2]},${depth * KIND_ALPHA})`;
       ctx.fillText(entities[k]!.kind, lx + dirX * 4, ly + 7);
     }
 
@@ -439,6 +468,12 @@ export function initCore(
     t = 1.6;
     render(0);
     canvas.setAttribute('data-core-static', '');
+    /* The repaint below exists on the animated path so the labels are not set in
+       whatever face was loaded at start-up. This path has no next frame to
+       correct itself on, so without it the one frame it ever draws keeps the
+       fallback — and reduced motion is a reader's preference, not only a test
+       mode, so that is a person reading the names in the wrong type. */
+    if (document.fonts?.ready) void document.fonts.ready.then(() => render(0));
     // Amplitude still matters when the recording is playing, so redraw on demand.
     return register(() => {});
   }

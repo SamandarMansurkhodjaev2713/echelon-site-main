@@ -621,16 +621,142 @@ this is ever worth reducing.
 
 ---
 
+## PHASE 17 — What the gates could not see ✅
+
+Opened by resuming an interrupted session. The work divides cleanly: one inherited
+finding that turned out not to be a defect, two defects no gate could have caught
+because no gate was looking at them, and the optimisation the last phase described
+and deliberately left unapplied.
+
+**The inherited finding was a frame, not a layout.** The previous session ended
+with one unexplained observation — text in `day` and `voice` starting 2 px left of
+the content edge at 390 px — and declined to guess at a cause. It is RECEIVE,
+caught in flight. The same elements were measured twice at the same viewport: once
+immediately after the scroll that triggers the reveals, and once after every
+transform in the section had actually reached `none`. Present in the first pass,
+absent in the second. The confirming detail is that the two probes disagree on the
+number — the earlier one recorded −2 px, this one −0.51 px. A layout offset
+reproduces; a frame does not.
+
+The comment in `base.css` that licensed the travel — *a clipped element cannot poke
+anywhere* — is exact at rest and only approximate in flight, because the clip and
+the transform run on different clocks. It now says so, together with the 1.6 px
+this actually costs on a phone and the reason it is left alone: deriving the travel
+from the gutter would close a gap nobody can see by cutting the mobile gesture a
+quarter, and these patterns were enlarged on purpose after reading as a twitch.
+
+**Two more false positives, both raised by this phase and both killed by
+measuring.** `ГОТОВО` on the boundary rows looked clipped at the window edge in a
+filmstrip; measured, the label's right edge sits exactly on the column edge, and
+the apparent offset was RECEIVE again. And the dark rounded object covering the
+bottom of every mobile frame was `ASTRO-DEV-TOOLBAR` — the filmstrip had been shot
+against the dev server. **Visual review now runs against `astro preview`**, the way
+the E2E suite already did. The toolbar covers the bottom ~45 px of every frame,
+which is precisely where an unnoticed defect would sit.
+
+**Canvas type was outside every gate.** The entity names on the voice core are the
+only type on the page that neither `scripts/contrast.mjs` nor axe-core can reach:
+they are painted into a canvas at a computed alpha, not declared as a colour. They
+were carried by the same `fade` as the dots and the rings, which rests at 0.45
+whenever nothing is playing — and nothing is playing until the visitor presses
+play. Composited against every ground the ambient ramp can reach, that drew the
+name at **2.7:1** and the kind beneath it at **1.7:1**, against AA's 4.5. The kind
+label cleared AA in *no* state, not even mid-sentence at full brightness.
+
+The type no longer shares the ornament's alpha. `depth` — how far the point faces
+the reader — is all it answers to; `fade` keeps the resting dimness and now carries
+only the leader line and the anchor dot. The two floors are computed, not chosen,
+and `scripts/contrast.mjs` gates them the way it gates the ramp: name **6.2–6.7:1**,
+kind **4.8–5.3:1** at every stop. Dropping the `open` term is a gain rather than a
+compromise — the module insists these labels are never timed to the audio, and
+brightening them when the voice starts was the one place that claim leaked.
+
+**The visual gate was not looking at three sections, and that is not a
+coincidence.** `SCENES` covered ten sections; `load`, `voice` and `ledger` had no
+baseline at any viewport. The worst defect found in this page so far — the ECHELON
+column of the comparison table sitting off the right edge of a phone, so the
+section read as proving the opposite of what it claims — was in `ledger`, and the
+gate was green throughout because nothing was pointed at it. It was found by a
+person scrolling a narrow screen, which is not a repeatable process and does not
+run in CI. `voice` was the larger blind spot: the section with the most machinery
+on the page had no pixel protecting any of it.
+
+All three are now scenes — 15 new baselines, two consecutive clean runs. `voice`
+is parked at 0.78 rather than over the core, because the core canvas is masked with
+the others and a frame taken there is mostly a magenta rectangle; at 0.78 the shot
+holds the transcript grid, the marked citations and the italic that separates the
+owner's line from the machine's. The core's own type is gated by `npm run contrast`
+instead, which is a stronger guarantee for a colour than one frozen frame and does
+not depend on the FFT driver being deterministic at rest.
+
+**A reduced-motion defect, found by reading rather than by looking.** The core
+repaints once when the fonts land, "so the labels are not measured too early" — and
+that repaint sat only on the animated path. The frozen path draws exactly one frame
+and has no next frame to correct itself on, so it kept whatever fallback face was
+active at start-up. Reduced motion is a reader's preference, not only a test mode.
+The repaint is now on both paths.
+
+### The field's draw loop, measured rather than argued
+
+The FRAME RATE section above describes this fix and deliberately does not apply it,
+because the 6.3 % had not been attributed to that line and this project has already
+implemented, measured and reverted an optimisation that did not pay. Both
+obligations are now discharged.
+
+*Pixel-identical, proven not asserted.* The field canvas is `position: fixed;
+inset: 0` and exempt from masking, so it is present in **every** baseline. All 51
+pre-existing baselines matched bit-for-bit after the change. A change to this loop
+that altered a single pixel would have failed most of them.
+
+*One difference is not cosmetic.* `rgba()` clamps an out-of-range alpha to 1; the
+`globalAlpha` setter **ignores** a value outside 0..1 and silently keeps the
+previous one. A station at full hit asks for 1.4. That one site clamps explicitly,
+and the owner's ring still takes its alpha from the unclamped value, because that
+is what the old string computed.
+
+*It pays.* Production build, 18 s of continuous scrolling at a human rate, the same
+`scripts/fps.mjs` as before.
+
+| | live, before | **live, after** | frozen control, now |
+|---|---|---|---|
+| median | 16.7 ms | **16.7 ms** | 16.7 ms |
+| p95 | 33.3 ms | **16.8 ms** | 16.8 ms |
+| worst | 83.4 ms | **33.3 ms** | 33.4 ms |
+| frames > 33 ms | 6.3 % | **0.2 %** | 0.6 % |
+
+The live page now measures the same as the page with both canvases frozen: the
+substrate has stopped costing anything the instrument can see. The 0.2 % against
+the control's 0.6 % is three long frames versus eight out of ~1 400 and should be
+read as indistinguishable, not as live being faster than frozen.
+
+Two honest caveats. This was measured behind `astro preview` where the recorded
+table used the gzip server; the frozen control measured now (16.8 ms p95, 0.6 %)
+lands on the recorded frozen column (16.8 ms, 0.7 %), which is what makes the two
+setups comparable. And pixel-identity is proven for the *frozen* frame the
+baselines capture — the animated path's varying alphas rest on the compositing
+argument plus the one clamp, not on 51 screenshots.
+
+**Looked at, and left alone.** At rest the voice tape reads as an unfilled form:
+its top border, its centre baseline rule and its bottom border stack into three
+hairlines with nothing between them. The first fix considered — dropping the
+canvas's silent dots — was measured and abandoned, because at 0.18 alpha those dots
+contribute almost nothing to the reading; the three CSS rules do. The real change
+is a state on the tape so the box opens when there is history, and it is not made
+here rather than half-made at the end of a session.
+
+---
+
 ## OPEN ITEMS
 
 1. RU LCP is 2.6 s against the 2.5 s target; EN and UZ are inside budget.
    Unchanged by this phase.
 2. TBT is no longer 0 — 110 ms on RU, 20 ms on UZ — with a forced-reflow insight
    beside it. Inside the "good" band, but a regression against the recorded number.
-3. At the 95th percentile the page runs at 30 fps rather than 60, and the two
-   canvases account for essentially all of it. A pixel-identical candidate fix is
-   described under FRAME RATE above and deliberately left unapplied until it is
-   measured rather than assumed.
+   Not re-measured this phase; the field fix removes per-frame work, not the
+   occupancy grid's start-up walk, which is the suspected source.
+3. ~~At the 95th percentile the page runs at 30 fps.~~ **Closed by PHASE 17** —
+   p95 33.3 ms → 16.8 ms, long frames 6.3 % → 0.2 %, pixel-identical across 51
+   baselines.
 4. `npm audit` still reports the sharp/astro advisories from the baseline.
    `astro:assets` is not used, so neither is on a runtime path.
 5. **The CI gate has never actually run.** The workflow that types-, unit- and
@@ -640,13 +766,21 @@ this is ever worth reducing.
    is the old build-and-deploy one, which is why they all finish in 33–48 s. The
    gate is documented but unproven.
 6. **The visual baselines cannot pass on the CI runner.** Playwright puts the
-   platform in the snapshot file name, so the 51 `…-visual-win32.png` files have no
+   platform in the snapshot file name, so the 66 `…-visual-win32.png` files have no
    `…-visual-linux.png` counterparts and `ubuntu-latest` would fail every one of
    them as a missing snapshot — which, since `test` gates `build` and `build` gates
    `deploy`, means nothing would ever deploy. Three ways out, and choosing between
    them is a real trade-off: run the visual project only where its baselines exist
    and lose visual cover in CI; commit a second, Linux-captured set; or run visual
    in CI inside the official Playwright image so one set serves both. Undecided.
-7. The three seams are this phase's one new visual element with no baseline of its
-   own — `SCENES` parks on section ids and the seams carry none. An id and five
-   more baselines would close it.
+7. The three seams still have no baseline of their own — `SCENES` parks on section
+   ids and the seams carry none. PHASE 17 closed the `load` / `voice` / `ledger`
+   half of this gap; an id on each seam and five more baselines would close the
+   rest.
+8. The voice core's canvas is masked in the baselines, so its *drawing* is
+   unprotected — only its type is, by `npm run contrast`. Exempting it the way the
+   attention field is exempted would require the frozen frame to be proven a pure
+   function of viewport, including what the FFT driver returns at rest. Worth
+   doing; not attempted here.
+9. The voice tape reads as an unfilled form before anything has been played. Cause
+   established (three stacked hairlines, not the canvas), fix scoped and not made.

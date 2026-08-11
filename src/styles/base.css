@@ -555,6 +555,19 @@ html.js [data-reveal] {
  * comment on RECEIVE was right — an offset larger than the page gutter lets a
  * not-yet-revealed row poke outside the page box. A clipped element cannot poke
  * anywhere, so the constraint that held these moves down to a twitch is gone.
+ *
+ * That last sentence is exact at rest and only approximate in flight, and the
+ * difference is worth writing down because it looked like a defect once already.
+ * The clip and the transform run on different clocks — --dur-scene/editorial
+ * against --dur-expressive/enter — so nothing holds the opening wipe behind the
+ * page edge while the row is still travelling. Measured, not assumed: on a
+ * 390 px phone the travel is 20 px against an 18.4 px gutter, so the most of the
+ * leading edge that can fall outside the viewport is 1.6 px, during the first
+ * moments of a wipe that is itself only a few pixels wide at that point. No page
+ * overflow results at 360, 390 or 1440 — scrollWidth equals clientWidth at all
+ * three. Left alone deliberately: deriving the travel from the gutter would
+ * close a gap nobody can see by cutting the mobile gesture by a quarter, and
+ * these patterns were enlarged on purpose after reading as a twitch.
  */
 
 /* RECEIVE — an event arrives into the record, written onto the line from the
