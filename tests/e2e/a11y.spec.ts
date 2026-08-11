@@ -16,8 +16,18 @@ const AXE = path.join(process.cwd(), 'node_modules/axe-core/axe.min.js');
  * Put the page in its settled state before auditing.
  * Without this, axe measures colour contrast against elements that are still
  * fading in and reports failures that no user ever sees.
+ *
+ * Fonts first, and this is not belt-and-braces. `--measure` is `62ch`, and `ch`
+ * is the advance of the *current* font's zero glyph — so until the webfont lands,
+ * the body measure is 62 characters of the fallback face and resolves to a
+ * different pixel width. Anything that reads a box before that is reading a
+ * layout the visitor sees for a few hundred milliseconds. It cost a CI run: the
+ * measure check read 80 characters on the runner and well under it here, purely
+ * because the font arrived at a different moment. Font metrics come out of the
+ * file, so once it has loaded every platform agrees.
  */
 async function settle(page: Page) {
+  await page.evaluate(() => document.fonts?.ready);
   await page.addStyleTag({
     content: `*, *::before, *::after {
       transition-duration: 0s !important;
@@ -128,6 +138,8 @@ test('interactive targets are large enough to hit', async ({ page }) => {
 test('body copy stays inside a readable measure', async ({ page }) => {
   await page.goto('./?intro=off');
   await page.waitForSelector('html[data-ready]', { state: 'attached' });
+  // The one measuring test that was not settling first — see settle() above.
+  await settle(page);
   // §25: art direction must not cost readability
   const tooWide = await page.evaluate(() => {
     const out: string[] = [];
