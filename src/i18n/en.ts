@@ -491,6 +491,7 @@ export const en: Dict = {
     hold: 'Waiting on you',
     drag: 'Drag',
     speak: 'Listen',
+    stop: 'Stop',
     return: 'Back',
     approve: 'Decide',
   },

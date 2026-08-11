@@ -506,6 +506,7 @@ export const ru = {
     hold: 'Ждёт вас',
     drag: 'Перетащить',
     speak: 'Слушать',
+    stop: 'Остановить',
     return: 'Назад',
     approve: 'Решить',
   },

@@ -26,6 +26,7 @@ export const CURSOR_STATES = [
   'hold',
   'drag',
   'speak',
+  'stop',
   'return',
   'approve',
 ] as const;
@@ -39,6 +40,7 @@ export interface CursorLabels {
   hold: string;
   drag: string;
   speak: string;
+  stop: string;
   return: string;
   approve: string;
 }
@@ -123,6 +125,27 @@ export function initCursor(labels: CursorLabels): () => void {
     setState(resolveState(e.target as Element).state);
   };
 
+  /*
+   * Re-read the state without the pointer having moved.
+   *
+   * Resolving only on pointermove assumes a control means the same thing for as
+   * long as the pointer rests on it, and controls do not work that way: pressing
+   * play turns that same button into stop. The cursor went on announcing
+   * "Слушать" over a button that would now halt playback — a cursor that names
+   * the wrong operation is worse than one that names none, and naming the
+   * operation is this cursor's entire reason to exist.
+   *
+   * The contract is that `data-cursor` *is* the meaning, so watching that
+   * attribute is exact rather than approximate: no polling, no timers, and the
+   * hit test only runs when a control has actually redefined itself.
+   */
+  const refresh = () => {
+    if (!active || !node) return;
+    setState(resolveState(document.elementFromPoint(tx, ty)).state);
+  };
+
+  const meaningWatcher = new MutationObserver(refresh);
+
   const onLeave = () => {
     active = false;
     node?.removeAttribute('data-visible');
@@ -138,7 +161,13 @@ export function initCursor(labels: CursorLabels): () => void {
   const attach = () => {
     build();
     raf = requestAnimationFrame(loop);
+    meaningWatcher.observe(document.body, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-cursor'],
+    });
     disposers.push(
+      () => meaningWatcher.disconnect(),
       listen(window, 'pointermove', onMove as EventListener, { passive: true }),
       listen(document, 'pointerdown', onDown, { passive: true }),
       listen(document, 'pointerup', onUp, { passive: true }),

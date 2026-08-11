@@ -494,6 +494,7 @@ export const uz: Dict = {
     hold: 'Sizni kutyapti',
     drag: 'Surish',
     speak: 'Tinglash',
+    stop: 'To’xtatish',
     return: 'Orqaga',
     approve: 'Hal qilish',
   },

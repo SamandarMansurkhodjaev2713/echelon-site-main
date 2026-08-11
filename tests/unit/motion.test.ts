@@ -107,10 +107,15 @@ describe('reveal patterns', () => {
 });
 
 describe('cursor state machine', () => {
-  it('declares the nine semantic states', () => {
-    expect(CURSOR_STATES).toHaveLength(9);
+  it('declares the ten semantic states', () => {
+    expect(CURSOR_STATES).toHaveLength(10);
     expect(CURSOR_STATES).toContain('approve');
     expect(CURSOR_STATES).toContain('speak');
+    /* `stop` is not a synonym for `hold`. `hold` means the machine is waiting on
+       you; `stop` means pressing this halts something that is running. The play
+       control becomes the second one mid-interaction, and the cursor has to be
+       able to say so. */
+    expect(CURSOR_STATES).toContain('stop');
   });
 
   it('resolves the nearest declaring ancestor', () => {

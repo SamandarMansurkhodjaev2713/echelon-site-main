@@ -140,14 +140,36 @@ test('body copy stays inside a readable measure', async ({ page }) => {
   await page.waitForSelector('html[data-ready]', { state: 'attached' });
   // The one measuring test that was not settling first — see settle() above.
   await settle(page);
-  // §25: art direction must not cost readability
+  /*
+   * §25: art direction must not cost readability.
+   *
+   * The count is measured, not approximated. It used to divide the box width by
+   * a flat `0.5em` guess at average glyph advance, and that made the check
+   * quietly font-dependent in the worst way: the width comes from
+   * `--measure: 62ch`, which is 62 advances of the *current* font's zero, while
+   * the divisor was a constant. Two numbers from two different fonts. They agree
+   * by luck while one face is active and disagree the moment another is — which
+   * is exactly what happened on the CI runner, where the same paragraph scored 80
+   * and scored 77 here.
+   *
+   * Measuring the element's own text in the element's own font puts both numbers
+   * back on the same footing. Whatever face is actually rendering, the box is N
+   * of its characters wide and the answer is N — so the check finally measures
+   * what it has always claimed to measure, and it means the same thing on every
+   * platform.
+   */
   const tooWide = await page.evaluate(() => {
     const out: string[] = [];
+    const ctx = document.createElement('canvas').getContext('2d')!;
     for (const el of document.querySelectorAll<HTMLElement>('.copy, .lead, p.note')) {
-      const r = el.getBoundingClientRect();
-      const size = parseFloat(getComputedStyle(el).fontSize);
-      // ~0.5em average glyph advance → characters per line
-      const chars = r.width / (size * 0.5);
+      const text = (el.textContent ?? '').trim();
+      // too short to give a stable average advance, and too short to be a measure problem
+      if (text.length < 24) continue;
+      const cs = getComputedStyle(el);
+      ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const advance = ctx.measureText(text).width / text.length;
+      if (!(advance > 0)) continue;
+      const chars = el.getBoundingClientRect().width / advance;
       if (chars > 80) out.push(`${el.className}: ${Math.round(chars)} chars`);
     }
     return out;

@@ -180,6 +180,11 @@ export function initVoice(): () => void {
     getLevel = () => 0;
     getSpectrum = (out) => out.fill(0);
     if (playLabel) playLabel.textContent = root.dataset.labelPlay ?? '';
+    /* The button's meaning is carried by `data-cursor`, not inferred from its
+       text, because the contextual cursor reads exactly that attribute. Leaving
+       it on 'speak' while the control had become a stop button made the cursor
+       announce "Слушать" over a button that would halt playback. */
+    if (playBtn) playBtn.dataset.cursor = 'speak';
     setState(msg('msgIdle'));
   };
 
@@ -229,6 +234,7 @@ export function initVoice(): () => void {
       fillBands(analyser, bins, out);
     };
     if (playLabel) playLabel.textContent = root.dataset.labelStop ?? '';
+    if (playBtn) playBtn.dataset.cursor = 'stop';
     setState(msg('msgSpeaking'), 'speaking');
     void audio.play().catch(() => setState(msg('msgError')));
   };
