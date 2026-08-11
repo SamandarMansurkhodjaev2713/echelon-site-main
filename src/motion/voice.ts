@@ -98,6 +98,11 @@ export function initVoice(): () => void {
     getComputedStyle(root).getPropertyValue('--signal').trim() || '#b0341a';
 
   let shift = 0;
+  /* Set once, the first time the tape actually carries something, and never
+     cleared: the trace stays after playback stops because the history does. It
+     is keyed off the measured level rather than off the play button, so it means
+     "this tape has a recording on it" and not "someone pressed a control". */
+  let everActive = false;
   const draw = () => {
     if (!ctx || !w || !h) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -106,6 +111,10 @@ export function initVoice(): () => void {
     const mid = h / 2;
     const step = w / TICKS;
     const active = level > 0.012;
+    if (active && !everActive) {
+      everActive = true;
+      root.dataset.tapeLive = '';
+    }
     ctx.lineWidth = 1;
     ctx.lineCap = 'butt';
 

@@ -181,8 +181,20 @@ const mark = (text: string, marks: readonly string[]) => {
     position: relative;
     margin-top: 0.9rem;
     height: clamp(2.5rem, 6vh, 3.75rem);
-    border-top: 1px solid var(--rule);
-    border-bottom: 1px solid var(--rule);
+    /* A tape is a record, and before anything has been said there is nothing on
+       it. Boxed, it put three hairlines around an empty rectangle — which is the
+       unfilled-form reading this section was rebuilt to stop producing, and
+       shortening the box only made it a shorter empty form. At rest the baseline
+       carries it alone: a flat line is what silence looks like on a tape, and the
+       word beside it already says ТИШИНА.
+
+       Transparent rather than absent, so the borders arriving move nothing. */
+    border-top: 1px solid transparent;
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--dur-expressive) var(--ease-standard);
+  }
+  .voice__console[data-tape-live] .voice__tape {
+    border-color: var(--rule);
   }
   .voice__wave {
     position: absolute;

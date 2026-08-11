@@ -16,7 +16,7 @@ export const BASE = `http://localhost:${PORT}/echelon-site-main/`;
 /*
  * Screenshot baselines carry the platform in their file name, and only the win32
  * set is committed. On `ubuntu-latest` Playwright looks for `…-visual-linux.png`,
- * finds nothing and fails all fifty-one as missing snapshots — and since `test`
+ * finds nothing and fails all sixty-six as missing snapshots — and since `test`
  * gates `build` and `build` gates `deploy`, that stops the site from deploying
  * rather than reporting a visual regression. So the project runs where its
  * baselines exist. Behaviour and accessibility still run on every engine

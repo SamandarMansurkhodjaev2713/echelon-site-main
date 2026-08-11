@@ -736,13 +736,23 @@ setups comparable. And pixel-identity is proven for the *frozen* frame the
 baselines capture — the animated path's varying alphas rest on the compositing
 argument plus the one clamp, not on 51 screenshots.
 
-**Looked at, and left alone.** At rest the voice tape reads as an unfilled form:
-its top border, its centre baseline rule and its bottom border stack into three
-hairlines with nothing between them. The first fix considered — dropping the
-canvas's silent dots — was measured and abandoned, because at 0.18 alpha those dots
-contribute almost nothing to the reading; the three CSS rules do. The real change
-is a state on the tape so the box opens when there is history, and it is not made
-here rather than half-made at the end of a session.
+### The tape opens when it has something on it
+
+At rest the voice tape read as an unfilled form: its top border, its centre
+baseline rule and its bottom border stacked into three hairlines with nothing
+between them, and PHASE 16's shortening of the box only made that a shorter empty
+form. The first fix considered — dropping the canvas's silent dots — was abandoned
+after looking at what those dots actually contribute: at 0.18 alpha, almost
+nothing. It is the three CSS rules that produce the reading, not the canvas. This
+is the fourth thing this phase nearly changed on the strength of a glance.
+
+So the box borders are transparent until the tape has carried something, and the
+baseline rule stands alone. A flat line is what silence looks like on a tape, and
+`ТИШИНА` beside it already says so in words. Transparent rather than absent, so
+their arrival moves nothing. The state is keyed off the measured level rather than
+off the play button, which makes it mean *this tape has a recording on it* instead
+of *someone pressed a control*, and it is never cleared — the trace stays after
+playback stops for the same reason the history does.
 
 ---
 
@@ -759,12 +769,16 @@ here rather than half-made at the end of a session.
    baselines.
 4. `npm audit` still reports the sharp/astro advisories from the baseline.
    `astro:assets` is not used, so neither is on a runtime path.
-5. **The CI gate has never actually run.** The workflow that types-, unit- and
-   E2E-gates the deploy arrived with the redesign commit, and its only invocation —
-   the redesign pull request — sits at `action_required` with a duration of 0 s, so
-   GitHub never started it. Every green run in the history predates the workflow and
-   is the old build-and-deploy one, which is why they all finish in 33–48 s. The
-   gate is documented but unproven.
+5. ~~The CI gate has never actually run.~~ **Corrected in PHASE 17: it runs, and
+   the original claim was read off the wrong repository.** Bare `gh run list` in
+   this working tree answers about `fork` — the older `echelon-site` — where the
+   workflow's only invocation really does sit at `action_required`. On `origin`,
+   `echelon-site-main`, which is the repository that deploys, the gate has run on
+   every push since 11 Aug and is demonstrably real rather than decorative: it has
+   passed repeatedly, failed once on `fa4f58b`, and been cancelled once by the
+   `pages` concurrency group. This is the same trap as pushing to the
+   obvious-looking remote, wearing different clothes. Ask it by name:
+   `gh run list -R SamandarMansurkhodjaev2713/echelon-site-main`.
 6. **The visual baselines cannot pass on the CI runner.** Playwright puts the
    platform in the snapshot file name, so the 66 `…-visual-win32.png` files have no
    `…-visual-linux.png` counterparts and `ubuntu-latest` would fail every one of
@@ -782,5 +796,6 @@ here rather than half-made at the end of a session.
    attention field is exempted would require the frozen frame to be proven a pure
    function of viewport, including what the FFT driver returns at rest. Worth
    doing; not attempted here.
-9. The voice tape reads as an unfilled form before anything has been played. Cause
-   established (three stacked hairlines, not the canvas), fix scoped and not made.
+9. ~~The voice tape reads as an unfilled form before anything has been played.~~
+   **Closed by PHASE 17** — the box opens when the tape has carried something; at
+   rest only the baseline is drawn.
