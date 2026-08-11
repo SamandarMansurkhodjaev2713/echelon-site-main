@@ -271,7 +271,19 @@ const { dict, locale } = Astro.props;
         const e = entries[0];
         if (e) document.documentElement.toggleAttribute('data-past-hero', !e.isIntersecting);
       },
-      { threshold: 0 },
+      /*
+       * The trigger is kept far away from the hero's actual edge, and that is not
+       * a tuning preference — without it this observer feeds itself. Flipping the
+       * flag changes the masthead's own contents, that changes layout by a few
+       * pixels, and a reader parked exactly at the hero's bottom edge would cross
+       * the boundary back and forth on every reflow: a header that flickers as
+       * long as you hold still. It showed up as a click that could never land,
+       * because the button never stopped moving.
+       *
+       * Pushing the root's top down 60% moves the crossing point several hundred
+       * pixels away from anything the header can shift, so the loop cannot close.
+       */
+      { threshold: 0, rootMargin: '-60% 0px 0px 0px' },
     );
     io.observe(hero);
     register(() => io.disconnect());

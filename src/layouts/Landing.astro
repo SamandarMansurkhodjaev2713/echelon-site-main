@@ -12,6 +12,7 @@ import WorkTape from '../components/WorkTape.astro';
 import Hero from '../components/Hero.astro';
 import Load from '../components/Load.astro';
 import Teach from '../components/Teach.astro';
+import Pillars from '../components/Pillars.astro';
 import Day from '../components/Day.astro';
 import Product from '../components/Product.astro';
 import Memory from '../components/Memory.astro';
@@ -47,6 +48,9 @@ const dict = getDict(locale);
     <Load dict={dict} />
     <!-- LEARN — the visitor teaches one rule here; it is used in <Client/> -->
     <Teach dict={dict} />
+    <!-- The briefing: five pillars at 08:59, one minute before the shift starts,
+         each pointing at the section that later proves it. -->
+    <Pillars dict={dict} />
     <!-- The three seams are the page's chapter breaks. Each is also a clock
          anchor for motion/shift.ts, so the ambient light turns at exactly the
          moment the narrative says the shift changed. -->

@@ -95,6 +95,44 @@ export const en: Dict = {
     changeNote: 'You can change it — press another option.',
   },
 
+  pillars: {
+    label: 'What this stands on',
+    title: 'It’s built like an assistant, not like a program',
+    proofLabel: 'Shown at',
+    items: [
+      {
+        name: 'Remembers',
+        text: 'Who promised what, and what the two of you agreed back in March. That memory doesn’t wipe when a window closes and doesn’t reset in a new chat.',
+        at: '15:00',
+        href: '#memory',
+      },
+      {
+        name: 'Does the work',
+        text: 'It doesn’t advise, it does: writes to people, pulls the numbers, nudges the silent, files leads into the CRM. What’s left for you is checking, not doing.',
+        at: '17:00',
+        href: '#automate',
+      },
+      {
+        name: 'Learns',
+        text: 'Say “write shorter to clients” once, and it becomes a permanent rule. A month in, it works the way things are done at your place.',
+        at: '18:20',
+        href: '#client',
+      },
+      {
+        name: 'Works nights',
+        text: 'By 9:00 the brief is already in your Telegram. At night it does what your day never has room for. It keeps the schedule on its own; nobody reminds it.',
+        at: '23:20',
+        href: '#night',
+      },
+      {
+        name: 'Yours',
+        text: 'It lives on your computer. The correspondence, the memory, the numbers, the client list — all of it stays with you, not in someone else’s cloud. It can’t quit and take them along.',
+        at: '19:40',
+        href: '#boundary',
+      },
+    ],
+  },
+
   day: {
     label: 'The same day',
     title: 'This time you’re the owner, not the dispatcher',

@@ -1,0 +1,236 @@
+---
+import type { Dict } from '../i18n';
+
+interface Props {
+  dict: Dict;
+}
+
+const { dict } = Astro.props;
+const p = dict.pillars;
+---
+
+<!--
+  THE FIVE PILLARS — 08:59, the last minute before the shift starts.
+
+  This is the page's spine, and it went missing. The redesign dissolved these
+  five points into the sections that demonstrate them — "remembers" into Memory,
+  "does" into Automate, "works nights" into Night, "yours" into Boundary. Every
+  sentence survived; the one place where all five stand together as a single
+  answer did not, and five arguments spread over sixteen thousand pixels do not
+  do the work that five arguments on one spread do.
+
+  Placed here on purpose. The visitor has just taught it a rule one minute ago —
+  which is pillar three happening rather than being claimed — and the seam
+  immediately below reads 09:00, the shift beginning. So the block sits where a
+  briefing sits: state the five, then spend the rest of the day proving them.
+
+  Each row carries the time of the section that proves it, and that time is a
+  link. The block is therefore also the page's contents — and a promise it keeps,
+  since every claim points at the screen where you can watch it happen.
+-->
+<section class="pil band" id="pillars" data-shift="08:59">
+  <div class="page pil__grid">
+    <header class="pil__head">
+      <p class="label">{p.label}</p>
+      <h2 class="title pil__title">{p.title}</h2>
+    </header>
+
+    <ol class="pil__list" data-stagger>
+      {
+        p.items.map((item, i) => (
+          <li class="pil__row">
+            {/* The rule is ruled before it is written on: the hairline draws
+                itself across, then the line lands. A journal, not a fade-up. */}
+            <span class="pil__rule" data-reveal="archive" aria-hidden="true" />
+            <span class="pil__num sys" data-reveal="receive">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <h3 class="pil__name" data-reveal="receive">
+              {item.name}
+            </h3>
+            <p class="pil__text copy" data-reveal="receive">
+              {item.text}
+            </p>
+            {/* Deliberately outside any moving reveal: an interactive control
+                that is still travelling when the pointer arrives moves out from
+                under the click, and the index stays readable from the first
+                frame either way. */}
+            <a class="pil__at sys" href={item.href} data-cursor="view">
+              <span class="pil__at-label">{p.proofLabel}</span>
+              <span class="pil__at-time">{item.at}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .pil {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  /* The heading sits in the margin column rather than above the list. Twelve
+     other sections open with kicker over headline over lead, and by the fourth
+     screen that shape stops carrying information — the eye cannot tell one
+     opening from another. Here the list *is* the opening. */
+  .pil__grid {
+    display: grid;
+    gap: clamp(1.75rem, 4vw, 3rem);
+  }
+  @media (min-width: 62rem) {
+    .pil__grid {
+      grid-template-columns: minmax(0, 0.42fr) minmax(0, 1fr);
+      align-items: start;
+    }
+    .pil__head {
+      position: sticky;
+      top: 7rem;
+    }
+  }
+
+  .pil__title {
+    margin-top: 0.6rem;
+    /* 14ch broke "Он устроен / как / помощник," and left "как" alone on a line.
+       A measure this short stops being a measure and starts being a ragged
+       column. */
+    max-width: 19ch;
+    text-wrap: balance;
+  }
+
+  .pil__row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 3.25rem minmax(0, 1fr) max-content;
+    grid-template-areas:
+      'num name at'
+      '.   text text';
+    gap: 0.4rem 1.25rem;
+    align-items: baseline;
+    padding-block: clamp(1.1rem, 2.6vh, 1.75rem);
+  }
+
+  /* Drawn, not painted on. The hairline is its own element so it can scale from
+     the left without the row's own box moving a pixel. */
+  .pil__rule {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
+    background: var(--rule-strong);
+  }
+
+  /* Drawn with clip-path, not with a transform, and that is a deliberate retreat
+     from a fight not worth winning: the shared patterns in base.css own
+     `transform` on every `[data-reveal]` through `html.js [data-reveal].is-in`,
+     which outranks anything a scoped component style can say without shouting.
+     Nothing touches `clip-path` on a reveal, so the hairline rules itself across
+     the page without contending for a property someone else already owns — and
+     it keeps the shared fade underneath it rather than replacing it. */
+  html.js .pil__rule {
+    clip-path: inset(0 100% 0 0);
+    transition-property: opacity, transform, clip-path;
+    transition-duration: var(--dur-expressive);
+    transition-timing-function: var(--ease-editorial);
+    transition-delay: calc(var(--i, 0) * 90ms);
+  }
+  html.js .pil__rule.is-in {
+    clip-path: inset(0 0 0 0);
+  }
+  /* The rule is drawn last in the row's sequence in time but first in meaning:
+     the line is ruled, then written on. */
+  .pil__row [data-reveal]:not(.pil__rule) {
+    transition-delay: calc(var(--i, 0) * 90ms + 140ms);
+  }
+
+  /* Without JS nothing toggles `is-in`, and a rule stuck at scaleX(0) is a row
+     with no line above it. */
+  :global(html:not(.js)) .pil__rule {
+    transform: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pil__rule {
+      transition: none;
+      transform: none;
+    }
+    .pil__row [data-reveal]:not(.pil__rule) {
+      transition-delay: 0ms;
+    }
+  }
+  .pil__row:last-child::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  .pil__num {
+    grid-area: num;
+    font-size: var(--step-micro);
+    color: var(--signal);
+    font-variant-numeric: tabular-nums;
+  }
+  .pil__name {
+    grid-area: name;
+    font-size: clamp(1.35rem, 1rem + 1.4vw, 2rem);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+  }
+  .pil__text {
+    grid-area: text;
+    margin-top: 0.35rem;
+  }
+
+  .pil__at {
+    grid-area: at;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    /* Tall enough to hit, without stretching the row it sits in: the height is
+       taken as padding around the baseline rather than as a min-height on a
+       grid item, which was pushing the copy a line away from its own heading. */
+    padding-block: 0.75rem;
+    padding-inline: 0.15rem;
+    font-size: var(--step-micro);
+    color: var(--machine);
+    white-space: nowrap;
+    transition: color var(--dur-fast) var(--ease-standard);
+  }
+  .pil__at-label {
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+  }
+  .pil__at-time {
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    border-bottom: 1px solid var(--rule-strong);
+    padding-bottom: 0.15em;
+    transition: border-color var(--dur-fast) var(--ease-standard);
+  }
+  .pil__at:hover .pil__at-time,
+  .pil__at:focus-visible .pil__at-time {
+    border-bottom-color: var(--signal);
+  }
+
+  @media (max-width: 47.999rem) {
+    .pil__row {
+      grid-template-columns: 2.5rem minmax(0, 1fr);
+      grid-template-areas:
+        'num name'
+        '.   text'
+        '.   at';
+      gap: 0.3rem 0.9rem;
+    }
+    .pil__at {
+      margin-top: 0.35rem;
+      padding-block: 0.6rem;
+    }
+    /* The label stays. Hiding it here was the wrong economy: on its own, an
+       underlined `15:00` sitting under a pillar says nothing — it is not obvious
+       that it is a destination, or what is at it. The label is the only part of
+       this control that carries meaning; the time is just the address. */
+  }
+</style>

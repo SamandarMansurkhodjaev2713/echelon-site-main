@@ -96,6 +96,44 @@ export const uz: Dict = {
     changeNote: 'Xohlasangiz o’zgartiring — boshqa variantni bosing.',
   },
 
+  pillars: {
+    label: 'Bu nimaga tayanadi',
+    title: 'U dasturday emas, yordamchiday qurilgan',
+    proofLabel: 'Ko’rsatiladi',
+    items: [
+      {
+        name: 'Eslab qoladi',
+        text: 'Kim nima va’da bergan, martda nima kelishilgan — hammasi yodida. Bu xotira oynani yopsangiz o’chmaydi, yangi chatda nolga tushmaydi.',
+        at: '15:00',
+        href: '#memory',
+      },
+      {
+        name: 'Bajaradi',
+        text: 'Maslahat berib o’tirmaydi — qiladi: odamlarga o’zi yozadi, raqamlarni yig’adi, jim qolganlarga eslatadi, so’rovlarni CRMga kiritadi. Sizga tekshirish qoladi — o’zingiz qilib o’tirish emas.',
+        at: '17:00',
+        href: '#automate',
+      },
+      {
+        name: 'O’rganadi',
+        text: 'Bir marta «mijozlarga qisqa yoz» deysiz — bu unga umrbod qoida. Bir oydan keyin ishni xuddi o’zingizday qiladi.',
+        at: '18:20',
+        href: '#client',
+      },
+      {
+        name: 'Kechasi ham ishlaydi',
+        text: 'Svodka 9:00gacha Telegramingizda. Kunduzi qo’l tegmaydigan ishlarni kechasi qiladi. Jadvalini o’zi eslab yuradi.',
+        at: '23:20',
+        href: '#night',
+      },
+      {
+        name: 'Sizniki',
+        text: 'Kompyuteringizda yashaydi. Yozishmalar, xotira, raqamlar o’zingizda qoladi — birovning bulutida emas. Ishdan bo’shab, bilganini olib keta olmaydi.',
+        at: '19:40',
+        href: '#boundary',
+      },
+    ],
+  },
+
   day: {
     label: 'O’sha kun',
     title: 'Bu safar siz dispetcher emas, egasisiz',

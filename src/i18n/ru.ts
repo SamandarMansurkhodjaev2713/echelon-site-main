@@ -102,6 +102,54 @@ export const ru = {
     changeNote: 'Можно поменять — нажмите другой вариант.',
   },
 
+  /*
+   * The five pillars. This copy is the owner's, kept word for word: it is the
+   * answer to "what does this stand on", and the redesign's mistake was not
+   * losing the sentences — every one of them survived somewhere — but losing the
+   * one place where all five stand together and can be read as a single answer.
+   *
+   * `at` is the section each pillar is later proved in. It makes the block the
+   * page's own table of contents and keeps the promise honest: every claim here
+   * points at the screen where you can watch it happen.
+   */
+  pillars: {
+    label: 'На чём это держится',
+    title: 'Он устроен как помощник, а не как программа',
+    proofLabel: 'Показано в',
+    items: [
+      {
+        name: 'Помнит',
+        text: 'Кто что обещал и о чём вы договорились ещё в марте. Эта память не стирается при закрытии окна и не обнуляется в новом чате.',
+        at: '15:00',
+        href: '#memory',
+      },
+      {
+        name: 'Делает',
+        text: 'Не советует, а делает: пишет людям, собирает цифры, напоминает молчащим, заносит заявки в CRM. Вам остаётся проверить, а не сделать самому.',
+        at: '17:00',
+        href: '#automate',
+      },
+      {
+        name: 'Учится',
+        text: 'Скажите один раз «клиентам пиши короче» — и это навсегда станет его правилом. Через месяц он работает так, как принято именно у вас.',
+        at: '18:20',
+        href: '#client',
+      },
+      {
+        name: 'Работает ночью',
+        text: 'К 9:00 сводка уже в Telegram. Ночью он делает то, до чего у вас днём не доходят руки. Про расписание он помнит сам — напоминать не надо.',
+        at: '23:20',
+        href: '#night',
+      },
+      {
+        name: 'Ваш',
+        text: 'Живёт на вашем компьютере. Переписка, память и цифры остаются у вас, а не в чужом облаке. Уволиться и унести их с собой он не может.',
+        at: '19:40',
+        href: '#boundary',
+      },
+    ],
+  },
+
   day: {
     label: 'Тот же день',
     title: 'Вы в нём — владелец, а не диспетчер',
