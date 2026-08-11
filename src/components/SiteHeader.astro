@@ -190,10 +190,43 @@ const { dict, locale } = Astro.props;
     background: var(--signal);
   }
 
+  /*
+   * Narrow: the clock and the call to action take turns.
+   *
+   * The old rule cut the clock first, on the grounds that brand, languages and
+   * CTA all outrank it. That was the wrong question. Which of the two the row
+   * can afford is a matter of *where the reader is*, not of abstract rank: at
+   * the top of the page the hero's own call to action is a few hundred pixels
+   * below and several times larger, so a second one in the masthead is
+   * duplication crowding the narrowest row on the site. The clock is the one
+   * element that says continuously that this page is a working day — on a phone
+   * it was the only thing saying so, and it was the thing being switched off.
+   *
+   * Once the hero is behind you the trade reverses: the call to action is the
+   * thing you might now want, and the clock stands down. Neither is ever fighting
+   * the other for the same 40 px.
+   */
   @media (max-width: 48rem) {
-    /* The clock is the first thing to go: the brand, the languages and the call
-       to action all outrank an atmospheric restatement of scroll position. */
-    .masthead__clock {
+    .masthead__cta {
+      display: none;
+    }
+    :global(html[data-past-hero]) .masthead__cta {
+      display: inline-flex;
+    }
+    :global(html[data-past-hero]) .masthead__clock {
+      display: none;
+    }
+    :global(html[data-past-hero]) .masthead__langs {
+      margin-left: auto;
+    }
+    /* With the call to action back, the row is genuinely full at 360 px and
+       something has to give. It is the wordmark: by the time you are reading, the
+       mark alone identifies the page, and the wordmark is still the first thing
+       on the page above. Left to flexbox this resolved itself by letting the
+       language switcher sit on top of the button — the click landed on "EN". A
+       row that overflows does not fail visibly; it fails as a control that cannot
+       be pressed. */
+    :global(html[data-past-hero]) .masthead__mark {
       display: none;
     }
   }
@@ -223,3 +256,24 @@ const { dict, locale } = Astro.props;
     }
   }
 </style>
+
+<script>
+  import { register } from '../motion/lifecycle';
+
+  /* Drives the swap described in the stylesheet. An observer rather than a scroll
+     listener: the answer changes twice in a visit, so paying for it per frame
+     would be absurd. The attribute lives on <html> because the masthead is not
+     the only thing that may eventually want to know the hero is behind us. */
+  const hero = document.getElementById('top');
+  if (hero) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        const e = entries[0];
+        if (e) document.documentElement.toggleAttribute('data-past-hero', !e.isIntersecting);
+      },
+      { threshold: 0 },
+    );
+    io.observe(hero);
+    register(() => io.disconnect());
+  }
+</script>

@@ -168,7 +168,37 @@ test('a fast scroll to the bottom and back leaves nothing half-drawn', async ({ 
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(200);
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-  await page.waitForTimeout(400);
+
+  /*
+   * Wait for the condition, not for a stopwatch.
+   *
+   * This test asks whether a fast scroll can leave a reveal *stuck*. A fixed
+   * 400 ms answered a different question — "has everything finished yet" — and
+   * reveals are staged, so an element that has only just been told to appear is
+   * legitimately still at zero opacity. Firefox on the CI runner crossed that
+   * line and reported the handover's closing line as half-drawn when it was
+   * simply still drawing.
+   *
+   * Waiting on the condition keeps the original meaning and sharpens it: a
+   * genuinely stuck reveal never satisfies it and the assertion below still
+   * names the offender, while a slow engine no longer fails a page that is
+   * behaving correctly.
+   */
+  await page
+    .waitForFunction(
+      () =>
+        [...document.querySelectorAll<HTMLElement>('[data-reveal]')].every((el) => {
+          const r = el.getBoundingClientRect();
+          const onScreen = r.top < window.innerHeight && r.bottom > 0;
+          return !onScreen || Number(getComputedStyle(el).opacity) >= 0.05;
+        }),
+      undefined,
+      { timeout: 5_000 },
+    )
+    .catch(() => {
+      /* fall through: the assertion below reports which element is stuck, which
+         is more use than a bare timeout */
+    });
 
   const invisible = await page.evaluate(() => {
     const out: string[] = [];

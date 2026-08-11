@@ -204,14 +204,32 @@ export function initCore(
   function drawRings(ca: number, sa: number, ct: number, st: number, alpha: number): void {
     ctx.lineWidth = 1;
     for (const lat of RINGS) {
-      const rr = Math.sqrt(Math.max(0, 1 - lat * lat));
+      /*
+       * The ring answers to the band at its own latitude, by the same formula as
+       * the points there — and it has to be the *same* formula, because if the
+       * rings deform on a different curve from the lattice they slide against it
+       * and the surface stops reading as one object.
+       *
+       * This is what was missing, and it is why a core that was genuinely
+       * answering to the audio still read as a static wireframe globe. The
+       * displacement was reaching only the points: 1 px squares at low alpha.
+       * The five rings — the structure the eye actually locks onto — were drawn
+       * from fixed geometry and never moved at all, so they said "diagram" loudly
+       * enough to drown out everything the points were saying.
+       */
+      const b = Math.min(CORE_BANDS - 1, Math.round(Math.abs(lat) * (CORE_BANDS - 1)));
+      const disp = 1 + (spec[b] ?? 0) * (0.12 + open * 0.3) + level * 0.06;
+      // Radial: the latitude rides outward with its own circle, so the ring stays
+      // on the deformed sphere rather than cutting through it.
+      const rr = Math.sqrt(Math.max(0, 1 - lat * lat)) * disp;
+      const ly = lat * disp;
       // Back half first, then front, so the ring reads as passing behind itself.
       for (let pass = 0; pass < 2; pass++) {
         ctx.beginPath();
         let drawing = false;
         for (let s = 0; s <= RING_STEPS; s++) {
           const th = (s / RING_STEPS) * Math.PI * 2;
-          project(Math.cos(th) * rr, lat, Math.sin(th) * rr, ca, sa, ct, st, p3);
+          project(Math.cos(th) * rr, ly, Math.sin(th) * rr, ca, sa, ct, st, p3);
           const front = p3[2]! >= 0;
           if (front !== (pass === 1)) {
             drawing = false;

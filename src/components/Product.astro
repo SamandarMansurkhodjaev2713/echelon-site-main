@@ -170,7 +170,19 @@ const panes = [
     isolation: isolate;
   }
 
-  /* ---- the paper leaves ---- */
+  /* ---- the paper leaves ----
+     The sheet has to read *as a sheet*. It is `--paper` laid over a `--paper`
+     ground, so with nothing but a hairline to declare itself the closed state
+     read as absence rather than as covering — the reader saw a blank band and
+     concluded the section was unfinished, instead of understanding that
+     something is under there waiting to be opened. Worst on a phone, where the
+     stage is short enough that the half-open state is most of what is on screen.
+
+     The fix is a shadow, which is the one piece of depth this art direction can
+     take without breaking its own rules: paper casting onto paper is physically
+     honest, and it is what an editorial page does when one sheet lies over
+     another. Short throw and low opacity, so it reads as a leaf of paper rather
+     than as an interface panel floating on elevation. */
   .prod__leaf {
     position: absolute;
     left: -2vw;
@@ -184,11 +196,13 @@ const panes = [
   .prod__leaf--top {
     top: 0;
     border-bottom: 1px solid var(--rule-strong);
+    box-shadow: 0 10px 24px -14px rgba(21, 20, 15, 0.5);
     transform: translate3d(0, calc(-100% * var(--open, 0)), 0);
   }
   .prod__leaf--bottom {
     bottom: 0;
     border-top: 1px solid var(--rule-strong);
+    box-shadow: 0 -10px 24px -14px rgba(21, 20, 15, 0.5);
     transform: translate3d(0, calc(100% * var(--open, 0)), 0);
   }
   .prod__stage[data-open] .prod__leaf {
