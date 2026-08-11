@@ -342,6 +342,39 @@ main > section[data-shift]:not(.hero)::before {
   pointer-events: none;
 }
 
+/*
+ * The section arrives by being ruled.
+ *
+ * Sections had no arrival of their own — only the elements inside them did — so
+ * thirteen of them began in exactly the same silence. This gives each one the
+ * gesture the page is already written in: the hairline is drawn across and the
+ * timestamp appears with it, left to right, the way a page of a log is ruled
+ * before it is filled. It differs every time for free, because the time does.
+ *
+ * Driven by the scroll position itself rather than by an observer: no listener,
+ * no class toggling, nothing to leak, and it tracks the scroll exactly instead
+ * of firing once at a threshold. Where `animation-timeline` is not implemented
+ * the mark is simply already drawn, which is what it has always been, so this
+ * costs nothing to a browser that cannot run it.
+ */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    main > section[data-shift]:not(.hero)::before {
+      animation: section-ruled linear both;
+      animation-timeline: view();
+      animation-range: entry 5% entry 60%;
+    }
+  }
+}
+@keyframes section-ruled {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
 /* The night band's mark sits on its own ground, so it takes the inverted ink. */
 main > section.on-ink[data-shift]::before {
   color: var(--machine-inv);
@@ -508,37 +541,62 @@ html.js [data-reveal] {
     clip-path var(--dur-scene) var(--ease-editorial) var(--rv-delay);
 }
 
-/* RECEIVE — an event arrives into the record, from the margin, along the line.
-   The offset stays smaller than the page gutter so a not-yet-revealed row can
-   never poke outside the page box. */
+/*
+ * The six were named in the code and identical in the eye.
+ *
+ * receive, resolve, archive, escalate and handover were all "translate a little
+ * and fade": 10 to 24 px, five directions, one gesture. A vocabulary that only
+ * exists in the stylesheet is not a vocabulary — it is why the fourth screen
+ * could not be told from the ninth. Each now differs in *kind*, not in heading:
+ * one is wiped on, one converges, one settles, one is stopped hard, one opens,
+ * one arrives on a strict beat.
+ *
+ * The travel could grow because of the clip, not in spite of it. The old
+ * comment on RECEIVE was right — an offset larger than the page gutter lets a
+ * not-yet-revealed row poke outside the page box. A clipped element cannot poke
+ * anywhere, so the constraint that held these moves down to a twitch is gone.
+ */
+
+/* RECEIVE — an event arrives into the record, written onto the line from the
+   margin. The wipe is the point: the row is not fading up into place, it is
+   being entered, left to right, the way a line is added to a log. */
 html.js [data-reveal='receive'] {
   opacity: 0;
-  transform: translate3d(-0.7rem, 0, 0);
+  transform: translate3d(-1.25rem, 0, 0);
+  clip-path: inset(0 100% 0 0);
 }
 @media (min-width: 48rem) {
   html.js [data-reveal='receive'] {
-    transform: translate3d(-1.25rem, 0, 0);
+    transform: translate3d(-2.25rem, 0, 0);
   }
 }
 
-/* RESOLVE — inputs converge into one decision */
+/* RESOLVE — inputs converge into one decision. It arrives wider than it ends and
+   draws in to its own left edge: several things becoming one, rather than one
+   thing sliding up. */
 html.js [data-reveal='resolve'] {
   opacity: 0;
-  transform: translate3d(0, 0.85rem, 0) scale(0.985);
+  transform: translate3d(0, 1.1rem, 0) scaleX(1.045);
   transform-origin: left center;
 }
 
-/* ARCHIVE — settles down into memory */
+/* ARCHIVE — settles down into memory. Comes from above slightly compressed and
+   relaxes as it lands, so it reads as something coming to rest on a surface
+   rather than as something appearing above one. */
 html.js [data-reveal='archive'] {
   opacity: 0;
-  transform: translate3d(0, -0.6rem, 0);
+  transform: translate3d(0, -1.1rem, 0) scaleY(0.94);
+  transform-origin: center top;
 }
 
-/* ESCALATE — rises and stops hard against the boundary */
+/* ESCALATE — rises and stops hard against the boundary. The distance is longer
+   and the stop is abrupt on purpose: this is the pattern for the one thing on
+   the page that will not proceed without a human, and it should not glide to a
+   halt. */
 html.js [data-reveal='escalate'] {
   opacity: 0;
-  transform: translate3d(0, 1.5rem, 0);
-  transition-timing-function: var(--ease-editorial);
+  transform: translate3d(0, 2.75rem, 0);
+  transition-timing-function: cubic-bezier(0.16, 0.9, 0.2, 1);
 }
 
 /* EXPAND — the paper opens and the machine is underneath */
@@ -546,10 +604,14 @@ html.js [data-reveal='expand'] {
   clip-path: inset(46% 0 46% 0);
 }
 
-/* HANDOVER — rows fly into their slot in the final report */
+/* HANDOVER — rows fly into their slot in the final report. Even, mechanical,
+   unhurried: a machine filing its own paperwork, not a page decorating itself.
+   The near-linear curve is what separates it from ESCALATE, which travels the
+   same axis and means the opposite thing. */
 html.js [data-reveal='handover'] {
   opacity: 0;
-  transform: translate3d(0, 1.1rem, 0);
+  transform: translate3d(0, 1.6rem, 0);
+  transition-timing-function: cubic-bezier(0.4, 0.5, 0.5, 1);
 }
 
 html.js [data-reveal].is-in {
@@ -558,9 +620,13 @@ html.js [data-reveal].is-in {
   clip-path: inset(0 0 0 0);
 }
 
-/* Sequenced children — one declaration instead of per-element delay hacks */
+/* Sequenced children — one declaration instead of per-element delay hacks.
+   Raised from 55 ms: at that spacing a five-row group arrived inside a fifth of
+   a second, which the eye reads as one block appearing rather than as rows being
+   entered one after another. Sequence you cannot perceive is sequence you have
+   paid for and not received. */
 [data-stagger] > * {
-  --rv-delay: calc(var(--i, 0) * 55ms);
+  --rv-delay: calc(var(--i, 0) * 85ms);
 }
 
 /* ============================================================

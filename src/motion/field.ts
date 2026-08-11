@@ -717,9 +717,27 @@ export function initField(opts: FieldOptions = {}): () => void {
     surface += (surfaceTarget - surface) * Math.min(1, dt * 3.2);
 
     layout(w, h, scrolled);
+    /*
+     * The day-to-night arc, made large enough to be an arc.
+     *
+     * This was `(0.6 + night * 0.4)`, which over ordinary paper moved the field
+     * from 0.12 in the morning to 0.20 at midnight — eight hundredths across a
+     * whole shift. The page claimed the machine grows more present as the day
+     * goes on and then delivered a change the eye cannot find, which is worse
+     * than not claiming it.
+     *
+     * Now the morning is nearly pure paper — 0.06, the machine genuinely out of
+     * sight while you are still reading a document — and by night it is 0.21 on
+     * paper and saturated on the bands. The claim and the ramp finally agree.
+     *
+     * Safe against the contrast gate by construction: a paper section is 95 %
+     * opaque over this canvas, so everything here reaches the reader attenuated
+     * twentyfold, and `npm run contrast` checks the composite at every stop the
+     * light can reach rather than taking that on trust.
+     */
     drawSwitchboard(
       ctx,
-      lerp(0.2, 0.9, surface) * (0.6 + night * 0.4),
+      Math.min(1, lerp(0.14, 0.9, surface) * (0.4 + night * 1.1)),
       inkDay,
       signalDay,
       machineDay,
