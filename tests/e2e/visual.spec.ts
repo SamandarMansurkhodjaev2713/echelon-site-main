@@ -34,6 +34,20 @@ const SCENES = [
   { id: 'handover', at: 0.3 },
 ];
 
+/**
+ * Wait for the page *and* for the substrate underneath it.
+ *
+ * `html[data-ready]` says the page's scripts are wired. It says nothing about
+ * whether the attention field has put its one frozen frame on the canvas: that
+ * happens only after the occupancy guard is built, which is deliberately deferred
+ * past the intro and onto idle. Waiting on `data-ready` alone would record
+ * whether the machine happened to be quick on a given run.
+ */
+async function ready(page: Page) {
+  await page.waitForSelector('html[data-ready]', { state: 'attached' });
+  await page.waitForSelector('canvas[data-field][data-field-ready]', { state: 'attached' });
+}
+
 async function freeze(page: Page) {
   await page.addStyleTag({
     content: `*, *::before, *::after {
@@ -128,7 +142,7 @@ test.describe('visual', () => {
       for (const scene of SCENES) {
         test(scene.id, async ({ page }) => {
           await page.goto('./?intro=off&motion=off&session=reset');
-          await page.waitForSelector('html[data-ready]', { state: 'attached' });
+          await ready(page);
           if (scene.id === 'handover') await fillReport(page);
           await freeze(page);
           await park(page, scene.id, scene.at);
@@ -137,8 +151,19 @@ test.describe('visual', () => {
              session clock is real time, and the handover report's contents
              depend on which sections this particular scroll crossed. All three
              are asserted behaviourally in journey.spec.ts, and the filled
-             report has its own pixel test below with explicit inputs. */
-          const dynamic = [page.locator('canvas'), page.locator('[data-hand-elapsed]')];
+             report has its own pixel test below with explicit inputs.
+
+             The attention field is exempt, and has to be. It is
+             `position: fixed; inset: 0`, so masking it would cover the whole shot
+             and every baseline would be one pink rectangle. It earns the exemption
+             rather than being waived through: under `?motion=off` it renders a
+             single seeded frame and advances no state, so it is a pure function of
+             viewport and scroll offset — and it is the one layer this phase added
+             that nothing else protects visually. */
+          const dynamic = [
+            page.locator('canvas:not([data-field]):not([data-band-field])'),
+            page.locator('[data-hand-elapsed]'),
+          ];
           if (scene.id === 'handover') dynamic.push(page.locator('[data-hand-report]'));
 
           await expect(page).toHaveScreenshot(`${vp.name}-${scene.id}.png`, {
@@ -156,7 +181,7 @@ test.describe('visual: session-aware handover', () => {
 
   test('reports what the visitor actually did', async ({ page }) => {
     await page.goto('./?intro=off&motion=off&session=reset');
-    await page.waitForSelector('html[data-ready]', { state: 'attached' });
+    await ready(page);
 
     // a fixed sequence of interactions → a fixed report
     await page.locator('#teach').scrollIntoViewIfNeeded();

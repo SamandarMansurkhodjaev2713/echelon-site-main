@@ -21,7 +21,29 @@ export default defineConfig({
   workers: process.env.CI ? 2 : undefined,
   reporter: process.env.CI ? [['github'], ['list']] : [['list']],
   timeout: 45_000,
-  expect: { timeout: 10_000, toHaveScreenshot: { maxDiffPixelRatio: 0.02 } },
+  /*
+   * The screenshot tolerance is derived, not guessed.
+   *
+   * It used to be 2 %, which sounds tight and is not: at 1440 × 900 it allows
+   * ~26 000 pixels to move. A full-width hairline is ~1 130 px and a timestamp
+   * label ~500, so PHASE 16 could add a rule and a time to *every* section and
+   * thirty-nine of the fifty-one baselines still reported green while depicting a
+   * page that no longer existed. A gate that cannot see that is not a gate.
+   *
+   * Measured instead: with the suite pinned to one engine, one device scale, fixed
+   * viewports and `?motion=off`, a re-run against freshly written baselines is
+   * bit-identical — 51/51 pass at `maxDiffPixelRatio: 0, threshold: 0`. The noise
+   * floor is zero, so the only question is how much slack to leave, and the answer
+   * is: less than the smallest thing worth catching. A bare hairline is 0.0008 of
+   * the frame at every viewport in the matrix, so 0.0005 catches it with margin
+   * while still absorbing incidental sub-pixel jitter from a future engine bump.
+   *
+   * `threshold` stays at its default on purpose. Lowering it would make the gate
+   * fire on the ambient light ramp, which shifts the paper by 3–5 % per channel —
+   * and that ramp already has a stricter, more meaningful gate of its own in
+   * `scripts/contrast.mjs`, which checks every stop it can reach, composited.
+   */
+  expect: { timeout: 10_000, toHaveScreenshot: { maxDiffPixelRatio: 0.0005 } },
   use: {
     baseURL: BASE,
     trace: 'retain-on-failure',

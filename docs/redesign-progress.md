@@ -472,12 +472,181 @@ only, so there the core breathes as a whole rather than resolving bands.
    still follows the viewport immediately.
 4. The band canvas matched `canvas` in the occupancy selector, marking its entire
    section as text and suppressing the switchboard exactly where it matters most.
+5. **The page depicted two days, not one shift.** Every scene of the day montage
+   declared its own `data-shift`, running `09:00` → `19:00`, so the `13:00` section
+   after it could only be read as the *next* day: at 30 % scroll the clock said
+   `04:39` and the ambient light ran a full night in the middle of the working day.
+   Every section was correct in isolation, which is why nothing short of sampling
+   the clock down the whole page finds it. The montage's times are now content, not
+   page time — the clock is anchored by the seams around it and by the sections
+   that follow, so it runs `09:00` → `13:00` across the montage instead of
+   rewinding after it. Locked by a robustness test that walks 24 scroll positions
+   and asserts two separate things: that the clock never goes backwards, and that
+   the page spans less than a day end to end. The second assertion is the one that
+   catches this class of fault — a rollover keeps the sequence perfectly monotonic
+   while quietly pushing the end of the page into day three.
+6. The intro's skip control appeared and vanished inside 380 ms in short mode,
+   which is a flash rather than an affordance. It is offered only for the full
+   intro; Escape and a scroll still skip either way.
+7. `playwright.config.ts` takes `E2E_PORT`, because a development machine usually
+   already has a dev server on 4321. The default is unchanged, so CI and the README
+   are unaffected.
+8. **The visual suite would have masked the entire page.** It masks every `canvas`,
+   which was right when the only canvases were the graph and the core. The
+   attention field's canvas is `position: fixed; inset: 0`, so from this phase
+   onward that mask covered the whole frame and every baseline would have been one
+   pink rectangle. The field is now exempt, and earns it: under `?motion=off` it
+   renders a single seeded frame and advances no state, so it is a pure function of
+   viewport and scroll offset. The exemption came with an obligation — the shot has
+   to wait for `data-field-ready`, because the frozen frame is drawn only after the
+   occupancy guard is built, which is deliberately deferred past the intro and onto
+   idle. Without that wait the baseline would record whether the machine happened
+   to be quick that run.
+9. **Every visual baseline was stale, and thirty-nine of them still passed.** The
+   tolerance was `maxDiffPixelRatio: 0.02`, which at 1440 × 900 lets about 26 000
+   pixels move. A full-width hairline is ~1 130 px and a timestamp label ~500, so
+   this phase could add a rule and a time to *every* section, plus three chapter
+   breaks, a grain layer, a vignette and a full-viewport canvas, and only twelve of
+   the fifty-one baselines noticed. Regenerating with `--update-snapshots=all`
+   rewrote **51 of 51** — proof that every one of them depicted a page that no
+   longer existed, including the thirty-nine the gate had been calling green. The
+   tolerance is now derived instead of guessed: re-running against fresh baselines
+   is bit-identical (51/51 at ratio 0 *and* per-pixel threshold 0), so the noise
+   floor is zero, and 0.0005 sits below the 0.0008 of a frame that a bare hairline
+   occupies at every viewport in the matrix. The reasoning is written into
+   `playwright.config.ts` beside the number, because a threshold whose derivation
+   is lost is a threshold the next person will loosen.
+
+**The anchor sequence, checked by hand as well as by test**
+
+`08:50` hero → `08:56` load → `08:58` teach → `09:00` seam → *montage, no anchor* →
+`13:00` product → `15:00` memory → `17:00` automate → `18:20` client → `19:40`
+boundary → `23:00` seam → `23:20` night → `23:40` voice → `00:40` ledger *(+1 day)*
+→ `07:00` seam → `07:10` handover. Monotonic, exactly one rollover, 22 h 20 min end
+to end. `main > section[data-shift]` guards the section mark, so the montage —
+the one band that deliberately declares no time — draws no empty hairline.
+
+---
+
+## RUNNING THE SUITE LOCALLY
+
+The full five-project matrix must not be run on this workstation. This is a local
+constraint, not a property of the suite: CI runs the same matrix without trouble.
+
+Three attempts on 11 Aug ended in a Windows bugcheck `0x0000010E`
+(`VIDEO_MEMORY_MANAGEMENT_INTERNAL`) — at 11:49, 13:03 and 13:50, the last of them
+nineteen seconds after Playwright had finished writing its own summary. Firefox
+logged `RenderCompositorSWGL failed mapping default framebuffer` inside the same
+runs, so the userspace symptom and the kernel fault agree with each other.
+
+This matters for reading a red report. The run that "found" 137 failures out of 200
+was reporting a machine that had stopped, not a page that was broken: every one of
+those failures was a timeout — several inside `browserContext.close`, which no page
+can cause — and every one passes when its project is run by itself.
+
+The trigger is established; the root cause is not. The bugcheck is specific to
+*video* memory, the GPU is an RTX 3050 Laptop with 4 GB of VRAM on a driver dated
+October 2024, and the page now composites two canvases in every engine at once. Run
+one project at a time at two workers, and the visual project at one.
+
+---
+
+## FRAME RATE — §57-H, MEASURED AT LAST
+
+The audit's one open item was that sustained frame rate during a scrub had never
+been instrumented: the supporting evidence was strong (TBT 0 ms, CLS 0, GSAP gone)
+but the thing itself was stated rather than shown. This phase added two canvases,
+so it stopped being optional. `scripts/fps.mjs` drives the page with real wheel
+events at a human rate and samples `requestAnimationFrame` deltas inside the page.
+
+Measured against the production build behind the gzip server, 18 s of continuous
+scrolling covering the whole page. The right-hand column is a control: the same
+page under `?motion=off`, both canvases frozen, so the difference between the
+columns is what the machine layer costs.
+
+| | canvases live | canvases frozen |
+|---|---|---|
+| 1× — median | 16.7 ms | 16.7 ms |
+| 1× — p95 | 33.3 ms | **16.8 ms** |
+| 1× — worst | 83.4 ms | 33.4 ms |
+| 1× — frames > 33 ms | 6.3 % | **0.7 %** |
+| 4× — p95 | 83.2 ms | 83.4 ms |
+| 4× — frames > 33 ms | 39.0 % | 29.7 % |
+
+**The honest answer to "is 60 fps held" is: at the median yes, at the 95th
+percentile no.** At full speed the page drops a frame in 6.3 % of them, and
+freezing the two canvases takes that to 0.7 % — so at full speed the attention
+field and the voice core account for essentially all of it. Under 4× CPU
+throttling the picture inverts: 29.7 % of frames are dropped with the canvases
+frozen and 39.0 % with them live, so on a slow machine they are a minor
+contributor and the page's own layout and paint dominate.
+
+Reading the table: the script's `> 16.7 ms` counter is deliberately not quoted
+here. That threshold sits exactly on the refresh interval, so ordinary jitter puts
+roughly half the frames "over" it on a page that is in fact running at 60 fps.
+`> 33 ms` is the count that means a frame was genuinely dropped.
+
+One thing found by reading rather than by measuring, and left open rather than
+fixed on a guess: `field.ts` opens with a budget rule saying nothing is
+"allocated, sorted, stringified or style-read inside the loop", and then builds a
+fresh `rgba(…)` string for `ctx.strokeStyle` once per draw — on the order of 380
+colour strings constructed and re-parsed per frame. Setting an opaque
+`strokeStyle` once and varying `ctx.globalAlpha` instead is pixel-identical under
+the canvas compositing rules and would remove all of them. It is not done here,
+because the 6.3 % has not been attributed to that line specifically, and this
+project has already once implemented, measured and reverted an optimisation that
+did not pay (PHASE 12, the inline-stylesheet split). The visual gate is now strict
+enough to prove such a change pixel-identical in about a minute, which is the
+right way to attempt it.
+
+### Load performance, re-measured
+
+PHASE 12's table describes a page without the substrate, so it has the same
+problem the visual baselines had. Re-run against the same gzip server, mobile
+throttling, all three locales.
+
+| Locale | Perf | A11y | BP | SEO | FCP | LCP | TBT | CLS |
+|---|---|---|---|---|---|---|---|---|
+| RU | 93 *(was 94)* | 100 | 100 | 100 | 2.4 s | 2.6 s | **110 ms** *(was 0)* | 0 |
+| EN | 96 *(was 97)* | 100 | 100 | 100 | 2.0 s | 2.3 s | 0 ms | 0 |
+| UZ | 96 *(was 96)* | 100 | 100 | 100 | 2.1 s | 2.3 s | **20 ms** *(was 0)* | 0 |
+
+Recorded rather than smoothed over: the substrate costs a point of performance on
+RU and EN, and TBT is no longer zero — 110 ms on RU, still inside Google's 200 ms
+"good" band, but not the 0 ms the previous table reports. LCP, CLS and the three
+non-performance scores are unchanged. Lighthouse now also raises a *forced reflow*
+insight on all three locales where it raised none before; the likely source is the
+occupancy grid's walk over every text box, and that is the first place to look if
+this is ever worth reducing.
 
 ---
 
 ## OPEN ITEMS
 
-1. Sustained scrub frame rate is not instrumented (§57-H above).
-2. RU LCP is 2.6 s against the 2.5 s target; EN and UZ are inside budget.
-3. `npm audit` still reports the sharp/astro advisories from the baseline.
+1. RU LCP is 2.6 s against the 2.5 s target; EN and UZ are inside budget.
+   Unchanged by this phase.
+2. TBT is no longer 0 — 110 ms on RU, 20 ms on UZ — with a forced-reflow insight
+   beside it. Inside the "good" band, but a regression against the recorded number.
+3. At the 95th percentile the page runs at 30 fps rather than 60, and the two
+   canvases account for essentially all of it. A pixel-identical candidate fix is
+   described under FRAME RATE above and deliberately left unapplied until it is
+   measured rather than assumed.
+4. `npm audit` still reports the sharp/astro advisories from the baseline.
    `astro:assets` is not used, so neither is on a runtime path.
+5. **The CI gate has never actually run.** The workflow that types-, unit- and
+   E2E-gates the deploy arrived with the redesign commit, and its only invocation —
+   the redesign pull request — sits at `action_required` with a duration of 0 s, so
+   GitHub never started it. Every green run in the history predates the workflow and
+   is the old build-and-deploy one, which is why they all finish in 33–48 s. The
+   gate is documented but unproven.
+6. **The visual baselines cannot pass on the CI runner.** Playwright puts the
+   platform in the snapshot file name, so the 51 `…-visual-win32.png` files have no
+   `…-visual-linux.png` counterparts and `ubuntu-latest` would fail every one of
+   them as a missing snapshot — which, since `test` gates `build` and `build` gates
+   `deploy`, means nothing would ever deploy. Three ways out, and choosing between
+   them is a real trade-off: run the visual project only where its baselines exist
+   and lose visual cover in CI; commit a second, Linux-captured set; or run visual
+   in CI inside the official Playwright image so one set serves both. Undecided.
+7. The three seams are this phase's one new visual element with no baseline of its
+   own — `SCENES` parks on section ids and the seams carry none. An id and five
+   more baselines would close it.
