@@ -99,25 +99,7 @@ test('the header CTA reaches the handover, and the handover CTA is the demo link
 }) => {
   await visit(page, `${RU}?intro=off`);
 
-  /* On a narrow viewport the masthead call to action is held back until the hero
-     is behind you: at the top the hero's own is a few hundred pixels below and
-     several times larger, so a second one crowds the narrowest row on the site
-     for no gain. Scrolling past the hero first is what a visitor does, not a
-     concession to the test — and asserting it appears is the part worth keeping,
-     because "reachable" is the promise, not "present at pixel zero". */
-  const headerCta = page.getByRole('banner').getByRole('link', { name: /демо/i });
-  if (!(await headerCta.isVisible())) {
-    /* Past the hero's bottom edge exactly, not "far enough that it probably
-       worked": `scrollIntoViewIfNeeded` on the next section moves the minimum
-       amount, which on a 360 × 800 screen still left the hero on screen — so the
-       control was correctly still hidden and the test blamed the page. */
-    await page.evaluate(() => {
-      const hero = document.getElementById('top');
-      if (hero) window.scrollTo(0, hero.getBoundingClientRect().bottom + window.scrollY + 1);
-    });
-    await expect(headerCta).toBeVisible();
-  }
-  await headerCta.click();
+  await page.getByRole('banner').getByRole('link', { name: /демо/i }).click();
   await expect(page.locator('#handover')).toBeInViewport({ timeout: 4000 });
 
   const cta = page.locator('#handover a.act');
@@ -328,23 +310,12 @@ test('mobile: navigation, tabs and the product are usable at 360 px', async ({ b
   const page = await ctx.newPage();
   await visit(page, `${RU}?intro=off`);
 
+  await expect(page.getByRole('banner').getByRole('link', { name: /демо/i })).toBeVisible();
   await expect(page.getByRole('navigation', { name: /язык/i })).toBeVisible();
-
-  /* The masthead trades at this width rather than crowding: at the top the shift
-     clock has the space, and the call to action takes it once the hero is behind
-     you. Both halves are asserted, because the promise is that neither is lost —
-     the earlier version of this test checked only that the button was present at
-     pixel zero, which is the one place it is redundant with the hero's own. */
-  const headerCta = page.getByRole('banner').getByRole('link', { name: /демо/i });
-  await expect(page.locator('[data-shift-clock]')).toBeVisible();
-  await expect(headerCta).toBeHidden();
-
-  await page.evaluate(() => {
-    const hero = document.getElementById('top');
-    if (hero) window.scrollTo(0, hero.getBoundingClientRect().bottom + window.scrollY + 1);
-  });
-  await expect(headerCta).toBeVisible();
-  await expect(page.getByRole('navigation', { name: /язык/i })).toBeVisible();
+  /* No assertion about the shift clock here, and that is measured rather than
+     conceded: at 360 px the row's right edge would land at 372 with only 324
+     available, so the clock genuinely does not fit and stands down below 23rem.
+     It reaches every phone wider than that, which is most of them. */
 
   await page.locator('#product').scrollIntoViewIfNeeded();
   await page.locator('[data-prod-tabs] [data-tab="vault"]').click();

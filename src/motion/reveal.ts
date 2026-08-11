@@ -47,7 +47,23 @@ export function initReveal(root: ParentNode = document): () => void {
         show(e.target);
       }
     },
-    { rootMargin: '0px 0px -6% 0px', threshold: 0.06 },
+    /*
+     * The reveal starts before the element arrives, not after.
+     *
+     * This was `-6%`, and a negative bottom margin *shrinks* the root from below
+     * — so nothing began appearing until it was already inside the viewport, and
+     * then took the best part of a second to finish while the reader kept
+     * scrolling. The reported experience was exact: you scroll, the thing is
+     * almost off the top of the screen, and only then does it animate. The
+     * choreography was playing to an empty seat.
+     *
+     * A positive margin extends the root below the fold, so a row begins its
+     * arrival while it is still off-screen and is in place by the time it can be
+     * read. 15 % of a viewport is roughly the distance the longest staggered
+     * group needs at reading pace; beyond that the reveal would be spent on
+     * things nobody has looked at yet, which is the opposite mistake.
+     */
+    { rootMargin: '0px 0px 15% 0px', threshold: 0.06 },
   );
 
   for (const el of pending) io.observe(el);
@@ -72,7 +88,7 @@ export function initReveal(root: ParentNode = document): () => void {
   let frame = 0;
   const sweep = () => {
     frame = 0;
-    const limit = window.innerHeight * 0.94; //  matches the observer's bottom margin
+    const limit = window.innerHeight * 1.15; //  matches the observer's bottom margin
     for (const el of [...pending]) {
       const r = el.getBoundingClientRect();
       if (r.height <= 0) continue;

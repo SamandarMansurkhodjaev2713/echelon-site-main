@@ -168,6 +168,22 @@ const panes = [
     position: relative;
     margin-top: 1rem;
     isolation: isolate;
+    /*
+     * The sheet leaves the stage, it does not leave the section.
+     *
+     * The top leaf is half the stage tall and opens by translating -100 % of its
+     * own height, which puts it above the stage's top edge — over the heading,
+     * the lead and the tabs. Being `--paper` coloured and z-index 2, it did not
+     * look like a moving element passing over text; it looked like the text was
+     * being erased as the product opened. That was clipped on phones and nowhere
+     * else, so the fault was invisible on exactly the screen it was checked on.
+     *
+     * `overflow-clip-margin` is set to the leaf's own horizontal overhang, so the
+     * sheet still runs wider than the column and keeps the shadow that makes it
+     * read as a sheet — while vertically it can escape by 2vw and no further.
+     */
+    overflow: clip;
+    overflow-clip-margin: 2vw;
   }
 
   /* ---- the paper leaves ----

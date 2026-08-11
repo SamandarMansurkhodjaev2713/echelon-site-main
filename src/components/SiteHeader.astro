@@ -54,6 +54,24 @@ const { dict, locale } = Astro.props;
       <span>{dict.nav.cta}</span>
     </a>
   </div>
+
+  <!--
+    THE SHIFT SCALE.
+
+    The page is one working day, so its progress indicator is a day: the filled
+    part is the shift you have read, and each notch is a section standing at the
+    hour it depicts. It is populated by script because a notch's place is the
+    section's real position in the document, not a number anyone can type.
+
+    Deliberately not a control. Making the notches clickable means giving them a
+    24 px hit area, which at the foot of a 56 px masthead is a full-width
+    transparent strip lying across the language switcher and the call to action —
+    the exact defect that already cost this header three rounds of debugging,
+    rebuilt on purpose. The page's navigation lives in the pillars index, where
+    the links are the size of a thumb and exist on every device. This is a
+    display, and it says so: aria-hidden, pointer-events: none.
+  -->
+  <div class="shiftbar" data-shiftbar aria-hidden="true"></div>
 </header>
 
 <style>
@@ -188,45 +206,146 @@ const { dict, locale } = Astro.props;
     height: 1px;
     width: calc(var(--read, 0) * 100%);
     background: var(--signal);
+    z-index: 1;
+  }
+
+  /* ---- the shift scale ---- */
+  .shiftbar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 1px;
+    pointer-events: none;
+  }
+  /*
+   * `:global` on everything the script creates, and it is not optional.
+   *
+   * Astro scopes a component's styles by appending its own attribute to each
+   * selector, and a span made with `document.createElement` does not carry that
+   * attribute — so these rules matched nothing at all. The notches were in the
+   * DOM, in the right places, computing as `display: inline`, `position: static`
+   * and 0 × 0: present, correct, and invisible. Only looking at it found that;
+   * every programmatic check said the scale was built.
+   */
+  .shiftbar :global(.shiftbar__tick) {
+    position: absolute;
+    bottom: 0;
+    /* `left` is written by the script as a percentage of the document */
+    width: 1px;
+    height: 5px;
+    background: var(--machine);
+  }
+  /* The hour a section depicts, set beside its own notch. Only every other one
+     is labelled: thirteen times along a 1440 px rail collide, and a scale you
+     cannot read is decoration. */
+  .shiftbar :global(.shiftbar__tick[data-label])::after {
+    content: attr(data-label);
+    position: absolute;
+    bottom: 7px;
+    left: 0;
+    transform: translateX(-50%);
+    font-family: var(--font-system);
+    font-size: 0.5625rem;
+    letter-spacing: 0.04em;
+    color: var(--machine);
+    font-variant-numeric: tabular-nums;
+    opacity: 0;
+    transition: opacity var(--dur-normal) var(--ease-standard);
+  }
+  /* An hour centred on a notch four pixels from the edge loses half of itself off
+     the side of the page — the first label read ":50". The two end notches hang
+     their label inward instead. */
+  .shiftbar :global(.shiftbar__tick[data-edge='start'])::after {
+    transform: none;
+  }
+  .shiftbar :global(.shiftbar__tick[data-edge='end'])::after {
+    transform: translateX(-100%);
+  }
+
+  /* The scale is quiet until you look at it. Hovering the masthead is the
+     gesture that means "where am I" — the labels answer, and then leave. */
+  .masthead:hover .shiftbar :global(.shiftbar__tick[data-label])::after {
+    opacity: 1;
+  }
+  /* Where the reader is now. Sits above the notches so it is never lost in one. */
+  .shiftbar :global(.shiftbar__now) {
+    position: absolute;
+    bottom: 0;
+    left: calc(var(--read, 0) * 100%);
+    width: 2px;
+    height: 9px;
+    margin-left: -1px;
+    background: var(--signal);
+  }
+
+  /* A one-pixel rail is a pointer affordance. On a touch screen it would be an
+     ornament nobody can use and a row of hairlines under the masthead, so it is
+     not drawn at all. */
+  @media not all and (hover: hover) and (pointer: fine) {
+    .shiftbar {
+      display: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .shiftbar :global(.shiftbar__tick[data-label])::after {
+      transition: none;
+    }
   }
 
   /*
-   * Narrow: the clock and the call to action take turns.
+   * Narrow: everything fits, because the wordmark stands down.
    *
-   * The old rule cut the clock first, on the grounds that brand, languages and
-   * CTA all outrank it. That was the wrong question. Which of the two the row
-   * can afford is a matter of *where the reader is*, not of abstract rank: at
-   * the top of the page the hero's own call to action is a few hundred pixels
-   * below and several times larger, so a second one in the masthead is
-   * duplication crowding the narrowest row on the site. The clock is the one
-   * element that says continuously that this page is a working day — on a phone
-   * it was the only thing saying so, and it was the thing being switched off.
+   * The old rule cut the shift clock first, which meant that on a phone — where
+   * most people meet this page — nothing said continuously that it depicts a
+   * working day. That was worth fixing. It was not worth fixing the way I first
+   * fixed it: by making the masthead's contents depend on scroll position, so
+   * the call to action appeared once the hero was behind you and the clock stood
+   * down. That is a feedback loop in the one element that must never wobble —
+   * the header changes its own layout, the layout moves the hero, the hero
+   * changes the header — and it cost three rounds of debugging, a hysteresis
+   * margin to damp it, and it still could not be clicked reliably on every
+   * device. Removed rather than propped up further.
    *
-   * Once the hero is behind you the trade reverses: the call to action is the
-   * thing you might now want, and the clock stands down. Neither is ever fighting
-   * the other for the same 40 px.
+   * The measurement that made it unnecessary: at 360 px, with the wordmark
+   * hidden, brand 18–40, languages 116–212 and the button 219–342 all sit inside
+   * the row with room to spare. The wordmark is the thing that can go; the mark
+   * beside it still identifies the page, and the wordmark is set full size at the
+   * top of the document anyway. Nothing here depends on where the reader is.
    */
-  @media (max-width: 48rem) {
-    .masthead__cta {
-      display: none;
+  @media (max-width: 30rem) {
+    /*
+     * Hidden from the eye, not from the accessibility tree.
+     *
+     * `display: none` here removed the only text the brand link had — the image
+     * beside it is decorative with an empty alt, and "Desktop" is hidden at this
+     * width too — so the link had no accessible name at all and axe was right to
+     * call it serious. A wordmark that is merely too wide to draw is still the
+     * name of the thing; it should stop being painted, not stop existing.
+     */
+    .masthead__mark {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
     }
-    :global(html[data-past-hero]) .masthead__cta {
-      display: inline-flex;
+    /* With the wordmark gone the brand link is exactly the 22 px image, which is
+       under the target-size floor — the link stopped being big enough to press
+       the moment it stopped carrying text. The box grows; the mark does not. */
+    .masthead__brand {
+      min-width: 2.5rem;
+      min-height: 2.5rem;
+      justify-content: center;
     }
-    :global(html[data-past-hero]) .masthead__clock {
-      display: none;
-    }
-    :global(html[data-past-hero]) .masthead__langs {
-      margin-left: auto;
-    }
-    /* With the call to action back, the row is genuinely full at 360 px and
-       something has to give. It is the wordmark: by the time you are reading, the
-       mark alone identifies the page, and the wordmark is still the first thing
-       on the page above. Left to flexbox this resolved itself by letting the
-       language switcher sit on top of the button — the click landed on "EN". A
-       row that overflows does not fail visibly; it fails as a control that cannot
-       be pressed. */
-    :global(html[data-past-hero]) .masthead__mark {
+  }
+  /* Below this the clock is the one that yields: four elements genuinely do not
+     fit, and a call to action outranks a restatement of scroll position. */
+  @media (max-width: 23rem) {
+    .masthead__clock {
       display: none;
     }
   }
@@ -247,10 +366,6 @@ const { dict, locale } = Astro.props;
     }
   }
   @media (max-width: 22.5rem) {
-    /* 320 px, longest locale: the brand mark alone still identifies the page */
-    .masthead__mark {
-      font-size: 0.9375rem;
-    }
     .masthead__langs a {
       min-width: 1.9rem;
     }
@@ -258,34 +373,65 @@ const { dict, locale } = Astro.props;
 </style>
 
 <script>
-  import { register } from '../motion/lifecycle';
+  import { register, listen } from '../motion/lifecycle';
 
-  /* Drives the swap described in the stylesheet. An observer rather than a scroll
-     listener: the answer changes twice in a visit, so paying for it per frame
-     would be absurd. The attribute lives on <html> because the masthead is not
-     the only thing that may eventually want to know the hero is behind us. */
-  const hero = document.getElementById('top');
-  if (hero) {
-    const io = new IntersectionObserver(
-      (entries) => {
-        const e = entries[0];
-        if (e) document.documentElement.toggleAttribute('data-past-hero', !e.isIntersecting);
-      },
-      /*
-       * The trigger is kept far away from the hero's actual edge, and that is not
-       * a tuning preference — without it this observer feeds itself. Flipping the
-       * flag changes the masthead's own contents, that changes layout by a few
-       * pixels, and a reader parked exactly at the hero's bottom edge would cross
-       * the boundary back and forth on every reflow: a header that flickers as
-       * long as you hold still. It showed up as a click that could never land,
-       * because the button never stopped moving.
-       *
-       * Pushing the root's top down 60% moves the crossing point several hundred
-       * pixels away from anything the header can shift, so the loop cannot close.
-       */
-      { threshold: 0, rootMargin: '-60% 0px 0px 0px' },
-    );
-    io.observe(hero);
-    register(() => io.disconnect());
+  /*
+   * Populates the shift scale.
+   *
+   * A notch's place is the section's real position in the document, measured
+   * against the same denominator the read-progress hairline uses — so when the
+   * playhead sits on a notch the reader is genuinely at that section rather than
+   * approximately near it. A wrong denominator would not look broken; it would
+   * look like a scale that lies quietly, which is worse.
+   *
+   * Measured on load and after a resize, never per frame. The playhead rides
+   * `--read`, which the shift clock already publishes, so while the page is
+   * being read this has nothing to do.
+   */
+  const bar = document.querySelector<HTMLElement>('[data-shiftbar]');
+  const sections = Array.from(
+    document.querySelectorAll<HTMLElement>('main > section[data-shift]'),
+  );
+
+  if (bar && sections.length) {
+    const build = () => {
+      const span = document.documentElement.scrollHeight - window.innerHeight;
+      bar.textContent = '';
+      if (span <= 0) return;
+
+      sections.forEach((el, i) => {
+        const at = (el.getBoundingClientRect().top + window.scrollY) / span;
+        if (at < 0 || at > 1) return;
+        const tick = document.createElement('span');
+        tick.className = 'shiftbar__tick';
+        tick.style.left = `${(at * 100).toFixed(3)}%`;
+        // every other one carries its hour; see the stylesheet for why
+        if (i % 2 === 0) {
+          tick.dataset.label = el.dataset.shift ?? '';
+          // a label centred on an end notch falls off the side of the page
+          if (at < 0.05) tick.dataset.edge = 'start';
+          else if (at > 0.95) tick.dataset.edge = 'end';
+        }
+        bar.append(tick);
+      });
+
+      const now = document.createElement('span');
+      now.className = 'shiftbar__now';
+      bar.append(now);
+    };
+
+    build();
+    /* The document's height settles when the webfonts land: every section moves,
+       and a scale measured before that is measured against a page that no longer
+       exists. */
+    if (document.fonts?.ready) void document.fonts.ready.then(build);
+
+    let timer = 0;
+    listen(window, 'resize', () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(build, 180);
+    });
+    register(() => window.clearTimeout(timer));
   }
 </script>
+

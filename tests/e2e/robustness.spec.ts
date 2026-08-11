@@ -204,7 +204,10 @@ test('a fast scroll to the bottom and back leaves nothing half-drawn', async ({ 
   const stuck = () =>
     page.evaluate(() => {
       const out: string[] = [];
-      const limit = window.innerHeight * 0.94; // the observer's own root, bottom margin included
+      // Deliberately stricter than the observer, which now begins a reveal 15 %
+      // of a viewport *below* the fold: anything this counts is well inside the
+      // screen and has had longer than the trigger distance to arrive.
+      const limit = window.innerHeight * 0.94;
       for (const el of document.querySelectorAll<HTMLElement>('[data-reveal]')) {
         const r = el.getBoundingClientRect();
         if (r.height <= 0) continue;
