@@ -13,16 +13,28 @@ const ratio = (a, b) => {
   return (x + 0.05) / (y + 0.05);
 };
 
+/* Composite `fg` over `bg` at alpha `a` — how a paper veil actually resolves
+   against the attention field behind it (see --paper-veil in tokens.css). */
+const over = (fg, bg, a) => {
+  const [f, b] = [hex(fg), hex(bg)];
+  return (
+    '#' +
+    f
+      .map((c, i) => Math.round((c * a + b[i] * (1 - a)) * 255).toString(16).padStart(2, '0'))
+      .join('')
+  );
+};
+
 const P = {
   paper: '#F4F1E8',
   paperDeep: '#EAE6DA',
   rule: '#CFC9B6', //  decorative hairline
-  ruleStrong: '#8C8779', //  functional border (inputs, controls) — needs 3:1
+  ruleStrong: '#7A7568', //  functional border (inputs, controls) — needs 3:1
   ink: '#15140F',
   inkMuted: '#403E37',
-  inkSoft: '#5C594F',
-  machine: '#636057', //  system meta on paper
-  machineInv: '#9E9A8E', //  system meta on ink
+  inkSoft: '#565348',
+  machine: '#55524A', //  system meta on paper
+  machineInv: '#A8A496', //  system meta on ink
   signal: '#B0341A',
   signalDeep: '#8E2913',
   signalBright: '#E2673F', //  signal on ink
@@ -57,6 +69,34 @@ const checks = [
   ['uiAccent on uiBg', P.uiAccent, P.uiBg, 4.5],
   ['uiBg on uiAccent (button)', P.uiBg, P.uiAccent, 4.5],
 ];
+
+/* ---------------------------------------------------------------------------
+   The ambient light ramp (motion/light.ts). The ground moves across the shift,
+   so every stop it can reach has to clear AA on its own — and it has to clear it
+   *composited*, because a paper section is 95 % opaque over the attention field
+   and the worst case behind it is the near-black band ground.
+   --------------------------------------------------------------------------- */
+const RAMP = {
+  'day     ': { paper: '#F7F3E7', deep: '#EFEADC' },
+  'dusk    ': { paper: '#F3EDE0', deep: '#EBE5D6' },
+  'lamp    ': { paper: '#F0E9DB', deep: '#EDE6D7' },
+};
+const VEIL = 0.95;
+const BEHIND = '#15140F'; //  --paper-ink, the darkest thing the veil can sit on
+
+for (const [when, stop] of Object.entries(RAMP)) {
+  for (const [which, base] of Object.entries(stop)) {
+    const ground = over(base, BEHIND, VEIL);
+    checks.push(
+      [`ink on ${which} @${when} (veiled ${ground})`, P.ink, ground, 4.5],
+      [`inkMuted on ${which} @${when}`, P.inkMuted, ground, 4.5],
+      [`inkSoft on ${which} @${when}`, P.inkSoft, ground, 4.5],
+      [`machine on ${which} @${when}`, P.machine, ground, 4.5],
+      [`signal on ${which} @${when}`, P.signal, ground, 4.5],
+      [`ruleStrong on ${which} @${when}`, P.ruleStrong, ground, 3],
+    );
+  }
+}
 
 let fails = 0;
 for (const [name, fg, bg, min] of checks) {

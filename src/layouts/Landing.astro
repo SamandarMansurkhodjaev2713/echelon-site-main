@@ -5,6 +5,8 @@
  * which guaranteed drift the moment a section was added or reordered.
  */
 import Base from './Base.astro';
+import Field from '../components/Field.astro';
+import Seam from '../components/Seam.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import WorkTape from '../components/WorkTape.astro';
 import Hero from '../components/Hero.astro';
@@ -34,6 +36,8 @@ const dict = getDict(locale);
 
 <Base locale={locale} title={dict.meta.title} description={dict.meta.description}>
   <a class="skip-link" href="#main">{dict.nav.skip}</a>
+  <!-- The machine, running underneath everything below it. -->
+  <Field />
   <SiteHeader dict={dict} locale={locale} />
   <WorkTape dict={dict} />
   <main id="main">
@@ -43,6 +47,10 @@ const dict = getDict(locale);
     <Load dict={dict} />
     <!-- LEARN — the visitor teaches one rule here; it is used in <Client/> -->
     <Teach dict={dict} />
+    <!-- The three seams are the page's chapter breaks. Each is also a clock
+         anchor for motion/shift.ts, so the ambient light turns at exactly the
+         moment the narrative says the shift changed. -->
+    <Seam {...dict.seams.day} />
     <!-- ACT -->
     <Day dict={dict} />
     <!-- UNDERSTAND — the paper parts and the real product is underneath -->
@@ -55,9 +63,11 @@ const dict = getDict(locale);
     <Client dict={dict} />
     <!-- ESCALATE -->
     <Boundary dict={dict} />
+    <Seam {...dict.seams.night} />
     <Night dict={dict} />
     <Voice dict={dict} locale={locale} />
     <Ledger dict={dict} />
+    <Seam {...dict.seams.dawn} />
     <!-- HANDOVER -->
     <Handover dict={dict} locale={locale} />
   </main>
@@ -77,12 +87,31 @@ const dict = getDict(locale);
     import { initTeach } from '../motion/teach';
     import { initCursor, type CursorLabels } from '../motion/cursor';
     import { initScrollRefresh } from '../motion/scroll';
+    import { initField } from '../motion/field';
+    import { initLight } from '../motion/light';
 
     initReveal();
     initIntro();
     initTape();
     initTeach();
     initScrollRefresh();
+
+    /* The substrate — the ambient light and the attention field. Both read the
+       same shift clock, so the light on the paper and the load on the machine
+       can never disagree about the time.
+
+       Guarded, and deliberately so. These two are atmosphere: the page reads
+       perfectly without them. They are also the only things here touching canvas
+       and a browser API that is not universally present, and an exception thrown
+       from either would abort the rest of this module — including `data-ready`
+       below, which every test and every deferred behaviour waits on. Atmosphere
+       must not be able to take the page down with it. */
+    try {
+      initLight();
+      initField();
+    } catch (err) {
+      console.warn('[echelon] substrate unavailable', err);
+    }
 
     const labelsEl = document.querySelector('[data-cursor-labels]');
     if (labelsEl?.textContent) {

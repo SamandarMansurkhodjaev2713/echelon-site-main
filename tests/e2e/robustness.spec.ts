@@ -238,3 +238,48 @@ test('no duplicate ids, broken anchors or missing assets on any locale', async (
     expect(failed, path).toEqual([]);
   }
 });
+
+test('the page depicts one shift, not two days', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('./?intro=off&motion=off');
+  await ready(page);
+  // The page scrolls smoothly; sampling a clock needs the scroll to land, not travel.
+  await page.addStyleTag({ content: 'html { scroll-behavior: auto !important; }' });
+
+  /* The ambient light, the masthead clock and the load on the attention field are
+     all driven by motion/shift.ts, which interpolates between the times sections
+     declare. A declared time that goes backwards can only mean the next day —
+     right for 23:40 → 00:40, ruinous for anything that revisits an earlier hour.
+     The day montage used to declare 09:00 → 19:00 on each of its scenes, so the
+     13:00 product section after it landed on day two: at 30 % scroll the page read
+     04:39 and drove the ground to near-full night in the middle of the working
+     day. Every section was correct on its own, which is why nothing short of
+     sampling the clock down the whole page finds it. */
+  /* Sampled inside the page in one round trip. Driving 25 scroll-and-read steps
+     from the test process is 50 crossings of the driver boundary, which is slow
+     enough to hit the test timeout on a loaded machine — and waiting on frames
+     the clock actually renders is more precise than waiting on a stopwatch. */
+  const steps = 24;
+  const samples = await page.evaluate(async (n) => {
+    const out: number[] = [];
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const settled = () =>
+      new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    for (let i = 0; i <= n; i++) {
+      window.scrollTo(0, (max * i) / n);
+      await settled();
+      await settled();
+      out.push(Number(document.documentElement.dataset.shiftMinutes));
+    }
+    return out;
+  }, steps);
+
+  expect(Number.isFinite(samples[0]), 'the shift clock never reported a time').toBe(true);
+  for (let i = 1; i < samples.length; i++) {
+    expect(samples[i]!, `the clock went backwards at step ${i} of ${steps}`).toBeGreaterThanOrEqual(
+      samples[i - 1]!,
+    );
+  }
+  // one shift, plus the handover the next morning — under a day, end to end
+  expect(samples[samples.length - 1]! - samples[0]!).toBeLessThan(24 * 60);
+});

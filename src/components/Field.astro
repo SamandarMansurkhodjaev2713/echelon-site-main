@@ -1,0 +1,69 @@
+---
+/*
+ * THE SUBSTRATE — everything the page sits on, in one place.
+ *
+ * Three fixed layers, below every section and above nothing:
+ *   .field__canvas  the attention field (motion/field.ts)
+ *   .field__grain   paper tooth, so the ground reads as a material rather
+ *                   than a hex value
+ *   .field__vignette  the room the paper is lying in; deepens after dark
+ *
+ * The layers are `position: fixed` and `pointer-events: none`, so they cost one
+ * composited layer each and can never intercept a click. Sections paint their
+ * own paper on top at slightly less than full opacity, which is what lets the
+ * machine read as *under* the record instead of behind a window.
+ */
+---
+
+<div class="field" aria-hidden="true">
+  <canvas class="field__canvas" data-field></canvas>
+  <div class="field__grain"></div>
+  <div class="field__vignette"></div>
+</div>
+
+<style>
+  .field {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    /* the layers never affect layout or paint outside themselves */
+    contain: strict;
+  }
+
+  .field__canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Paper tooth. Static: a grain that animates is sand, and it costs a full
+     repaint per frame for something the eye reads as texture either way. */
+  .field__grain {
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+  }
+
+  /* The room. Almost nothing by day; by night the edges of the desk go dark. */
+  .field__vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      118% 92% at 50% 34%,
+      transparent 38%,
+      rgba(21, 20, 15, 0.5) 100%
+    );
+    opacity: calc(0.06 + var(--night, 0) * 0.34);
+    transition: opacity 900ms linear;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .field__vignette {
+      transition: none;
+    }
+  }
+</style>

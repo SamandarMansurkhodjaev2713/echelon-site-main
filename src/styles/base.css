@@ -240,8 +240,112 @@ em.human {
   padding-block: var(--band-tight);
 }
 
-.band--deep {
-  background: var(--paper-deep);
+/* ============================================================
+   THE SUBSTRATE — the machine runs under the record.
+
+   The first version of this design was a journal: a record of work already
+   done. Past tense, for a product whose whole claim is that something is
+   running right now. components/Field.astro supplies the present tense as a
+   fixed layer beneath everything, and sections stop painting a background
+   directly — they paint a *veil* over it.
+
+   At the default 0.95 the field contributes at most five percent of the ground:
+   enough for motion to register at the edge of vision, far too little to move
+   any foreground off its contrast target (scripts/contrast.mjs checks the
+   composited worst case, not just the nominal paper). Dark bands open the veil
+   so the machine becomes the subject rather than the watermark; seams drop it
+   entirely, and there the paper has genuinely ended.
+   ============================================================ */
+
+main,
+.site-footer {
+  position: relative;
+  z-index: var(--z-content);
+}
+
+main > section {
+  position: relative;
+  isolation: isolate;
+}
+
+/* The veil is `::after` so that the section mark below can be `::before`, which
+   is the only thing that decides the order a screen reader announces them in:
+   generated content *is* exposed to assistive technology, and the mark is drawn
+   at the top of the section, so announcing it last contradicted the layout. */
+main > section::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--veil, var(--paper));
+  opacity: var(--paper-veil);
+}
+
+.band--deep,
+.veil--deep {
+  --veil: var(--paper-deep);
+}
+
+/* A dark band's own switchboard: above its background, below its type. The
+   canvas is inert without JS, so the band simply reads as a dark band. */
+.band-field {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.on-ink > .page {
+  position: relative;
+  z-index: 1;
+}
+
+/* A seam is a gap in the record by definition — components/Seam.astro owns its
+   sizing; all that belongs here is the guarantee that no paper is painted over
+   it, whether it is authored as a section or a plain block. */
+main > .seam::after {
+  opacity: 0;
+}
+
+/* ============================================================
+   SECTION MARKS — the landmark every section was missing.
+
+   Thirteen sections opened with the same three moves (mono kicker → large
+   headline → grey lead) across fifteen thousand pixels. Nothing was wrong with
+   any one of them and the sequence was unreadable, because the eye had no way to
+   tell the fourth screen from the ninth. That is what "unreadable" meant here far
+   more than any contrast ratio did.
+
+   The mark is the section's own timestamp, which it already declares for the
+   shift clock, over a hairline that runs the full width of the column. It costs
+   no markup, it differs in every section because the time does, and it is the
+   same gesture the product's own log makes. It also puts a line across the empty
+   right-hand half, which is what made these sections read as unfinished.
+   ============================================================ */
+
+main > section[data-shift]:not(.hero)::before {
+  content: attr(data-shift);
+  position: absolute;
+  top: calc(var(--band) * 0.38);
+  left: 50%;
+  width: min(100% - var(--gutter) * 2, var(--page) - var(--gutter) * 2);
+  transform: translateX(-50%);
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--font-system);
+  font-size: var(--step-micro);
+  font-weight: 560;
+  letter-spacing: var(--track-label);
+  color: var(--machine);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* The night band's mark sits on its own ground, so it takes the inverted ink. */
+main > section.on-ink[data-shift]::before {
+  color: var(--machine-inv);
+  border-top-color: var(--rule-inv);
 }
 
 /* Editorial grid: a content column with a true margin column beside it.

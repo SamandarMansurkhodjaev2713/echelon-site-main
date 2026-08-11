@@ -17,7 +17,7 @@ const gate = b.tasks[b.tasks.length - 1]!;
   only the owner can cross. Not an error state: the boundary is drawn in the
   owner's colour, because the owner is exactly what it is waiting for.
 -->
-<section class="bound band" id="boundary" data-produces="6" data-action="saw-boundary">
+<section class="bound band" id="boundary" data-produces="6" data-action="saw-boundary" data-shift="19:40">
   <div class="page">
     <p class="label">{b.label}</p>
     <h2 class="title bound__title">{b.title}</h2>
@@ -84,7 +84,7 @@ const gate = b.tasks[b.tasks.length - 1]!;
 
 <style>
   .bound {
-    background: var(--paper-deep);
+    --veil: var(--paper-deep);
     border-bottom: 1px solid var(--rule);
   }
   .bound__title {
@@ -94,7 +94,7 @@ const gate = b.tasks[b.tasks.length - 1]!;
 
   .bound__tasks {
     margin-top: clamp(2rem, 5vh, 3.5rem);
-    max-width: 46rem;
+    max-width: 60rem;
   }
   .bound__task {
     display: grid;
@@ -130,7 +130,7 @@ const gate = b.tasks[b.tasks.length - 1]!;
 
   .bound__gate {
     margin-top: clamp(1.5rem, 4vh, 2.25rem);
-    max-width: 46rem;
+    max-width: 60rem;
   }
   .bound__gate-reason {
     margin-top: 0.5rem;

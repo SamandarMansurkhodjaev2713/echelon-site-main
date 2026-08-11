@@ -15,7 +15,15 @@ const n = dict.night;
   random timer. The same scroll offset always produces the same frame, which is
   what makes this scene screenshot-stable.
 -->
-<section class="night on-ink" id="night" data-produces="7" data-action="night-shift">
+<section class="night on-ink" id="night" data-produces="7" data-action="night-shift" data-shift="23:20" data-field-surface="1">
+  <!--
+    The night shift is the one screen where the machine is the subject rather
+    than a watermark, so it carries its own switchboard rather than borrowing the
+    page's. It sits above this section's real background and below its type — see
+    the header of motion/field.ts for why it cannot simply be the shared canvas
+    showing through.
+  -->
+  <canvas class="band-field" data-band-field aria-hidden="true"></canvas>
   <div class="page night__inner" data-night>
     <div class="night__head">
       <p class="label night__label">{n.label}</p>

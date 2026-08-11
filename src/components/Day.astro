@@ -33,6 +33,15 @@ const d = dict.day;
       </div>
     </div>
 
+    {/*
+      These scenes carry their own visible timestamps but deliberately do *not*
+      declare `data-shift`. This section is a montage of the whole day — 09:00 to
+      19:00 — and the sections after it walk the same day again from 13:00. Fed
+      into the page clock, that reads as time going backwards, which motion/shift.ts
+      resolves the only way it can: as a second day. The ambient light then ran a
+      full night between this section and the product. The montage's times are
+      content; page time comes from the seams and the sections around it.
+    */}
     <ol class="day__scenes">
       {
         d.scenes.map((s, i) => (

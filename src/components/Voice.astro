@@ -28,22 +28,32 @@ const mark = (text: string, marks: readonly string[]) => {
 
 <!--
   VOICE (§23).
-  No glowing orb. A quiet tape running along a baseline, a transcript set large
-  enough to actually read, and the entities it knows from memory marked the way
-  a document marks a citation. The recorded voice and the (currently dormant)
-  live session both drive the same tape.
+
+  This section used to say "no glowing orb" and mean it: a flat tape trace, a
+  play link, three empty rules. The judgement about the orb was right and the
+  result was wrong — it left the strongest claim on the page, the one where the
+  product stops being compared to Jarvis and simply talks, with nothing to look
+  at. So the core is back, drawn rather than lit (motion/core.ts): hairline
+  latitude rings and a point lattice in the journal's own inks, deformed by a
+  real FFT of whatever is actually playing.
+
+  The tape stays underneath it. The core shows the shape of the voice; the tape
+  shows its history, and it is the thing that still works if WebAudio does not.
 -->
-<section class="voice band" id="voice">
-  <div class="page">
-    <p class="label">{v.label}</p>
-    <h2 class="title voice__title">{v.title}</h2>
-    <p class="lead voice__copy">{v.copy}</p>
+<section class="voice band" id="voice" data-shift="23:40">
+  <div class="page voice__grid">
+    <div class="voice__intro">
+      <p class="label">{v.label}</p>
+      <h2 class="title voice__title">{v.title}</h2>
+      <p class="lead voice__copy">{v.copy}</p>
+    </div>
 
     <div
       class="voice__console"
       data-voice
       data-recording={recording}
       data-locale={locale}
+      data-entities={JSON.stringify(v.coreEntities)}
       data-msg-connecting={v.connecting}
       data-msg-listening={v.listening}
       data-msg-thinking={v.thinking}
@@ -54,6 +64,11 @@ const mark = (text: string, marks: readonly string[]) => {
       data-label-play={v.playRecording}
       data-label-stop={v.stopRecording}
     >
+      <div class="voice__core">
+        <canvas class="voice__core-canvas" data-voice-core aria-hidden="true"></canvas>
+        <p class="voice__core-label label">{v.coreLabel}</p>
+      </div>
+
       <div class="voice__controls">
         <button type="button" class="act-quiet voice__play" data-voice-play data-cursor="speak">
           <span class="voice__play-glyph" aria-hidden="true">▶</span>
@@ -99,17 +114,52 @@ const mark = (text: string, marks: readonly string[]) => {
   .voice {
     border-bottom: 1px solid var(--rule);
   }
+  /* Two columns rather than one: the copy stayed at reading width on the left
+     while the right half of this section sat empty, which is most of what made
+     the page feel unfinished. The core now occupies it. */
+  .voice__grid {
+    display: grid;
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: start;
+  }
+  @media (min-width: 62rem) {
+    .voice__grid {
+      grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    }
+    .voice__console {
+      /* hold the core beside the copy while the reader is at the top of it */
+      position: sticky;
+      top: 7rem;
+    }
+    .voice__transcript {
+      grid-column: 1 / -1;
+    }
+  }
+
   .voice__title {
     margin-top: 0.6rem;
-    max-width: 18ch;
+    max-width: 15ch;
   }
   .voice__copy {
     margin-top: 1rem;
   }
 
-  .voice__console {
-    margin-top: clamp(2rem, 5vh, 3rem);
+  .voice__core {
+    position: relative;
+    display: grid;
+    justify-items: center;
   }
+  .voice__core-canvas {
+    width: 100%;
+    /* A fixed ratio, so the canvas never resizes as the labels come and go. */
+    aspect-ratio: 5 / 4;
+    height: auto;
+  }
+  .voice__core-label {
+    font-size: var(--step-micro);
+    color: var(--machine);
+  }
+
   .voice__controls {
     display: flex;
     flex-wrap: wrap;
@@ -125,11 +175,12 @@ const mark = (text: string, marks: readonly string[]) => {
     color: var(--machine);
   }
 
-  /* the tape: a quiet trace on the page, not a light source */
+  /* The tape: the voice's history, under its present shape. Shorter than it was
+     — beside the core, a tall empty box read as an unfilled form. */
   .voice__tape {
     position: relative;
-    margin-top: 1.1rem;
-    height: clamp(4.5rem, 11vh, 7.5rem);
+    margin-top: 0.9rem;
+    height: clamp(2.5rem, 6vh, 3.75rem);
     border-top: 1px solid var(--rule);
     border-bottom: 1px solid var(--rule);
   }

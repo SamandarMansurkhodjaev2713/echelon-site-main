@@ -11,3 +11,10 @@ playwright-report/
 blob-report/
 tests/e2e/**/*-actual.png
 tests/e2e/**/*-diff.png
+
+# Session scratch: run logs, ad-hoc repro scripts and the filmstrips that
+# scripts/shot.mjs writes. All of it is regenerable, none of it is evidence.
+*.log
+.shots/
+.railshot.mjs
+.introrepro.mjs

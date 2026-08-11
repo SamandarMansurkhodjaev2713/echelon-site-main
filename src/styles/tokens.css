@@ -20,11 +20,15 @@
   /* ---- Ink ---- */
   --ink: #15140f;
   --ink-muted: #403e37;
-  --ink-soft: #5c594f;
+  --ink-soft: #565348;
 
-  /* ---- Machine (system meta) ---- */
-  --machine: #636057;
-  --machine-inv: #9e9a8e;
+  /* ---- Machine (system meta) ----
+     Darker than the numbers strictly require. `#636057` cleared AA at 5.56:1 and
+     still read as weak, because these labels are 12–13 px, uppercase, letterspaced
+     mono — the condition where a contrast ratio and legibility disagree most.
+     Optical weight, not the ratio, was the readability defect. */
+  --machine: #55524a;
+  --machine-inv: #a8a496;
 
   /* ---- Signal = the owner ---- */
   --signal: #b0341a;
@@ -36,7 +40,9 @@
   /* ---- Rules & hairlines ---- */
   --rule: #cfc9b6; /* decorative separator */
   --rule-soft: #ded9c9;
-  --rule-strong: #8c8779; /* functional border — 3.17:1 on paper */
+  /* Functional border. Was #8c8779 at 3.17:1 — nominally a pass, and it stopped
+     being one the moment the ambient light started moving the ground under it. */
+  --rule-strong: #7a7568;
   --rule-inv: #2e2c26;
   --rule-inv-soft: #23211c;
 
@@ -61,9 +67,10 @@
   --leading-display: 0.92;
   --leading-title: 1.02;
   --leading-body: 1.62;
-  --track-display: -0.03em;
-  --track-title: -0.02em;
-  --track-label: 0.11em;
+  --track-display: -0.035em;
+  --track-title: -0.022em;
+  /* 0.11em spaced these labels so wide they stopped reading as words. */
+  --track-label: 0.08em;
 
   --measure: 62ch; /* body copy sits at 58–72 chars */
   --measure-tight: 44ch;
@@ -105,7 +112,32 @@
     0 0 0 1px rgba(255, 255, 255, 0.05), 0 2px 4px rgba(0, 0, 0, 0.35),
     0 18px 44px rgba(0, 0, 0, 0.42), 0 44px 96px rgba(0, 0, 0, 0.36);
 
+  /* ---- The substrate (styles/base.css · motion/field.ts · motion/light.ts) ----
+     The machine runs underneath the record. `--paper-veil` is how opaque a paper
+     section is over it: at 0.95 the field contributes at most 5 % of the ground,
+     which is enough for motion to register in peripheral vision and far too
+     little to move any foreground off its contrast target. The dark bands drop
+     the veil so the machine becomes the subject rather than the watermark. */
+  --paper-veil: 0.95;
+  /* how much constellation a section wants behind it; sections raise it in markup */
+  --field-surface: 0;
+  /* The field paints in the journal's own inks — it is not a separate palette.
+     One canvas serves both grounds, so it carries both sets and cross-fades
+     between them as a dark band scrolls in. */
+  --field-ink: #15140f;
+  --field-signal: #b0341a;
+  --field-machine: #55524a;
+  --field-ink-inv: #f4f1e8;
+  --field-signal-inv: #e2673f;
+  --field-machine-inv: #a8a496;
+  /* 0 = daylight, 1 = deep night. Written by motion/light.ts. */
+  --night: 0;
+  /* 0..1 read position through the document. Written by motion/light.ts. */
+  --read: 0;
+
   /* ---- z-index — one ladder, no magic numbers ---- */
+  --z-substrate: 0;
+  --z-content: 1;
   --z-tape: 20;
   --z-header: 40;
   --z-sheet: 60;
@@ -166,7 +198,16 @@
   --rule-soft: var(--rule-inv-soft);
   --rule-strong: #56534a;
 
-  background: var(--paper);
+  /* A dark band paints its ground fully and keeps it. The machine still surfaces
+     here — more strongly than anywhere else on the page — but through the band's
+     own `[data-band-field]` canvas, which sits above this background and below the
+     type. Two other arrangements were tried and both were wrong: a near-opaque
+     veil over the shared canvas washed the black out to brown, and no veil at all
+     left the computed style saying light text on light paper, which axe rightly
+     failed and which would have been genuinely unreadable had the canvas ever not
+     paint. See the header of motion/field.ts. */
+  --paper-veil: 1;
+
   color: var(--ink);
   color-scheme: dark;
 }

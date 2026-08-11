@@ -5,7 +5,10 @@ import { defineConfig, devices } from '@playwright/test';
  * dev server: the redesign's budget claims and GitHub Pages base path only mean
  * something on built output.
  */
-const PORT = 4321;
+/* Overridable because a developer machine may already have something on 4321 —
+   another project's dev server, most often. The default is unchanged, so CI and
+   the README are unaffected; only a local run needs to pass E2E_PORT. */
+const PORT = Number(process.env.E2E_PORT ?? 4321);
 /* Trailing slash matters: relative test paths resolve against it, and the
    deployed site lives under a base path, not at the origin root. */
 export const BASE = `http://localhost:${PORT}/echelon-site/`;
@@ -55,7 +58,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run build && npm run preview',
+    command: `npm run build && npm run preview -- --port ${PORT}`,
     url: BASE,
     /* Never reuse: a server left running from an earlier session serves a stale
        build, and the suite then passes against code that no longer exists. */

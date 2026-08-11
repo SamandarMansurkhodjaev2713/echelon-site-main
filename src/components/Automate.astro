@@ -15,7 +15,7 @@ const a = dict.automate;
   itself is taken apart: each phrase hands over to the operational primitive it
   became, and the primitives assemble into one standing order.
 -->
-<section class="auto band" id="automate" data-automation="order-018">
+<section class="auto band" id="automate" data-automation="order-018" data-shift="17:00">
   <div class="page">
     <p class="label">{a.label}</p>
     <h2 class="title auto__title">{a.title}</h2>
@@ -194,7 +194,7 @@ const a = dict.automate;
     margin-top: 0.75rem;
     display: grid;
     gap: 0;
-    max-width: 44rem;
+    max-width: 58rem;
   }
   /* A primitive is a slot that gets filled, not an element that fades in:
      every row stays fully legible from the first frame — the transformation is
@@ -242,7 +242,7 @@ const a = dict.automate;
   /* Pending: an empty form waiting to be issued. Issued: the owner's order. */
   .auto__order {
     margin-top: clamp(1.5rem, 4vh, 2.5rem);
-    max-width: 44rem;
+    max-width: 58rem;
     border: 1px solid var(--rule);
     background: transparent;
     padding: clamp(1rem, 2.5vw, 1.4rem);
@@ -355,7 +355,7 @@ const a = dict.automate;
   }
   .auto__cases {
     margin-top: 1.25rem;
-    max-width: 46rem;
+    max-width: 58rem;
   }
   .auto__case {
     padding-block: 0.95rem;

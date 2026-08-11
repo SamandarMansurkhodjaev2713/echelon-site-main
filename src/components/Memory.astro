@@ -16,7 +16,7 @@ const m = dict.memory;
   numbers. At the end of the section the page recalls a record the visitor
   already scrolled past, by name.
 -->
-<section class="mem band" id="memory" data-fact="memory-record">
+<section class="mem band" id="memory" data-fact="memory-record" data-shift="15:00">
   <div class="page">
     <div class="mem__head">
       <p class="label">{m.label}</p>
@@ -72,7 +72,7 @@ const m = dict.memory;
 
 <style>
   .mem {
-    background: var(--paper-deep);
+    --veil: var(--paper-deep);
     border-bottom: 1px solid var(--rule);
   }
   .mem__title {

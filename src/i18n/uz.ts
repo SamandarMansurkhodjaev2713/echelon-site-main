@@ -31,6 +31,12 @@ export const uz: Dict = {
     ],
   },
 
+  seams: {
+    day: { time: '09:00', state: 'Smena boshlandi', note: 'siz hali kompyuter oldida emassiz' },
+    night: { time: '23:00', state: 'Tungi smena', note: 'bundan keyin u yolg’iz ishlaydi' },
+    dawn: { time: '07:00', state: 'Smena topshirildi', note: 'hisobot sizni kutib turibdi' },
+  },
+
   hero: {
     status: 'Egasi joyida yo’q',
     display: 'Biznes\nishlayapti.',
@@ -410,6 +416,14 @@ export const uz: Dict = {
       { who: 'echelon' as const, text: '18:30ga qo’ydim. Javob bersa, aytaman.', marks: [] },
     ],
     marksNote: 'Tagi chizilganini u shu suhbatdan emas, xotirangizdan biladi.',
+    coreLabel: 'Shu paytda xotirasida',
+    coreEntities: [
+      { label: 'Aziz', kind: 'santexnika' },
+      { label: 'Yangi nuqta', kind: 'obyekt' },
+      { label: 'Alisher', kind: 'yetkazib beruvchi' },
+      { label: 'Timur', kind: 'brigadir' },
+      { label: 'Hisobot qoidasi', kind: 'qoida' },
+    ],
   },
 
   ledger: {

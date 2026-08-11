@@ -31,6 +31,12 @@ export const en: Dict = {
     ],
   },
 
+  seams: {
+    day: { time: '09:00', state: 'Shift started', note: 'you are not at the desk yet' },
+    night: { time: '23:00', state: 'Night shift', note: 'from here it works alone' },
+    dawn: { time: '07:00', state: 'Shift handed over', note: 'the report is already waiting' },
+  },
+
   hero: {
     status: 'Owner offline',
     display: 'Business\nstill running.',
@@ -408,6 +414,14 @@ export const en: Dict = {
       { who: 'echelon' as const, text: 'Set for 18:30. I’ll tell you when he replies.', marks: [] },
     ],
     marksNote: 'The underlined parts it knows from your memory, not from this conversation.',
+    coreLabel: 'In memory at this point',
+    coreEntities: [
+      { label: 'Aziz', kind: 'plumbing' },
+      { label: 'New site', kind: 'project' },
+      { label: 'Alisher', kind: 'supplier' },
+      { label: 'Timur', kind: 'foreman' },
+      { label: 'Reporting rule', kind: 'rule' },
+    ],
   },
 
   ledger: {

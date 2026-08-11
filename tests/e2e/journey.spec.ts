@@ -24,7 +24,14 @@ async function openTeach(page: Page) {
 /** A fresh visitor: no intro seen, no narrative session. */
 async function freshVisit(page: Page, path = RU) {
   await page.context().clearCookies();
-  await visit(page, `${path}?session=reset`);
+  /* Land once to get an origin, with the intro switched off so that it cannot
+     still be running when we wipe its key. The intro marks itself seen when it
+     *finishes*, not when it starts: clearing at `data-ready` was overwritten
+     ~2 s later, so every "fresh" visit below actually played the 380 ms short
+     intro, and the intro tests were racing that window instead of testing the
+     full one. With `intro=off` the key is written synchronously before
+     `data-ready`, so clearing it here is final. */
+  await visit(page, `${path}?intro=off&session=reset`);
   await page.evaluate(() => sessionStorage.clear());
   await visit(page, path);
 }
@@ -61,10 +68,16 @@ test('a repeat visit in the same tab does not replay the full intro', async ({ p
   await freshVisit(page);
   await expect(page.locator('html')).toHaveAttribute('data-intro-done', '', { timeout: 3000 });
 
-  const start = Date.now();
   await page.reload();
+  /* The mechanism, not a stopwatch. `data-intro-phase` ships as `operate` from
+     the inline head script; the short intro flips it to `settle` inside the
+     module's own synchronous execution, so it is already `settle` when the load
+     event fires, while the full intro spends its first 1.46 s in `operate`.
+     Timing the reload from the test process measured how loaded the machine was
+     — it failed at 2776 ms against a 2500 ms bound on a five-engine run while
+     the behaviour it protects was working correctly. */
+  expect(await page.locator('html').getAttribute('data-intro-phase')).toBe('settle');
   await expect(page.locator('html')).toHaveAttribute('data-intro-done', '', { timeout: 1500 });
-  expect(Date.now() - start).toBeLessThan(2500);
   await expect(page.locator('h1')).toBeVisible();
 });
 

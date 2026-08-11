@@ -42,7 +42,11 @@ async function freeze(page: Page) {
       caret-color: transparent !important;
     }
     /* the contextual cursor follows the last click; it is behaviour, not layout */
-    .cursor { display: none !important; }`,
+    .cursor { display: none !important; }
+    /* The page scrolls smoothly, so park() was aiming at a moving target and had
+       to settle it with two scrolls and two waits. Landing instantly makes the
+       parked position exact instead of nearly exact. */
+    html { scroll-behavior: auto !important; }`,
   });
   await page.evaluate(() => {
     for (const el of document.querySelectorAll('[data-reveal]')) el.classList.add('is-in');
@@ -123,7 +127,7 @@ test.describe('visual', () => {
 
       for (const scene of SCENES) {
         test(scene.id, async ({ page }) => {
-          await page.goto('./?intro=off&session=reset');
+          await page.goto('./?intro=off&motion=off&session=reset');
           await page.waitForSelector('html[data-ready]', { state: 'attached' });
           if (scene.id === 'handover') await fillReport(page);
           await freeze(page);
@@ -151,7 +155,7 @@ test.describe('visual: session-aware handover', () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
   test('reports what the visitor actually did', async ({ page }) => {
-    await page.goto('./?intro=off&session=reset');
+    await page.goto('./?intro=off&motion=off&session=reset');
     await page.waitForSelector('html[data-ready]', { state: 'attached' });
 
     // a fixed sequence of interactions → a fixed report

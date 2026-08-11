@@ -25,6 +25,28 @@ export const QUERY = {
 } as const;
 
 export const prefersReducedMotion = () => mq(QUERY.reducedMotion).matches;
+
+/**
+ * `?motion=off` — freeze everything that animates on its own clock.
+ *
+ * Playwright's `animations: 'disabled'` stops CSS animations and transitions but
+ * has no effect on a canvas requestAnimationFrame loop, so the attention field
+ * and the voice core would have made every visual baseline flaky. Both read this
+ * and render a single deterministic frame instead. It sits alongside the existing
+ * `?intro=off` rather than keying off reduced-motion, so the visual suite can
+ * still exercise the normal-motion styling of everything else.
+ */
+let frozen: boolean | null = null;
+export function motionFrozen(): boolean {
+  if (frozen === null) {
+    try {
+      frozen = new URLSearchParams(window.location.search).get('motion') === 'off';
+    } catch {
+      frozen = false;
+    }
+  }
+  return frozen;
+}
 export const hasFinePointer = () => mq(QUERY.finePointer).matches;
 export const isStage = () => mq(QUERY.stage).matches;
 export const isCompact = () => mq(QUERY.compact).matches;

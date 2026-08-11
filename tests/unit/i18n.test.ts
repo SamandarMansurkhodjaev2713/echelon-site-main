@@ -125,6 +125,26 @@ describe('narrative consistency', () => {
     }
   });
 
+  it('the seams anchor the same clock in every locale', () => {
+    // The three seams are the page clock's anchors (motion/shift.ts). A time
+    // translated differently in one locale would move that locale's ambient light
+    // on its own — and if the sequence stopped rising, the clock would read the
+    // regression as a second day and run a night through the working day.
+    const ru = DICTS.ru.seams;
+    for (const locale of LOCALES) {
+      const s = DICTS[locale].seams;
+      expect([s.day.time, s.night.time, s.dawn.time], locale).toEqual([
+        ru.day.time,
+        ru.night.time,
+        ru.dawn.time,
+      ]);
+    }
+    // day → night rises inside one shift; dawn is the next morning, so it is the
+    // one anchor allowed to read as earlier.
+    expect(ru.night.time > ru.day.time).toBe(true);
+    expect(ru.dawn.time < ru.night.time).toBe(true);
+  });
+
   it('every rule choice has a reply and a saved name', () => {
     for (const locale of LOCALES) {
       const d = DICTS[locale];

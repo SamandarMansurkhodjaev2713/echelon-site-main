@@ -381,6 +381,100 @@ instrumented. This is the one open item in the audit.
 
 ---
 
+## PHASE 16 — The present tense 🚧
+
+Opened after review of the shipped result. Three criticisms, all of them fair, and
+all of them traceable to decisions recorded above rather than to defects:
+
+1. **The site does not reflect what the product is.** PHASE 1 chose "operations
+   journal" as the art direction, and a journal is a record of work *already
+   done*. ECHELON's whole claim is that something is running right now, on your
+   machine, while you are not looking. Fifteen thousand pixels of unchanging beige
+   said the opposite. The metaphor was in the wrong tense.
+2. **It reads as unreadable.** Not at letter level — `scripts/contrast.mjs` passed
+   throughout. Thirteen sections opened with the same three moves (mono kicker →
+   large headline → grey lead), so the eye had no way to tell the fourth screen
+   from the ninth. Compounded by 12–13 px letterspaced mono in `#636057`, which
+   clears AA at 5.56:1 and still reads as weak at that size.
+3. **The interactive pieces were removed.** PHASE 6 deleted the voice sphere as
+   "the exact glowing AI orb the art direction rules out". Right about the orb,
+   wrong about the section: it left the page's strongest claim — where the product
+   stops being compared to Jarvis and simply talks — as a text link and three
+   empty rules.
+
+**What changed**
+
+- `src/motion/shift.ts` — one clock for the page. Sections declare the time they
+  depict with `data-shift="HH:MM"`; the clock interpolates between those anchors
+  by real pixel position. The ambient light, the load on the attention field and
+  the masthead clock all subscribe to it, so they cannot disagree, and it stays a
+  pure function of scroll offset, which visual regression requires.
+- `src/motion/field.ts` + `src/components/Field.astro` — the attention field.
+- `src/motion/light.ts` — the ground travels 09:00 → 23:00 → next morning.
+- `src/motion/core.ts` — the voice core, driven by a real FFT.
+- `src/components/Seam.astro` — three chapter breaks where the paper stops.
+- Section marks in `base.css`: each section's own timestamp over a full-width
+  hairline, drawn from `attr(data-shift)`, so it costs no markup and differs
+  everywhere.
+
+**Decisions**
+
+*The field is a switchboard, not a constellation.* The first build was a node mesh
+with nearest-neighbour edges and came out as the floating-dots-and-lines wallpaper
+every AI landing page ships: decorative, organic, and saying nothing about this
+product. What ECHELON does is *route*. So: stations on a lattice, orthogonal runs,
+events travelling them with trails. Right angles and hairlines are the language
+the rest of the page is already set in.
+
+*Nothing is drawn over text, and this is enforced rather than intended.* The
+module builds an occupancy grid of every text box in the document and reads it per
+point, so the guard follows the real layout in all three locales at every
+viewport. `data-field-surface` raises intensity only — it can never open the
+guard. A moving background behind body copy is the defect this phase exists to
+fix and it must not return as atmosphere.
+
+*The dark bands took three attempts.* An 82 % veil over the shared canvas washed
+black to brown, because what showed through was the light body ground. Dropping
+the veil to zero looked right and failed axe outright — the computed style said
+light text on light paper, and it was correct to, because any canvas failure would
+have left the band genuinely unreadable. Final form: the band keeps a real opaque
+background and carries its own `[data-band-field]` canvas between that background
+and its type. It also reads better, because the switchboard now scrolls with the
+section instead of sliding behind a window.
+
+*The ambient ramp is gated, not eyeballed.* `scripts/contrast.mjs` now checks every
+stop the light can reach, *composited* at the paper veil against the darkest ground
+behind it. The first ramp was considerably deeper toward evening and the gate
+rejected it: `ruleStrong`, `signal` and `inkSoft` all fell under AA. Night arrives
+as warmth; the actual dark is carried by the vignette and the bands, which have no
+text over them.
+
+*The core is audio-truthful and says nothing it cannot support.* Its deformation
+is a real FFT of whatever is playing. The named entities on it are a fixed property
+of their points and are never timed to the audio — nothing here knows which word
+is being spoken, and implying otherwise would be the one dishonest thing on a page
+whose argument is that it does not overclaim. The live session reports amplitude
+only, so there the core breathes as a whole rather than resolving bands.
+
+**Known issues found and fixed**
+
+1. `?motion=off` added. Playwright's `animations: 'disabled'` stops CSS animation
+   and has no effect on a canvas rAF loop, so both canvases would have made every
+   visual baseline flaky.
+2. **The occupancy grid was built synchronously at start-up.** It walks every text
+   box in a sixteen-thousand-pixel document — one large layout flush. On a 360 px
+   phone it blocked long enough that the intro's timers all fired at once when it
+   released, and the entry sequence was simply gone; six mobile tests timed out on
+   it. Now built on idle, and until it exists the guard reports *occupied*, so the
+   switchboard draws nothing rather than risking a line across a paragraph.
+3. Rebuilding the grid on every `resize` event meant dozens of full-document
+   layout reads per second while dragging a window edge. Debounced; the canvas
+   still follows the viewport immediately.
+4. The band canvas matched `canvas` in the occupancy selector, marking its entire
+   section as text and suppressing the switchboard exactly where it matters most.
+
+---
+
 ## OPEN ITEMS
 
 1. Sustained scrub frame rate is not instrumented (§57-H above).

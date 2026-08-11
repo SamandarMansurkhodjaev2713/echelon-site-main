@@ -17,7 +17,7 @@ const ROWS = ['rule', 'facts', 'automations', 'actions', 'escalations'] as const
   page remembered, what it completed, what it handed back. Rows that did not
   happen are absent, not zeroed — an honest report, not a scoreboard.
 -->
-<section class="hand band" id="handover">
+<section class="hand band" id="handover" data-shift="07:10">
   <div class="page hand__inner">
     <div class="hand__head">
       <p class="label">{h.label}</p>
@@ -87,7 +87,7 @@ const ROWS = ['rule', 'facts', 'automations', 'actions', 'escalations'] as const
 
 <style>
   .hand {
-    background: var(--paper-deep);
+    --veil: var(--paper-deep);
     padding-block: clamp(4rem, 11vh, 8rem);
   }
   .hand__head {
@@ -120,7 +120,7 @@ const ROWS = ['rule', 'facts', 'automations', 'actions', 'escalations'] as const
 
   .hand__report {
     margin-top: clamp(2rem, 5vh, 3rem);
-    max-width: 46rem;
+    max-width: 60rem;
   }
   .hand__row {
     display: grid;

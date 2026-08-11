@@ -93,13 +93,16 @@ export function initIntro(opts: IntroOptions = {}): () => void {
 
   const beats = Array.from(stage.querySelectorAll<HTMLElement>('[data-intro-beat]'));
   const skipBtn = document.querySelector<HTMLElement>('[data-intro-skip]');
-  skipBtn?.removeAttribute('hidden');
 
   if (mode === 'short') {
     root.setAttribute('data-intro-phase', 'settle');
     for (const b of beats) b.setAttribute('data-shown', '');
     at(SHORT_DONE_AT, finish);
   } else {
+    // Only the full intro is long enough to be worth offering an escape from. In
+    // short mode this control appeared and vanished inside 380 ms, which is a
+    // flash rather than an affordance. Escape and a scroll still skip either way.
+    skipBtn?.removeAttribute('hidden');
     root.setAttribute('data-intro-phase', 'operate');
     beats.forEach((beat, i) => {
       const t = BEATS[Math.min(i, BEATS.length - 1)] ?? 0;
