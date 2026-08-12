@@ -1233,13 +1233,20 @@ here without anything tuned for this section.
     object *on* paper, which is the stronger statement of that section. The gold
     the sphere brought is still used only by the sphere and one 4 px dot, and that
     is left alone rather than spread for the sake of spreading it.
-19. **Sections do not announce themselves.** `product`, `automate` and `night`
-    carry no `data-reveal` at all, and no section heading animates anywhere —
-    kicker, headline and lead simply are where they are. Measured by sampling
-    every section 200 ms into its arrival, this is what the "one repeated gesture"
-    complaint was actually about. The page's own idiom for announcing a section
-    already exists: `main > section[data-shift]::before` draws an hour over a
-    full-width hairline. Animating *that* would give every section an arrival in
-    one place, consistently, in the page's own language — but it is a `::before`
-    with no element for reveal.ts to observe, so wiring it is a decision rather
-    than a patch, and it is the obvious next piece of work.
+19. ~~Sections do not announce themselves.~~ **Wrong, and the fourth measurement
+    artefact of this session.** They do: `main > section[data-shift]::before`
+    draws its hour across a full-width hairline as the section enters, driven by
+    `animation-timeline: view()` with an `@supports` fallback that simply leaves
+    the mark drawn where the feature is missing. Verified on the dev server and in
+    production — `clip-path` resolves to `inset(0 0 0 0)`, duration `auto`,
+    timeline `view()`, the mark visible over the kicker.
+
+    The claim came from a filmstrip that sampled `[data-reveal]` elements 200 ms
+    into each section's arrival. The mark has no attribute and no class — it is a
+    pseudo-element on a scroll timeline — so that sweep could not see it, and its
+    absence from the sample was read as its absence from the page. `product`,
+    `automate` and `night` carrying no `data-reveal` is true and means only that
+    their choreography is scrubbed rather than triggered; they are not silent.
+
+    Standing lesson, now four times over: a probe that finds nothing has found
+    nothing *about the probe* until the page has also been looked at.
