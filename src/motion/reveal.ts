@@ -18,6 +18,10 @@ export const PATTERNS = [
   'escalate',
   'expand',
   'handover',
+  /* TURN — the shift changes hands at a seam. The only one that moves outward
+     from a centre, and the only one whose direction is per element, because its
+     two halves travel opposite ways. */
+  'turn',
 ] as const;
 
 export type Pattern = (typeof PATTERNS)[number];

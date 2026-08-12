@@ -62,7 +62,12 @@ describe('motion tokens', () => {
 });
 
 describe('reveal patterns', () => {
-  it('defines exactly the six named behaviours', () => {
+  /* Deliberately an exact list rather than a membership check: the vocabulary is
+     closed, and a pattern added to the stylesheet without being named here — or
+     named here without a rule to stand on — is a pattern nobody decided on. It
+     caught precisely that when `turn` was written into base.css and the markup
+     and not registered. */
+  it('defines exactly the seven named behaviours', () => {
     expect([...PATTERNS]).toEqual([
       'receive',
       'resolve',
@@ -70,6 +75,7 @@ describe('reveal patterns', () => {
       'escalate',
       'expand',
       'handover',
+      'turn',
     ]);
   });
 
