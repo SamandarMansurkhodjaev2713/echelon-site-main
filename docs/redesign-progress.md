@@ -1057,6 +1057,76 @@ the long-frame delta today. PHASE 17's 0.2 % does not reproduce here on the
 
 ---
 
+## PHASE 20 — Finishing the owner's list ✅
+
+### The play button could not be pressed on any desktop width
+
+Found while checking a button animation, which is the only reason it was found.
+Playwright refused to hover «Послушать» and said four times that a `.voice__said`
+line "intercepts pointer events". It was right: `.voice__console` was sticky above
+62rem, the transcript overlapped the stuck console by **450 px** at 1440, 1280 and
+992, and `elementFromPoint` at the button's centre returned a transcript line. The
+section's primary control was dead on every desktop width, and worked at 834 and
+390 where the sticky is off — which is why looking at phones never showed it.
+
+The sticky only ever worked while the console was short. It now carries the
+sphere, five chips, three controls and the tape. Removed; the gap between console
+and transcript measures 80–112 px at all five widths.
+
+### Is the page actually monotonous? Not the way the tally said
+
+PHASE 19 left the question open on purpose after the count-based claim collapsed.
+Answered by sampling every section 200 ms into its arrival rather than by reading
+attributes:
+
+- RECEIVE opens **six** of thirteen sections, not thirteen, and in five of them it
+  is on inner repeated rows — transcript lines, day scenes, pillar rows — where an
+  event arriving on a line is exactly what is happening.
+- **Three sections have no arrival gesture at all**: product, automate and night
+  carry zero `data-reveal`. They are scrub-driven and so have choreography, but
+  nothing marks their arrival.
+- **No section heading animates anywhere.** Kicker, headline and lead simply are
+  where they are.
+
+So the page's sameness is not repetition; it is that sections do not announce
+themselves. That is a different job from the one the open item described, and it
+is written up as such below rather than guessed at here.
+
+### The quiet button had no gesture
+
+`.act-quiet` was "minimal type displacement, nothing else", and nothing else meant
+a colour swap on a static hairline — the only control on the page with no gesture,
+on the voice band where controls matter most. Its rule is drawn now rather than
+recoloured, in the same idiom as the seam's hairline and the index's rows. Two
+gradients rather than a border, because a border can only be switched. `.act` was
+examined and left alone: it already swaps its label vertically, moves its mark and
+darkens on press.
+
+### Mobile, audited rather than assumed
+
+Every section at 360, 390 and 430, walked a screenful at a time so each element is
+judged **while it is on screen and settled**: clean at all three. The earlier
+sweep that reported five sections with content 2 px outside the left edge was
+measuring elements far below the fold that had not revealed yet and were sitting
+at RECEIVE's resting −20 px. That is the third time this page's "−2 px" has been
+found and dismissed; the audit now filters by vertical position so it cannot be
+found a fourth.
+
+"Кривая косая" described the state before PHASE 18 fixed the demo window and
+PHASE 19 fixed the header's fit. Nothing further was invented to justify the item.
+
+### The palette's second half
+
+The hybrid was half made. Laid against the hours the page publishes, it was
+disagreeing with its own clock — 23:20 dark, 23:40 dark, **00:40 paper**, 07:10
+paper. Ledger was the only night section on paper, at the deepest hour on the
+page. It is dark now and the night runs unbroken to the dawn seam. Nothing needed
+a new colour: `.on-ink` already inverts every token the table is built from, and
+the `--rule-strong` raised to 3.42:1 in PHASE 19 is what lets its rules clear 3:1
+here without anything tuned for this section.
+
+---
+
 ## OPEN ITEMS
 
 1. RU LCP is 2.6 s against the 2.5 s target; EN and UZ are inside budget.
@@ -1147,14 +1217,29 @@ the long-frame delta today. PHASE 17's 0.2 % does not reproduce here on the
     from a centre. **What remains open is the question the tally was standing in
     for:** whether the page *feels* repetitive when scrolled is a judgement to be
     made by watching it at length, not by counting attributes, and that has not
-    been done.
-16. **Button animations.** `.act` has a genuine semantic swap; the quieter
-    controls and the in-demo buttons have not been looked at with the same eye.
-17. **The mobile pass, section by section.** PHASE 18 fixed the demo window and
-    PHASE 19 the header's fit, but the owner's "кривая косая" was about the whole
-    page and every section has not been walked at 360/390/430.
-18. **The palette shift is half-made.** The owner chose the hybrid — machine
-    sections dark, editorial structure kept. `voice` moved and `night` was already
-    there; whether `load` and `product` should follow has not been decided, and
-    the gold that the sphere brought is so far used only by the sphere and one
-    4 px dot.
+    been done. **Answered in PHASE 20 by watching it**: RECEIVE opens six of
+    thirteen sections and sits on inner rows in five of them, which is right
+    where it is. The real finding is different and is now item 19.
+16. ~~Button animations.~~ **Closed by PHASE 20** — `.act-quiet` draws its rule
+    instead of recolouring it; `.act` was examined and needed nothing.
+17. ~~The mobile pass, section by section.~~ **Closed by PHASE 20** — every
+    section audited at 360, 390 and 430 with each element judged while on screen
+    and settled: clean at all three. The complaint predates the PHASE 18 and 19
+    fixes, and nothing was invented to justify the item.
+18. ~~The palette shift is half-made.~~ **Closed by PHASE 20** — ledger is dark,
+    because laid against the hours the page publishes it was the only night
+    section on paper, at 00:40. `load` and `product` stay on paper deliberately:
+    they are 08:56 and 13:00, and the product's machine already appears as a dark
+    object *on* paper, which is the stronger statement of that section. The gold
+    the sphere brought is still used only by the sphere and one 4 px dot, and that
+    is left alone rather than spread for the sake of spreading it.
+19. **Sections do not announce themselves.** `product`, `automate` and `night`
+    carry no `data-reveal` at all, and no section heading animates anywhere —
+    kicker, headline and lead simply are where they are. Measured by sampling
+    every section 200 ms into its arrival, this is what the "one repeated gesture"
+    complaint was actually about. The page's own idiom for announcing a section
+    already exists: `main > section[data-shift]::before` draws an hour over a
+    full-width hairline. Animating *that* would give every section an arrival in
+    one place, consistently, in the page's own language — but it is a `::before`
+    with no element for reveal.ts to observe, so wiring it is a decision rather
+    than a patch, and it is the obvious next piece of work.
