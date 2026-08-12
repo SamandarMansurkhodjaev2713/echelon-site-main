@@ -65,6 +65,7 @@ export function initCursor(labels: CursorLabels): () => void {
 
   let node: HTMLElement | null = null;
   let labelNode: HTMLElement | null = null;
+  let frame: HTMLElement | null = null;
   let raf = 0;
   let active = false;
 
@@ -73,6 +74,9 @@ export function initCursor(labels: CursorLabels): () => void {
   let x = -100;
   let y = -100;
   let state: CursorState = 'default';
+  /* The element the cursor currently has, if any. Held rather than re-resolved
+     per frame: the hit test belongs to pointermove and to the meaning watcher. */
+  let held: HTMLElement | null = null;
 
   const build = () => {
     node = document.createElement('div');
@@ -82,7 +86,26 @@ export function initCursor(labels: CursorLabels): () => void {
     labelNode = document.createElement('span');
     labelNode.className = 'cursor__label';
     node.append(labelNode);
-    document.body.append(node);
+
+    /*
+     * THE FRAME.
+     *
+     * Four corner marks that close around whatever the pointer has acquired.
+     *
+     * The obvious upgrade for a cursor is magnetism, and this file's own rules
+     * have forbidden it from the start — for good reason: a control that pulls
+     * the pointer is a control that has moved the target after the reader
+     * aimed, and on a page with a comparison table and a kanban board that
+     * costs precision to buy an effect. This does the opposite. Nothing moves;
+     * the cursor states what it has, in the same crop-mark language the page is
+     * already set in, and the reader keeps every pixel of aim they had.
+     */
+    frame = document.createElement('div');
+    frame.className = 'cursor-frame';
+    frame.setAttribute('aria-hidden', 'true');
+    frame.innerHTML = '<i></i><i></i><i></i><i></i>';
+
+    document.body.append(frame, node);
     document.documentElement.setAttribute('data-cursor-on', '');
   };
 
@@ -90,8 +113,11 @@ export function initCursor(labels: CursorLabels): () => void {
     cancelAnimationFrame(raf);
     raf = 0;
     node?.remove();
+    frame?.remove();
     node = null;
+    frame = null;
     labelNode = null;
+    held = null;
     document.documentElement.removeAttribute('data-cursor-on');
   };
 
@@ -102,7 +128,60 @@ export function initCursor(labels: CursorLabels): () => void {
     x += (tx - x) * k;
     y += (ty - y) * k;
     if (node) node.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+
+    /*
+     * One rect read per frame, and only while something is actually held.
+     *
+     * The frame has to follow its element, and the element moves for reasons
+     * the cursor never hears about: the page scrolls under a resting pointer,
+     * a reveal finishes travelling, a pane swaps. Reading the rect here keeps
+     * all of those correct for the price of a single measurement — this
+     * module's budget rule is against per-frame *allocation* and against
+     * hundreds of reads, not against one — and the alternative, listening to
+     * scroll and resize and mutation to recompute it, is more code that agrees
+     * less often.
+     */
+    if (frame && held) {
+      const r = held.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) {
+        frame.style.transform = `translate3d(${r.left.toFixed(1)}px, ${r.top.toFixed(1)}px, 0)`;
+        frame.style.width = `${r.width.toFixed(1)}px`;
+        frame.style.height = `${r.height.toFixed(1)}px`;
+      }
+    }
     raf = requestAnimationFrame(loop);
+  };
+
+  /** Acquire or release the framed element. */
+  const setHeld = (next: HTMLElement | null) => {
+    if (next === held) return;
+    held = next;
+    if (!frame) return;
+    frame.toggleAttribute('data-on', Boolean(next));
+  };
+
+  /*
+   * The cursor over a dark band.
+   *
+   * Both the registration dot and the label chip are drawn in `--ink`, and the
+   * cursor is appended to the body, so they resolve against the root palette
+   * wherever the pointer happens to be — which meant that over the night band,
+   * and now over the voice band, a dark dot and a dark chip sat on a near-black
+   * ground. The cursor was not subtle there; it was gone, on precisely the two
+   * sections that most need to feel alive under the hand.
+   *
+   * Asked of the element under the pointer rather than of the scroll position,
+   * because that is the only thing that knows: the bands are full-width, but the
+   * work-tape rail beside them is not, and a pointer resting on the rail is on
+   * paper while the middle of the screen is on ink.
+   */
+  let inverted = false;
+  const setGround = (el: Element | null) => {
+    const dark = Boolean(el?.closest('.on-ink'));
+    if (dark === inverted) return;
+    inverted = dark;
+    node?.toggleAttribute('data-inv', dark);
+    frame?.toggleAttribute('data-inv', dark);
   };
 
   const setState = (next: CursorState) => {
@@ -122,7 +201,10 @@ export function initCursor(labels: CursorLabels): () => void {
       y = ty;
       node?.setAttribute('data-visible', '');
     }
-    setState(resolveState(e.target as Element).state);
+    const hit = resolveState(e.target as Element);
+    setState(hit.state);
+    setHeld(hit.state === 'default' ? null : hit.el);
+    setGround(e.target as Element);
   };
 
   /*
@@ -141,7 +223,11 @@ export function initCursor(labels: CursorLabels): () => void {
    */
   const refresh = () => {
     if (!active || !node) return;
-    setState(resolveState(document.elementFromPoint(tx, ty)).state);
+    const under = document.elementFromPoint(tx, ty);
+    const hit = resolveState(under);
+    setState(hit.state);
+    setHeld(hit.state === 'default' ? null : hit.el);
+    setGround(under);
   };
 
   const meaningWatcher = new MutationObserver(refresh);
@@ -149,6 +235,9 @@ export function initCursor(labels: CursorLabels): () => void {
   const onLeave = () => {
     active = false;
     node?.removeAttribute('data-visible');
+    // the frame follows the pointer out of the window, or it is left holding
+    // something nobody is pointing at
+    setHeld(null);
   };
   const onEnter = () => {
     if (node) node.setAttribute('data-visible', '');

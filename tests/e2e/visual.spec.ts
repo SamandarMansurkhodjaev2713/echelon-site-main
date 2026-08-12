@@ -91,8 +91,10 @@ async function freeze(page: Page) {
       animation: none !important;
       caret-color: transparent !important;
     }
-    /* the contextual cursor follows the last click; it is behaviour, not layout */
-    .cursor { display: none !important; }
+    /* the contextual cursor follows the last click; it is behaviour, not layout.
+       Its frame goes with it: a shot taken with the pointer resting on a control
+       would otherwise record four corner marks around that control. */
+    .cursor, .cursor-frame { display: none !important; }
     /* The page scrolls smoothly, so park() was aiming at a moving target and had
        to settle it with two scrolls and two waits. Landing instantly makes the
        parked position exact instead of nearly exact. */

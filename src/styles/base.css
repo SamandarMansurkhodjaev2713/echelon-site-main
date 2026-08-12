@@ -740,6 +740,94 @@ html.js [data-reveal].is-in {
     background var(--dur-fast) var(--ease-standard);
 }
 
+/* ------------------------------------------------------------------
+   THE FRAME — four corner marks closing on whatever the cursor has.
+
+   Crop marks, which is what this page already uses to say "this is the
+   object": the same 1 px hairlines, the same ink. They arrive by scaling
+   in from slightly outside the box, so the gesture is a frame closing on
+   something rather than a rectangle fading up — the difference between
+   the machine acquiring a target and the page decorating a hover.
+
+   `width`/`height`/`transform` are written by the cursor's own rAF from a
+   single rect read; nothing here transitions those three, or the frame
+   would lag its element by the length of the transition every time the
+   page scrolled underneath it.
+   ------------------------------------------------------------------ */
+.cursor-frame {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--z-cursor);
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+.cursor-frame[data-on] {
+  opacity: 1;
+}
+.cursor-frame i {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border: 0 solid var(--ink);
+  transition: transform var(--dur-normal) var(--ease-snap);
+  transform: scale(1.6);
+}
+.cursor-frame[data-on] i {
+  transform: none;
+}
+.cursor-frame i:nth-child(1) {
+  top: -3px;
+  left: -3px;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+.cursor-frame i:nth-child(2) {
+  top: -3px;
+  right: -3px;
+  border-top-width: 1px;
+  border-right-width: 1px;
+}
+.cursor-frame i:nth-child(3) {
+  bottom: -3px;
+  right: -3px;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+.cursor-frame i:nth-child(4) {
+  bottom: -3px;
+  left: -3px;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+
+/* Over a dark band the ink cursor was invisible — see setGround() in
+   motion/cursor.ts. Paper, not white: the cursor stays the same object, it just
+   changes which side of the page it is drawn on. */
+.cursor-frame[data-inv] i {
+  border-color: var(--paper);
+}
+.cursor[data-inv]::before {
+  background: var(--paper);
+}
+.cursor[data-inv] .cursor__label {
+  background: var(--paper);
+  color: var(--ink);
+}
+/* the owner's operations keep the signal on both grounds; on ink it brightens */
+.cursor[data-inv][data-state='approve']::before,
+.cursor[data-inv][data-state='hold']::before {
+  background: var(--signal-bright);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor-frame i {
+    transition-duration: 1ms;
+  }
+}
+
 .cursor__label {
   position: absolute;
   top: 0.65rem;
