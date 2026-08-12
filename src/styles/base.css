@@ -375,6 +375,59 @@ main > section[data-shift]:not(.hero)::before {
   }
 }
 
+/*
+ * The heading is fed out from under the rule.
+ *
+ * The section mark rules a line and prints an hour on it, and then the section's
+ * own kicker, headline and lead simply *were there* — the one place on the page
+ * where nothing arrives. Thirteen sections opening in silence is most of what
+ * "still boring" is describing, and it is the same on a phone, where the scrubbed
+ * scenes are subtle enough to feel like nothing moves at all.
+ *
+ * The gesture is not a fade-up, which is what every landing page reaches for and
+ * what makes them interchangeable. This is a log: paper advances out of the
+ * machine one line at a time. So the block is clipped to nothing at its own top
+ * edge and opens downward while settling the last few millimetres — a sheet being
+ * fed, not a card being faded in. The kicker leads, the headline follows, the
+ * lead trails, so it reads as one sheet advancing rather than three things
+ * appearing at once.
+ *
+ * Driven by the scroll position itself, like the mark above it: no observer, no
+ * class, nothing to leak, and — the reason this is here at all — it runs on the
+ * compositor, so a phone gets the same choreography as a desktop instead of
+ * being handed a still page because JavaScript scrubbing was too expensive.
+ * Where `animation-timeline` is missing the type is simply already in place.
+ */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    main > section[data-shift] .label:has(+ .title),
+    main > section[data-shift] .title,
+    main > section[data-shift] .lead {
+      animation: head-feed linear both;
+      animation-timeline: view();
+    }
+    main > section[data-shift] .label:has(+ .title) {
+      animation-range: entry 8% entry 48%;
+    }
+    main > section[data-shift] .title {
+      animation-range: entry 13% entry 58%;
+    }
+    main > section[data-shift] .lead {
+      animation-range: entry 19% entry 68%;
+    }
+  }
+}
+@keyframes head-feed {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: translate3d(0, -0.45rem, 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    transform: none;
+  }
+}
+
 /* The night band's mark sits on its own ground, so it takes the inverted ink. */
 main > section.on-ink[data-shift]::before {
   color: var(--machine-inv);

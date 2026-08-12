@@ -115,8 +115,8 @@ const INDEX = shiftIndex(dict);
       <p class="shift-index__label label">{dict.nav.sections}</p>
       <ol class="shift-index__list">
         {
-          INDEX.map((s) => (
-            <li class="shift-index__row">
+          INDEX.map((s, i) => (
+            <li class="shift-index__row" style={`--i:${i}`}>
               <a class="shift-index__link" href={`#${s.id}`} data-index-link={s.id} data-cursor="view">
                 <span class="shift-index__at sys" data-index-at aria-hidden="true" />
                 <span class="shift-index__name">{s.name}</span>
@@ -155,6 +155,20 @@ const INDEX = shiftIndex(dict);
 
   /* ---------- the index control ---------- */
 
+  /*
+   * A control has to look like one.
+   *
+   * This was three hairlines and a word, on a page built entirely out of
+   * hairlines — so on a phone, where the word is hidden, the site's whole
+   * navigation was three grey strokes indistinguishable from the rules around
+   * them. The owner's report was that there is no menu at all, and by any fair
+   * reading of the screen there was not.
+   *
+   * It is a bordered field now, the same object the demo's controls and the
+   * boundary's decisions are: 1 px of --rule-strong, a hair of radius, and the
+   * signal wash on hover. Still quiet — it is not competing with the call to
+   * action beside it — but unmistakably a thing you can press.
+   */
   .masthead__index {
     display: inline-flex;
     align-items: center;
@@ -165,17 +179,30 @@ const INDEX = shiftIndex(dict);
        the exact width of the three rules and nothing else. */
     min-height: 2.75rem;
     min-width: 2.75rem;
-    padding-inline: 0.15rem;
+    padding-inline: 0.7rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
     font-family: var(--font-system);
     font-size: var(--step-micro);
     letter-spacing: var(--track-label);
     text-transform: uppercase;
-    color: var(--machine);
-    transition: color var(--dur-fast) var(--ease-standard);
+    color: var(--ink-muted);
+    transition:
+      color var(--dur-fast) var(--ease-standard),
+      border-color var(--dur-fast) var(--ease-standard),
+      background-color var(--dur-fast) var(--ease-standard);
   }
   .masthead__index:hover,
   .masthead__index:focus-visible {
-    color: var(--ink);
+    color: var(--signal);
+    border-color: var(--signal);
+    background-color: var(--signal-wash);
+  }
+  /* Open, it is the thing currently in charge of the screen and says so. */
+  .masthead__index[aria-expanded='true'] {
+    color: var(--signal);
+    border-color: var(--signal);
+    background-color: var(--signal-wash);
   }
 
   /* Three rules that become a cross. Not a hamburger borrowed from a phone app:
@@ -262,6 +289,41 @@ const INDEX = shiftIndex(dict);
     .shift-index__list {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       column-gap: clamp(2rem, 5vw, 4rem);
+    }
+  }
+
+  /*
+   * The index prints itself.
+   *
+   * The panel wiped down as one sheet, which is a drawer opening — every menu
+   * does that. This is a log, so its page is entered a line at a time: fourteen
+   * rows, 26 ms apart, arriving from just above their place as though fed. The
+   * whole run takes about a third of a second, which is long enough to be read
+   * as a sequence and short enough that nobody is kept waiting for a menu.
+   *
+   * Closing does not replay it in reverse — the rows go together with the sheet,
+   * because a reader dismissing a menu is not owed a performance.
+   */
+  .shift-index__row {
+    opacity: 0;
+    transform: translate3d(0, -0.5rem, 0);
+    transition:
+      opacity var(--dur-fast) var(--ease-standard),
+      transform var(--dur-normal) var(--ease-editorial);
+  }
+  .shift-index.is-open .shift-index__row {
+    opacity: 1;
+    transform: none;
+    transition-delay: calc(var(--i, 0) * 26ms);
+    transition-duration: var(--dur-normal), var(--dur-expressive);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .shift-index__row {
+      transition-duration: 1ms;
+    }
+    .shift-index.is-open .shift-index__row {
+      transition-delay: 0ms;
+      transition-duration: 1ms;
     }
   }
 
