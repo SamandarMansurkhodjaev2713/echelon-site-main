@@ -14,7 +14,20 @@ const l = dict.ledger;
   Tabular information gets a table — with a caption, header scope and a labelled
   scroll region — not a grid of rounded cards.
 -->
-<section class="ledger band" id="ledger" data-shift="00:40">
+<!--
+  Dark, because it is twenty to one in the morning.
+
+  The page runs one shift, and it had gone dark at 23:20 and 23:40 and then
+  snapped back to paper at 00:40 — the deepest hour on it — before staying light
+  until the handover at 07:10. That is not a matter of taste, it is the page
+  disagreeing with its own clock: this was the only night section on paper.
+
+  Dark also suits what the section does. It is a reckoning of what a person costs
+  against what this costs, and it is the one place the page counts in money; the
+  machine's own ground is the right one to count on.
+-->
+<section class="ledger band on-ink" id="ledger" data-shift="00:40" data-field-surface="0.4">
+  <canvas class="band-field" data-band-field aria-hidden="true"></canvas>
   <div class="page">
     <p class="label">{l.label}</p>
     <h2 class="title ledger__title" data-reveal="handover">{l.title}</h2>
