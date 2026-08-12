@@ -160,11 +160,22 @@ const mark = (text: string, marks: readonly string[]) => {
     .voice__grid {
       grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
     }
-    .voice__console {
-      /* hold the core beside the copy while the reader is at the top of it */
-      position: sticky;
-      top: 7rem;
-    }
+    /*
+      The console does NOT stick, and that is a bug fix rather than a taste
+      change.
+
+      It used to, to hold the core beside the copy while the reader was at the
+      top of the section. Measured at 1440, 1280 and 992, the transcript below it
+      overlapped the stuck console by 450 px, and `elementFromPoint` at the centre
+      of «Послушать» returned a `.voice__said` line: the section's primary control
+      could not be pressed at all on any desktop width. Playwright found it while
+      trying to hover the button and reported, four times over, that the
+      transcript "intercepts pointer events".
+
+      It only ever worked while the console was short. The sphere, the memory
+      chips, the controls and the tape have made it tall enough that sticking it
+      buys a little proximity and costs the button.
+    */
     .voice__transcript {
       grid-column: 1 / -1;
     }

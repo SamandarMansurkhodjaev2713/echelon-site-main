@@ -499,6 +499,21 @@ main > section.on-ink[data-shift]::before {
 }
 
 /* Secondary — minimal type displacement, nothing else */
+/*
+ * The rule under it is drawn, not recoloured.
+ *
+ * This was "minimal type displacement, nothing else", and nothing else turned out
+ * to mean a colour swap on a static hairline — the one control on the page with
+ * no gesture at all, on the voice band where the controls matter most. It now
+ * does what every other line on this page does when something happens on it: it
+ * is ruled across, left to right, in the owner's colour. The same idiom as the
+ * seam's hairline and the shift index's rows, so it reads as this system rather
+ * than as a button effect.
+ *
+ * Two gradients rather than a border, because a border cannot be drawn — only
+ * switched. The under-rule stays at full width and the signal one grows over it,
+ * so the control never loses its baseline mid-gesture.
+ */
 .act-quiet {
   display: inline-flex;
   align-items: center;
@@ -507,15 +522,27 @@ main > section.on-ink[data-shift]::before {
   padding: 0.55em 0;
   font-weight: 520;
   color: var(--ink);
-  border-bottom: 1px solid var(--rule-strong);
+  background-image: linear-gradient(var(--signal) 0 0), linear-gradient(var(--rule-strong) 0 0);
+  background-position: left bottom, left bottom;
+  background-size:
+    0 1px,
+    100% 1px;
+  background-repeat: no-repeat;
   transition:
     color var(--dur-fast) var(--ease-standard),
-    border-color var(--dur-fast) var(--ease-standard);
+    background-size var(--dur-expressive) var(--ease-editorial);
 }
 .act-quiet:hover,
 .act-quiet:focus-visible {
   color: var(--signal);
-  border-bottom-color: var(--signal);
+  background-size:
+    100% 1px,
+    100% 1px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .act-quiet {
+    transition-duration: var(--dur-fast), 1ms;
+  }
 }
 
 .note {
