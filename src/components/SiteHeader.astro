@@ -158,8 +158,13 @@ const INDEX = shiftIndex(dict);
   .masthead__index {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.55rem;
-    min-height: 2.5rem;
+    /* 44 px both ways, which is the floor the a11y suite enforces and the floor
+       a thumb needs. It was 20 px wide once the word was hidden on a phone —
+       the exact width of the three rules and nothing else. */
+    min-height: 2.75rem;
+    min-width: 2.75rem;
     padding-inline: 0.15rem;
     font-family: var(--font-system);
     font-size: var(--step-micro);
@@ -666,9 +671,29 @@ const INDEX = shiftIndex(dict);
    * hairlines the page is set in, they animate to a cross when open, and next to
    * a shift scale made of notches they do not read as a borrowed hamburger.
    */
+  /*
+   * Hidden from the eye, not from the machine.
+   *
+   * `display: none` here cost the button its accessible name outright — the only
+   * other thing inside it is three decorative rules carrying aria-hidden — and
+   * axe called it what it was: `button-name`, critical, in all three locales, on
+   * both phone profiles. The word is the name; it is only the *sighted* reader
+   * who can spare it, because the three rules and the panel they open are
+   * unambiguous on sight and are not unambiguous to a screen reader.
+   *
+   * Found by CI, not here: the local run was `--project=chromium`, which is a
+   * desktop viewport, so neither phone profile was ever asked.
+   */
   @media (max-width: 36rem) {
     .masthead__index-word {
-      display: none;
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
     }
   }
 </style>
