@@ -1127,6 +1127,54 @@ here without anything tuned for this section.
 
 ---
 
+## PHASE 21 — One gesture, at four scales
+
+Three passes had converged on the same motion without anyone deciding to: the
+menu prints its index a line at a time, sections are fed out from under their
+rule, a seam parts from its centre. That is not a coincidence — this site is a
+log that writes itself — so this phase made it the site's language rather than a
+repeated accident, and used it at the one scale still missing.
+
+**The intro is the first page of that log.** Its content was always right and its
+staging was a card in a blank cream rectangle, which is what a loading screen
+looks like however good the card is. The sheet now rules itself: seven hairlines
+drawing down the page under the operation, unequal because a page of records is
+unequal. It also fills the only genuinely dead moment on the site — the rules
+animate off `data-intro`, set by the inline head script *before first paint*,
+while the beats wait for the module to load, so the ~600 ms of empty card outline
+is now the page preparing itself. Measured: at 700 ms the rules are drawn and the
+card is still empty, which is exactly the window that needed filling.
+
+**And the sections stopped arriving identically.** Four arrivals — FEED, SETTLE,
+HALT, BREATHE — each meaning what its sections do, and each taken from the page's
+own reveal vocabulary rather than invented, so the motion a reader has watched a
+*row* make is the motion its *section* makes. `#boundary` halts because it is the
+one section that stops rather than proceeds; `#night` and `#voice` breathe
+because they are where the machine works unwatched.
+
+### The flake that had been failing one shot per run all session
+
+A different arbitrary baseline failed every run, about 200 px, deterministic
+within a run. The diff named it: the shift scale's notch positions are computed
+from the document's measured height at load and again when the fonts land, so a
+run that arrives a frame earlier places fourteen ticks a pixel or two
+differently. That is a value that depends on when the machine got there — the
+same reason the elapsed clock is masked — and it is masked now too. 71/71 twice
+consecutively, and the suite has been quiet since.
+
+### What was asked for and deliberately not done
+
+The cursor. It already names the semantic action, re-reads that meaning when a
+control redefines itself mid-hover, frames what it has acquired and inverts on
+the dark bands; a used chip carries `pointer-events: none`, so there is no state
+in which it promises something that will not happen. The obvious next step is
+magnetism, which this module has forbidden from its first line because a control
+that pulls the pointer has moved the target after the reader aimed at it. No
+addition was found that was smart rather than ornamental, so the effort went
+where the page's feel actually changes. Recorded rather than quietly skipped.
+
+---
+
 ## OPEN ITEMS
 
 1. RU LCP is 2.6 s against the 2.5 s target; EN and UZ are inside budget.
