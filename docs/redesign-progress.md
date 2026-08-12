@@ -930,6 +930,133 @@ once per pane, computed styles memoised, frames waited on instead of stopwatches
 
 ---
 
+## PHASE 19 — The product's own object, and the things around it ✅
+
+Opened by the owner with two screenshots — his software beside the site — and a
+list. The list is long and this phase does not finish it; what is here is done,
+tested and shipped, and what is not is named at the end.
+
+### The sphere is the product's, and the site had thrown it away
+
+`src/lib/sphere.ts` was a faithful vanilla port of
+`hermes/web/src/features/voice/spheres/ConstellationSphere.tsx` — 460 points on a
+Fibonacci sphere, links inside 0.27, water physics, phases. PHASE 6 deleted it as
+"the exact glowing AI orb the art direction rules out". Sound as a general rule
+about glowing orbs; wrong about this object, because it is not borrowed from
+another landing page — it is a component of the thing being sold, and the owner
+recognises it as one. A site arguing "this is the real product, not a picture of
+it" cannot redraw the only piece of the real product it shows.
+
+Geometry, physics and gold are unchanged. What is not is how the paint reaches
+the canvas: the original builds an `rgba()` string per link and per point per
+frame, about 1 800 allocations, which is the pattern PHASE 17 removed from
+field.ts. Batching into one path would have fixed it and changed the picture —
+under `lighter`, separate strokes accumulate where links cross, and that
+accumulation is most of why the lattice reads as a mesh. So the depth term is
+quantised into 24 steps, the strings for those steps are built once per frame,
+and every link is still stroked individually against them.
+
+The entity names left the canvas for the DOM. Painted as a computed alpha they
+were invisible to both `scripts/contrast.mjs` and axe-core, which is why PHASE 17
+had to hand-gate two alpha constants; as markup they are ordinary tokens on an
+ordinary ground and the special case is gone. They reveal with ARCHIVE — the
+pattern this system already had for *settling into memory* — after RECEIVE turned
+out to be wrong twice over: it means an event arriving on a line, and its 0.9 s
+clip wipes across a pill that small, so the names sat unreadable for nearly two
+seconds. `motion/core.ts` and its spectrum plumbing are deleted.
+
+The section is dark because it is 23:40 on this page's own clock, one section
+after the night shift starts — not because dark looks technical.
+
+### Navigation, which the page did not have
+
+A brand, a clock, three language links and a call to action, and the only way to
+reach the middle of a sixteen-thousand-pixel document was to scroll it. A
+drop-down would have been the easy answer; this page is one working shift, so its
+index is the shift and you navigate it by the hour.
+
+Not one new string: every name is the section's own kicker, already proofread in
+all three locales, so the index cannot drift from the section it points at. Not
+one typed hour: they are read from `data-shift` at runtime, and the day montage
+comes back empty and correctly so — it spans four hours, and PHASE 16 already
+spent a phase unpicking a clock that disagreed with itself.
+
+The masthead now carries `.on-ink` over a dark band. One class, because every
+colour in it is a token, so brand, clock, language switch, shift scale and read
+hairline invert together and cannot disagree.
+
+### The cursor said what it would do and never what to
+
+Four corner marks now close on the acquired element. Magnetism is the obvious
+upgrade and this module has forbidden it from its first line: a control that
+pulls the pointer has moved the target after the reader aimed. The frame moves
+nothing. It also fixed something that had been true since PHASE 16 — the cursor
+is appended to the body and drawn in `--ink`, so on the dark bands it was not
+subtle, it was invisible.
+
+### The field was drawing its wires and none of its nodes
+
+Measured on the night band, where it is meant to be the subject: **0.244 % of the
+canvas carried any ink at all, and 54 pixels out of 3.5 million were brighter than
+55 % alpha.** A 420 × 300 region held two bare vertical lines. The densest cell of
+an eight-by-six sweep turned out to be the stratum in the rail, not the
+switchboard.
+
+The arithmetic agrees: 58 stations at r 1.6 cover 0.05 % of the viewport while the
+runs cover about twenty-five times that. A network drawn as edges with invisible
+nodes is hatching. Now 78 stations at r 2.2, station alpha 0.38 → 0.6, run alpha
+0.34 → 0.26, route probability 0.30 → 0.22 so the extra stations arrive as places
+rather than as a denser mesh. The side bias — stations pushed to the edges because
+"the middle is where the reading happens" — was a second, cruder guard on top of
+an occupancy grid that already knows where every text box is to the pixel;
+harmless on paper, and on a dark band it was what emptied the middle. Softened,
+not removed. Events had a quiet floor of 0.5 spawns a second across the whole
+board, so the one thing the layer exists to show was often not on screen; now 1.8.
+
+And the turn is drawn: a run bends exactly once and that bend is a switch.
+Undrawn, collinear runs and their corners read as one large empty rectangle, which
+is most of what made the layer look architectural.
+
+Result on the same band: ink 0.244 % → 0.334 %, bright pixels 54 → 330. Paper
+sections unchanged in character — 0.24 % inked and **zero** bright pixels on
+memory. Only three of seventy-one baselines moved, all of them dark bands, which
+is the same statement made by the gate.
+
+### Two defects this phase shipped and then fixed
+
+The index button lost its accessible name on a phone: below 36rem its word was
+hidden with `display: none` and the only other thing inside it is three
+aria-hidden rules, so `button-name` failed as critical in all three locales on
+both phone profiles — and at 20 px wide it also missed the 44 px floor. Caught by
+CI, not here, because the local run was `--project=chromium`, a desktop viewport.
+Both phone profiles exist for exactly this and neither was asked.
+
+Adding a fifth element to the header also broke its fit invisibly: 4 px over its
+box at 320, 2 px at 390, 18 px at 560, each of them a horizontal scrollbar on the
+whole document. The two optional elements were standing down at breakpoints tuned
+for four things. Re-measured across eight widths.
+
+### Three things that looked like defects and were not
+
+The skip link "appearing" over a headline is a fixed element printing into an
+element-screenshot of a section taller than the viewport; it sits at −51 px. The
+memory chips rendering "empty" is a 0.9 s clip caught mid-wipe; it reaches
+`inset(0)` by 3 s. And a baseline that failed four runs out of four at exactly
+2000 pixels was not flaky — the update filter had been written with the
+reporter's `›` separator, matched no test, and updated nothing.
+
+### What the field cost, honestly
+
+Old and new measured back to back on this machine and this server: p95 33.3 ms
+both, long frames 5.5 % against 5.8 %. Then the same build three times: 6.5 %,
+10.8 %, 9.1 %. The spread of the measurement is four points, far wider than the
+difference being asked about. So neither "it costs nothing" nor "it costs a point"
+is supportable: p95 is unchanged in every run, and this workstation cannot resolve
+the long-frame delta today. PHASE 17's 0.2 % does not reproduce here on the
+*untouched* build either, which places it with the machine.
+
+---
+
 ## OPEN ITEMS
 
 1. RU LCP is 2.6 s against the 2.5 s target; EN and UZ are inside budget.
@@ -999,3 +1126,28 @@ once per pane, computed styles memoised, frames waited on instead of stopwatches
     "the demo window says when it has more below". That split is deliberate and
     consistent with how the core's colours are gated, but it is worth naming:
     no pixel checks what the bottom of that window looks like.
+
+### Still owed from the owner's list (PHASE 19 did not reach these)
+
+13. **The live voice.** `VOICE_WORKER_URL` has been empty for the whole history of
+    the repository, so the «Поговорить» button is hidden by contract and the
+    sphere runs on the recording only. This is not a bug to fix in the site: it
+    needs a Cloudflare Worker deployed against the owner's own Gemini key, per
+    `worker/README.md`. Everything on this side is ready and turns on with one
+    string. Deferred by the owner for now, deliberately.
+14. **The intro.** Asked to be "more wow"; untouched this phase.
+15. **Section reveal and scroll choreography.** The vocabulary is good — RECEIVE,
+    RESOLVE, ARCHIVE, ESCALATE, EXPAND, HANDOVER, each meaning a different thing —
+    but thirteen of the uses are RECEIVE, which is most of why the page reads as
+    one gesture repeated. Picking the right pattern per section is the work, and
+    PHASE 19 only did it for the memory chips.
+16. **Button animations.** `.act` has a genuine semantic swap; the quieter
+    controls and the in-demo buttons have not been looked at with the same eye.
+17. **The mobile pass, section by section.** PHASE 18 fixed the demo window and
+    PHASE 19 the header's fit, but the owner's "кривая косая" was about the whole
+    page and every section has not been walked at 360/390/430.
+18. **The palette shift is half-made.** The owner chose the hybrid — machine
+    sections dark, editorial structure kept. `voice` moved and `night` was already
+    there; whether `load` and `product` should follow has not been decided, and
+    the gold that the sphere brought is so far used only by the sphere and one
+    4 px dot.
