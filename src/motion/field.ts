@@ -66,9 +66,24 @@ import { onShift, type ShiftState } from './shift';
 
 /* ---------------------------------------------------------------- budget --- */
 
-const STATIONS_WIDE = 58;
-const STATIONS_COMPACT = 24;
-const EVENTS = 18;
+/*
+ * Density, re-derived rather than nudged.
+ *
+ * Measured on the night band, where this layer is supposed to be the subject
+ * with nothing in front of it: 0.244 % of the canvas carried any ink at all, and
+ * 54 pixels out of 3.5 million were brighter than 55 % alpha. A 420 × 300 region
+ * of it held two bare vertical lines and nothing else. That is the number behind
+ * "it looks like arbitrary line-work": the switchboard was drawing its wires and
+ * almost none of its nodes.
+ *
+ * The arithmetic says the same thing. 58 stations at r = 1.6 cover about 460 px²
+ * of a 973 000 px² viewport — 0.05 %. The runs between them cover roughly 25
+ * times that. A network drawn as edges with invisible nodes is not a network;
+ * it is hatching.
+ */
+const STATIONS_WIDE = 78;
+const STATIONS_COMPACT = 30;
+const EVENTS = 26;
 /** Longest orthogonal run, as a fraction of the viewport. Keeps routes local. */
 const MAX_RUN = 0.17;
 /** Samples behind a travelling event. This is what makes it read as motion. */
@@ -178,6 +193,11 @@ export function initField(opts: FieldOptions = {}): () => void {
   const rB = new Uint16Array(R);
   /** true when the run goes horizontal first, then vertical */
   const rHFirst = new Uint8Array(R);
+  /* Whether each run's turn is drawable this pass — both of its legs cleared the
+     text guard. Written by the run loop and read by the corner loop immediately
+     after, so the guard is asked once per leg rather than twice. Allocated once,
+     like every other buffer here. */
+  const corner = new Uint8Array(R);
   let routeCount = 0;
 
   const evRoute = new Int16Array(EVENTS).fill(-1);
@@ -196,9 +216,15 @@ export function initField(opts: FieldOptions = {}): () => void {
     let gx = 0;
     let gy = 0;
     for (let tries = 0; tries < 24; tries++) {
-      // Bias to the sides: the middle of the page is where the reading happens.
+      /* Bias to the sides: the middle of the page is where the reading happens.
+         Softened from 0.7 — that exponent is a second, cruder guard sitting on
+         top of the occupancy grid, which already knows where every text box on
+         the page actually is and fades the field out to the pixel. On paper the
+         duplication is harmless; on a dark band, where there is no reading to
+         protect and the machine is the subject, it was what emptied the middle
+         of the picture. */
       const side = rand() < 0.5 ? -1 : 1;
-      gx = Math.round(LAT_X / 2 + side * Math.pow(rand(), 0.7) * (LAT_X / 2));
+      gx = Math.round(LAT_X / 2 + side * Math.pow(rand(), 0.88) * (LAT_X / 2));
       gy = Math.round(rand() * LAT_Y);
       const key = gy * (LAT_X + 1) + gx;
       if (!taken.has(key)) {
@@ -222,7 +248,11 @@ export function initField(opts: FieldOptions = {}): () => void {
       const dy = Math.abs(syN[a]! - syN[b]!);
       if (dx > MAX_RUN || dy > MAX_RUN) continue;
       if (dx + dy < 0.02) continue;
-      if (rand() > 0.3) continue;
+      /* Lowered with the station count raised, so the extra nodes arrive as
+         nodes and not as extra wire: more places, not a denser mesh. Left any
+         higher, 78 stations turn this back into the triangulated wallpaper the
+         header of this file exists to rule out. */
+      if (rand() > 0.22) continue;
       rA[routeCount] = a;
       rB[routeCount] = b;
       rHFirst[routeCount] = rand() < 0.5 ? 1 : 0;
@@ -639,20 +669,47 @@ export function initField(opts: FieldOptions = {}): () => void {
       const g1 = clear((ax + cx) / 2, (ay + cy) / 2, originY);
       const g2 = clear((cx + bx) / 2, (cy + by) / 2, originY);
 
+      /* 0.34 → 0.26: the wire steps back so the nodes can be seen against it.
+         Not a taste adjustment — at 0.34 the runs carried some twenty-five times
+         the ink of every station on the canvas put together. */
       if (g1 > 0.02) {
-        ctx.globalAlpha = alpha * 0.34 * g1;
+        ctx.globalAlpha = alpha * 0.26 * g1;
         ctx.beginPath();
         ctx.moveTo(Math.round(ax) + 0.5, Math.round(ay) + 0.5);
         ctx.lineTo(Math.round(cx) + 0.5, Math.round(cy) + 0.5);
         ctx.stroke();
       }
       if (g2 > 0.02) {
-        ctx.globalAlpha = alpha * 0.34 * g2;
+        ctx.globalAlpha = alpha * 0.26 * g2;
         ctx.beginPath();
         ctx.moveTo(Math.round(cx) + 0.5, Math.round(cy) + 0.5);
         ctx.lineTo(Math.round(bx) + 0.5, Math.round(by) + 0.5);
         ctx.stroke();
       }
+      corner[r] = g1 > 0.02 && g2 > 0.02 ? 1 : 0;
+    }
+
+    /*
+     * The turn itself.
+     *
+     * A run bends exactly once, and that bend is the only place on this layer
+     * where a routing decision is visible — it is a switch. Undrawn, several
+     * collinear runs and their corners read as one large empty rectangle, which
+     * is what made the layer look like arbitrary architectural line-work rather
+     * than a board. Two pixels of ink at the turn is the whole difference
+     * between a rectangle and a route that goes somewhere.
+     *
+     * Batched after the runs so the stroke style is set once for all of them and
+     * the fill style once here, rather than alternating per route.
+     */
+    ctx.fillStyle = cMachine;
+    fill = cMachine;
+    for (let r = 0; r < routeCount; r++) {
+      if (!corner[r]) continue;
+      const a = alpha * 0.5;
+      if (a <= 0.015) continue;
+      ctx.globalAlpha = a > 1 ? 1 : a;
+      ctx.fillRect(Math.round(cornerX(r)) - 1, Math.round(cornerY(r)) - 1, 2, 2);
     }
 
     /* events in transit, each with a short trail — a single 3 px square moving a
@@ -697,7 +754,9 @@ export function initField(opts: FieldOptions = {}): () => void {
       const owner = k === 4;
       const hit = sHit[i]!;
       const c = owner ? cSignal : k === 2 ? cMachine : cInk;
-      const a = alpha * g * ((owner ? 0.9 : 0.38) + hit * 0.5);
+      /* 0.38 → 0.6. A station is a place where work stops, and it has to be
+         legible as one for any of the runs between them to mean anything. */
+      const a = alpha * g * ((owner ? 1 : 0.6) + hit * 0.5);
       if (a <= 0.01) continue;
 
       if (c !== fill) {
@@ -710,10 +769,10 @@ export function initField(opts: FieldOptions = {}): () => void {
       ctx.globalAlpha = a > 1 ? 1 : a;
       if (k === 1) {
         // Projects are squares: a thing with edges and a deadline.
-        ctx.fillRect(Math.round(x) - 2, Math.round(y) - 2, 4, 4);
+        ctx.fillRect(Math.round(x) - 2.5, Math.round(y) - 2.5, 5, 5);
       } else {
         ctx.beginPath();
-        ctx.arc(x, y, owner ? 3 : 1.6, 0, Math.PI * 2);
+        ctx.arc(x, y, owner ? 3.6 : 2.2, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -732,8 +791,12 @@ export function initField(opts: FieldOptions = {}): () => void {
 
   function spawn(dt: number): void {
     if (!routeCount) return;
-    // Roughly 0.5 events/s when quiet, 5/s at full tilt.
-    if (Math.random() > (0.5 + busy * 4.5) * dt) return;
+    /* Roughly 1.8 events/s when quiet, 8 at full tilt — raised from 0.5 and 5.
+       At the old floor a route was carrying something perhaps once every two
+       seconds across the whole board, so the one thing this layer exists to
+       show — that work is moving from somewhere to somewhere — was a coin flip
+       away from never being on screen at all. */
+    if (Math.random() > (1.8 + busy * 6.2) * dt) return;
     for (let e = 0; e < EVENTS; e++) {
       if (evRoute[e]! >= 0) continue;
       evRoute[e] = Math.floor(Math.random() * routeCount);
