@@ -428,6 +428,89 @@ main > section[data-shift]:not(.hero)::before {
   }
 }
 
+/*
+ * THE SECTIONS DO NOT ALL ARRIVE THE SAME WAY.
+ *
+ * One gesture for thirteen sections is one gesture repeated, which is the
+ * complaint this page keeps earning. But thirteen bespoke gestures would be
+ * thirteen things to keep true, and most of them would be different for the sake
+ * of being different — decoration, and the kind that reads as generated.
+ *
+ * So: four arrivals, and each one *means* the thing its sections do. They are
+ * not invented here either — they are the page's own reveal vocabulary, the one
+ * already used inside these sections for their rows, applied at the scale of the
+ * section itself. A reader who has watched a row settle into memory meets the
+ * same motion when the memory section arrives.
+ *
+ *   FEED    the record advancing — the default, and the one most sections want
+ *   SETTLE  something coming to rest, from above, relaxing as it lands (ARCHIVE)
+ *   HALT    rising further and stopping dead against a rule (ESCALATE)
+ *   BREATHE the machine alive on its own, arriving with a held breath
+ */
+@keyframes head-settle {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: translate3d(0, -1.1rem, 0) scaleY(0.94);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    transform: none;
+  }
+}
+@keyframes head-halt {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: translate3d(0, 1.6rem, 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    transform: none;
+  }
+}
+@keyframes head-breathe {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: translate3d(0, -0.3rem, 0) scale(1.035);
+    opacity: 0.55;
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* REMEMBER, and the rule that settles into how it behaves. */
+    #memory .label:has(+ .title),
+    #memory .title,
+    #memory .lead,
+    #client .label:has(+ .title),
+    #client .title,
+    #client .lead {
+      animation-name: head-settle;
+    }
+    /* ESCALATE — the one section that stops rather than proceeds. Its own rows
+       already halt like this; the section now arrives the way it ends. */
+    #boundary .label:has(+ .title),
+    #boundary .title,
+    #boundary .lead {
+      animation-name: head-halt;
+      animation-timing-function: cubic-bezier(0.16, 0.9, 0.2, 1);
+    }
+    /* The two sections where the machine is working with nobody watching. */
+    #night .label:has(+ .title),
+    #night .title,
+    #night .lead,
+    #voice .label:has(+ .title),
+    #voice .title,
+    #voice .lead {
+      animation-name: head-breathe;
+    }
+  }
+}
+
 /* The night band's mark sits on its own ground, so it takes the inverted ink. */
 main > section.on-ink[data-shift]::before {
   color: var(--machine-inv);
