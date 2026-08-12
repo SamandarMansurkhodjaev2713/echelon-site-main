@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import mark from '../assets/mark.png';
 import type { Dict } from '../i18n';
+import { shiftIndex } from '../lib/shift-index';
 
 interface Props {
   dict: Dict;
@@ -9,22 +10,55 @@ interface Props {
 
 const { dict } = Astro.props;
 const f = dict.footer;
+const INDEX = shiftIndex(dict);
 ---
 
-<footer class="foot">
-  <div class="page foot__row">
-    <div class="foot__brand">
-      <Image src={mark} alt="" width={20} height={20} loading="lazy" densities={[1, 2]} />
-      <div>
-        <p class="foot__name">{f.product}</p>
-        <p class="foot__line">{f.line}</p>
+<!--
+  THE FOOT OF THE LOG.
+
+  It was a brand, three grey lines and a reset button, which is a colophon
+  rather than a footer: nothing to do, nowhere to go. A reader who has just
+  finished a sixteen-thousand-pixel document is exactly the reader most likely
+  to want a particular part of it again, and the page offered them the scrollbar.
+
+  So the shift is here in full — the same fourteen entries the header index
+  carries, from the one definition in lib/shift-index.ts. Not a decorative
+  sitemap: it is the page's own table of contents at the place a table of
+  contents is looked for, and unlike the header panel it needs no JavaScript to
+  exist.
+-->
+<footer class="foot" data-shift="07:10">
+  <div class="page">
+    <nav class="foot__index" aria-label={dict.nav.sections}>
+      <p class="foot__index-label label">{dict.nav.sections}</p>
+      <ul class="foot__index-list">
+        {
+          INDEX.map((s) => (
+            <li>
+              <a class="foot__index-link" href={`#${s.id}`} data-foot-link={s.id} data-cursor="view">
+                <span class="foot__index-at sys" data-foot-at aria-hidden="true" />
+                <span>{s.name}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="foot__row">
+      <div class="foot__brand">
+        <Image src={mark} alt="" width={20} height={20} loading="lazy" densities={[1, 2]} />
+        <div>
+          <p class="foot__name">{f.product}</p>
+          <p class="foot__line">{f.line}</p>
+        </div>
       </div>
-    </div>
-    <div class="foot__meta">
-      <a href="https://t.me/komrxn" target="_blank" rel="noopener" data-cursor="open">t.me/komrxn</a>
-      <p>{f.demoNote}</p>
-      <p>{f.rights}</p>
-      <button type="button" class="foot__reset" data-session-reset>{dict.nav.reset}</button>
+      <div class="foot__meta">
+        <a href="https://t.me/komrxn" target="_blank" rel="noopener" data-cursor="open">t.me/komrxn</a>
+        <p>{f.demoNote}</p>
+        <p>{f.rights}</p>
+        <button type="button" class="foot__reset" data-session-reset>{dict.nav.reset}</button>
+      </div>
     </div>
   </div>
 </footer>
@@ -32,9 +66,57 @@ const f = dict.footer;
 <style>
   .foot {
     border-top: 1px solid var(--rule-strong);
-    padding-block: 2.5rem 3rem;
+    padding-block: clamp(2.5rem, 6vh, 4rem) 3rem;
   }
+
+  /* ---------- the shift, again ---------- */
+
+  .foot__index-label {
+    color: var(--machine);
+  }
+  .foot__index-list {
+    margin-top: 0.9rem;
+    display: grid;
+    gap: 0 clamp(1.5rem, 4vw, 3rem);
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 34rem) {
+    .foot__index-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 62rem) {
+    .foot__index-list {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .foot__index-link {
+    display: grid;
+    grid-template-columns: 3.4rem minmax(0, 1fr);
+    gap: 0.7rem;
+    align-items: baseline;
+    /* a thumb's worth of row, in a footer people reach for on a phone */
+    min-height: 2.5rem;
+    padding-block: 0.35rem;
+    border-top: 1px solid var(--rule);
+    color: var(--ink-muted);
+    font-size: var(--step-small);
+    transition: color var(--dur-fast) var(--ease-standard);
+  }
+  .foot__index-link:hover,
+  .foot__index-link:focus-visible {
+    color: var(--signal);
+  }
+  .foot__index-at {
+    font-size: var(--step-micro);
+    color: var(--machine);
+    font-variant-numeric: tabular-nums;
+  }
+
   .foot__row {
+    margin-top: clamp(2rem, 5vh, 3rem);
+    padding-top: clamp(1.25rem, 3vh, 2rem);
+    border-top: 1px solid var(--rule-strong);
     display: flex;
     justify-content: space-between;
     gap: 2rem;
@@ -96,6 +178,14 @@ const f = dict.footer;
 <script>
   import { session } from '../session/state';
   import { register } from '../motion/lifecycle';
+
+  /* The hours, read off the sections themselves — same rule as the header
+     index: `data-shift` is the value the whole page already runs on, and a
+     typed copy is a copy that can disagree. The montage has none on purpose. */
+  for (const link of document.querySelectorAll<HTMLElement>('[data-foot-link]')) {
+    const at = link.querySelector<HTMLElement>('[data-foot-at]');
+    if (at) at.textContent = document.getElementById(link.dataset.footLink ?? '')?.dataset.shift ?? '—';
+  }
 
   const btn = document.querySelector<HTMLElement>('[data-session-reset]');
   if (btn) {

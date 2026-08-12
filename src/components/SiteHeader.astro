@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import mark from '../assets/mark.png';
 import { LOCALES, LOCALE_LABELS, LOCALE_TAGS, localePath, type Dict, type Locale } from '../i18n';
+import { shiftIndex } from '../lib/shift-index';
 
 interface Props {
   dict: Dict;
@@ -9,6 +10,19 @@ interface Props {
 }
 
 const { dict, locale } = Astro.props;
+
+/*
+ * THE SHIFT INDEX.
+ *
+ * The page had no section navigation at all: a brand, a clock, three language
+ * links and a call to action, and the only way to reach the middle of a
+ * sixteen-thousand-pixel document was to scroll it. A generic drop-down of
+ * links would have been the easy answer and the wrong one — this page is one
+ * working shift, so its index is the shift, and you navigate it by the hour.
+ *
+ * The list itself lives in lib/shift-index.ts, because the footer shows it too.
+ */
+const INDEX = shiftIndex(dict);
 ---
 
 <header class="masthead" data-masthead>
@@ -18,6 +32,22 @@ const { dict, locale } = Astro.props;
       <span class="masthead__mark">Echelon</span>
       <span class="masthead__sub">Desktop</span>
     </a>
+
+    <!-- The index opens the shift. Same control and same panel on every width:
+         a phone does not get a lesser menu, it gets this one. -->
+    <button
+      type="button"
+      class="masthead__index"
+      aria-expanded="false"
+      aria-controls="shift-index"
+      data-index-toggle
+      data-cursor="open"
+    >
+      <span class="masthead__index-bars" aria-hidden="true">
+        <i></i><i></i><i></i>
+      </span>
+      <span class="masthead__index-word">{dict.nav.sections}</span>
+    </button>
 
     <!--
       The shift clock. The whole page is one working day, and this is the only
@@ -72,6 +102,32 @@ const { dict, locale } = Astro.props;
     display, and it says so: aria-hidden, pointer-events: none.
   -->
   <div class="shiftbar" data-shiftbar aria-hidden="true"></div>
+
+  <!--
+    The panel is dark on every ground, including the light ones, and that is the
+    point: opening the index is stepping out of the record and into the machine
+    that keeps it. It is the same surface the product window and the night band
+    are made of, so the site has one answer for "this is the system" instead of
+    three.
+  -->
+  <div class="shift-index on-ink" id="shift-index" data-index-panel hidden>
+    <div class="page shift-index__inner">
+      <p class="shift-index__label label">{dict.nav.sections}</p>
+      <ol class="shift-index__list">
+        {
+          INDEX.map((s) => (
+            <li class="shift-index__row">
+              <a class="shift-index__link" href={`#${s.id}`} data-index-link={s.id} data-cursor="view">
+                <span class="shift-index__at sys" data-index-at aria-hidden="true" />
+                <span class="shift-index__name">{s.name}</span>
+                <span class="shift-index__rule" aria-hidden="true" />
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </div>
 </header>
 
 <style>
@@ -95,6 +151,200 @@ const { dict, locale } = Astro.props;
       background-color var(--dur-expressive) var(--ease-standard),
       border-color var(--dur-expressive) var(--ease-standard),
       color var(--dur-expressive) var(--ease-standard);
+  }
+
+  /* ---------- the index control ---------- */
+
+  .masthead__index {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 2.5rem;
+    padding-inline: 0.15rem;
+    font-family: var(--font-system);
+    font-size: var(--step-micro);
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--machine);
+    transition: color var(--dur-fast) var(--ease-standard);
+  }
+  .masthead__index:hover,
+  .masthead__index:focus-visible {
+    color: var(--ink);
+  }
+
+  /* Three rules that become a cross. Not a hamburger borrowed from a phone app:
+     they are the same hairlines the page is set in, and they are of different
+     lengths, because the index they open is a list of unequal things. */
+  .masthead__index-bars {
+    display: grid;
+    gap: 3px;
+    width: 15px;
+  }
+  .masthead__index-bars i {
+    height: 1px;
+    background: currentColor;
+    transition:
+      transform var(--dur-normal) var(--ease-editorial),
+      opacity var(--dur-fast) var(--ease-standard),
+      width var(--dur-normal) var(--ease-editorial);
+  }
+  .masthead__index-bars i:nth-child(1) {
+    width: 15px;
+  }
+  .masthead__index-bars i:nth-child(2) {
+    width: 10px;
+  }
+  .masthead__index-bars i:nth-child(3) {
+    width: 13px;
+  }
+  [aria-expanded='true'] .masthead__index-bars i:nth-child(1) {
+    width: 15px;
+    transform: translateY(4px) rotate(45deg);
+  }
+  [aria-expanded='true'] .masthead__index-bars i:nth-child(2) {
+    opacity: 0;
+  }
+  [aria-expanded='true'] .masthead__index-bars i:nth-child(3) {
+    width: 15px;
+    transform: translateY(-4px) rotate(-45deg);
+  }
+
+  /* ---------- the panel ---------- */
+
+  .shift-index {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule-strong);
+    overflow: hidden;
+    /* Opens by clip rather than by height: a height transition on a list this
+       long reflows every row on every frame, and this panel can be opened while
+       the page behind it is still scrolling. */
+    clip-path: inset(0 0 100% 0);
+    /* Closed it must also be unreachable, or fourteen links stay in the tab
+       order behind a panel nobody can see. `visibility` does that and is the one
+       property that can be transitioned, so it waits for the wipe to finish on
+       the way out and applies immediately on the way in. */
+    visibility: hidden;
+    transition:
+      clip-path var(--dur-expressive) var(--ease-editorial),
+      visibility 0s linear var(--dur-expressive);
+  }
+  .shift-index.is-open {
+    clip-path: inset(0 0 0 0);
+    visibility: visible;
+    transition:
+      clip-path var(--dur-expressive) var(--ease-editorial),
+      visibility 0s;
+  }
+
+  .shift-index__inner {
+    padding-block: clamp(1.25rem, 3vh, 2rem) clamp(1.5rem, 4vh, 2.5rem);
+  }
+  .shift-index__label {
+    color: var(--machine);
+  }
+  .shift-index__list {
+    margin-top: 0.75rem;
+    display: grid;
+    gap: 0;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 48rem) {
+    .shift-index__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: clamp(2rem, 5vw, 4rem);
+    }
+  }
+
+  .shift-index__link {
+    display: grid;
+    grid-template-columns: 3.6rem minmax(0, auto) minmax(1.5rem, 1fr);
+    align-items: baseline;
+    gap: 0.9rem;
+    /* 44 px of thumb on every row, which is what the old comment said the
+       shift scale could not give and used as the reason to have no navigation
+       at all. A panel has the room the header bar did not. */
+    min-height: 2.75rem;
+    padding-block: 0.5rem;
+    border-top: 1px solid var(--rule);
+    color: var(--ink);
+    transition: color var(--dur-fast) var(--ease-standard);
+  }
+  .shift-index__row:last-child .shift-index__link {
+    border-bottom: 1px solid var(--rule);
+  }
+  .shift-index__at {
+    font-size: var(--step-micro);
+    color: var(--machine);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+  .shift-index__name {
+    font-size: var(--step-lead);
+    letter-spacing: -0.012em;
+  }
+  /* The hairline runs to the edge and fills toward the reader on hover — the
+     row completing itself, the same gesture the record uses everywhere else. */
+  .shift-index__rule {
+    height: 1px;
+    background: linear-gradient(to right, var(--signal) 0 0) left / 0 100% no-repeat,
+      linear-gradient(to right, var(--rule) 0 0) left / 100% 100% no-repeat;
+    transition: background-size var(--dur-expressive) var(--ease-editorial);
+    align-self: center;
+  }
+  .shift-index__link:hover,
+  .shift-index__link:focus-visible {
+    color: var(--signal);
+  }
+  .shift-index__link:hover .shift-index__rule,
+  .shift-index__link:focus-visible .shift-index__rule {
+    background-size:
+      100% 100%,
+      100% 100%;
+  }
+  .shift-index__link[aria-current='true'] .shift-index__at {
+    color: var(--signal);
+  }
+  .shift-index__link[aria-current='true'] .shift-index__name {
+    font-weight: 620;
+  }
+
+  .shift-index__langs {
+    margin-top: 1.25rem;
+    display: flex;
+    gap: 1.25rem;
+    font-family: var(--font-system);
+    font-size: var(--step-micro);
+    letter-spacing: var(--track-label);
+  }
+  .shift-index__langs a {
+    color: var(--machine);
+    min-height: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+  }
+  .shift-index__langs a.is-current {
+    color: var(--ink);
+    border-bottom: 1px solid var(--signal);
+  }
+
+  /* The scale steps aside for the index — see setOpen(). */
+  .masthead[data-indexing] .shiftbar {
+    opacity: 0;
+    transition: opacity var(--dur-fast) var(--ease-standard);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shift-index {
+      transition-duration: 1ms;
+    }
+    .masthead__index-bars i {
+      transition-duration: 1ms;
+    }
   }
 
   .masthead__row {
@@ -351,18 +601,28 @@ const { dict, locale } = Astro.props;
       justify-content: center;
     }
   }
-  /* Below this the clock is the one that yields: four elements genuinely do not
-     fit, and a call to action outranks a restatement of scroll position. */
-  @media (max-width: 23rem) {
+  /* Below this the clock is the one that yields: the row genuinely does not fit,
+     and a call to action outranks a restatement of scroll position.
+
+     Raised from 23rem to 27rem when the index joined the row. The old number was
+     right for four elements and wrong for five: measured at 390 px the row came
+     out 2 px over its own box, and at 560 px — where "Desktop" returns to the
+     brand — 18 px over. Neither is a rounding artefact; both put the page into
+     horizontal overflow. The two optional elements now stand down until there is
+     actually room for them. */
+  @media (max-width: 27rem) {
     .masthead__clock {
       display: none;
     }
   }
 
-  @media (max-width: 30rem) {
+  @media (max-width: 36rem) {
     .masthead__sub {
       display: none;
     }
+  }
+
+  @media (max-width: 30rem) {
     .masthead__row {
       gap: 0.4rem;
     }
@@ -374,9 +634,41 @@ const { dict, locale } = Astro.props;
       padding-inline: 0.75em;
     }
   }
+  /* The narrowest phones still in use. Everything that can give, gives — and it
+     is measured: at 320 px the row was 4 px over even with the clock already
+     down, which is a scrollbar on the whole document for the sake of two
+     letters of padding. */
   @media (max-width: 22.5rem) {
     .masthead__langs a {
-      min-width: 1.9rem;
+      min-width: 1.75rem;
+    }
+    .masthead__cta {
+      padding-inline: 0.55em;
+    }
+    .masthead__row {
+      gap: 0.3rem;
+    }
+  }
+
+  /*
+   * The bar was at four elements and the index makes five, so something has to
+   * give on a phone — and it is the *word*, not the language switch.
+   *
+   * Moving the switch into the panel was tried first and was wrong. This is a
+   * trilingual site for a country where the reader may well want the other
+   * language on sight; burying that behind a menu puts a first-order control one
+   * tap deeper on the device where taps cost most, and the header already went
+   * to the trouble of narrowing those hit areas at 30rem and 22.5rem precisely
+   * so it could keep them. It also put two navigation landmarks called "Язык" on
+   * the same page, which is a thing a screen reader now has to disambiguate.
+   *
+   * Below 36rem the three rules carry the control alone. They are the same
+   * hairlines the page is set in, they animate to a cross when open, and next to
+   * a shift scale made of notches they do not read as a borrowed hamburger.
+   */
+  @media (max-width: 36rem) {
+    .masthead__index-word {
+      display: none;
     }
   }
 </style>
@@ -497,6 +789,107 @@ const { dict, locale } = Astro.props;
       window.clearTimeout(reWatch);
       io?.disconnect();
     });
+  }
+
+  /*
+   * THE SHIFT INDEX — open, mark, close.
+   *
+   * The panel ships `hidden`, so without JavaScript it is not a broken control
+   * sitting in the tab order; the script takes the attribute off and from then
+   * on owns the state.
+   */
+  const toggle = document.querySelector<HTMLButtonElement>('[data-index-toggle]');
+  const panel = document.querySelector<HTMLElement>('[data-index-panel]');
+
+  if (toggle && panel) {
+    panel.removeAttribute('hidden');
+
+    /* The hour of each row is read off the section it points at, never typed
+       here — `data-shift` is the same value the ambient light and the header
+       clock run on, and a second copy is a copy that can disagree. A row whose
+       section has no hour keeps an empty slot rather than inventing one. */
+    for (const link of panel.querySelectorAll<HTMLElement>('[data-index-link]')) {
+      const target = document.getElementById(link.dataset.indexLink ?? '');
+      const at = link.querySelector<HTMLElement>('[data-index-at]');
+      /* One section has no hour on purpose — the day montage spans four of them
+         and declaring any single one would put the page on the wrong day, which
+         PHASE 16 had to unpick once already. It gets a rule rather than a blank,
+         so the column reads as "runs through" instead of as a missing value. */
+      if (at) at.textContent = target?.dataset.shift ?? '—';
+    }
+
+    let open = false;
+    const setOpen = (next: boolean) => {
+      open = next;
+      toggle.setAttribute('aria-expanded', String(next));
+      panel.classList.toggle('is-open', next);
+      /* The shift scale hangs its hour labels below the bar, which is exactly
+         where the panel opens; with both on screen the notches printed across
+         the top of the index. The scale stands down while the index is up —
+         they answer the same question, and only one of them can be read. */
+      toggle.closest('header')?.toggleAttribute('data-indexing', next);
+    };
+
+    listen(toggle, 'click', () => setOpen(!open));
+
+    /* Escape closes and hands focus back to the control that opened it —
+       otherwise the caret is left inside a panel that is no longer on screen. */
+    listen(document, 'keydown', (e) => {
+      if ((e as KeyboardEvent).key === 'Escape' && open) {
+        setOpen(false);
+        toggle.focus();
+      }
+    });
+
+    /* A chosen row closes the panel. The browser does the scrolling: these are
+       real anchors, so they work with the history, with a middle-click, and with
+       JavaScript switched off. */
+    listen(panel, 'click', (e) => {
+      if ((e.target as HTMLElement).closest('[data-index-link]')) setOpen(false);
+    });
+
+    /* Clicking the page behind it closes it too — but only a real click outside
+       both the panel and its button, so the control does not fight itself. */
+    listen(document, 'pointerdown', (e) => {
+      if (!open) return;
+      const t = e.target as Node;
+      if (!panel.contains(t) && !toggle.contains(t)) setOpen(false);
+    });
+
+    /* Which row is the reader actually in. The same question the shift scale
+       answers, asked the same way: whichever section owns the top third of the
+       viewport is the current one. */
+    const marks = new Map<string, HTMLElement>();
+    for (const link of panel.querySelectorAll<HTMLElement>('[data-index-link]')) {
+      marks.set(link.dataset.indexLink ?? '', link);
+    }
+    const targets = [...marks.keys()]
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => Boolean(el));
+
+    if (targets.length) {
+      const seen = new Map<string, number>();
+      const spy = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) seen.set(e.target.id, e.intersectionRatio);
+          let bestId = '';
+          let best = 0;
+          for (const [id, r] of seen) {
+            if (r > best) {
+              best = r;
+              bestId = id;
+            }
+          }
+          for (const [id, link] of marks) {
+            if (id === bestId && best > 0) link.setAttribute('aria-current', 'true');
+            else link.removeAttribute('aria-current');
+          }
+        },
+        { threshold: [0, 0.25, 0.5, 0.75, 1] },
+      );
+      for (const t of targets) spy.observe(t);
+      register(() => spy.disconnect());
+    }
   }
 </script>
 
