@@ -1136,11 +1136,18 @@ the long-frame delta today. PHASE 17's 0.2 % does not reproduce here on the
     `worker/README.md`. Everything on this side is ready and turns on with one
     string. Deferred by the owner for now, deliberately.
 14. **The intro.** Asked to be "more wow"; untouched this phase.
-15. **Section reveal and scroll choreography.** The vocabulary is good — RECEIVE,
-    RESOLVE, ARCHIVE, ESCALATE, EXPAND, HANDOVER, each meaning a different thing —
-    but thirteen of the uses are RECEIVE, which is most of why the page reads as
-    one gesture repeated. Picking the right pattern per section is the work, and
-    PHASE 19 only did it for the memory chips.
+15. ~~Thirteen of twenty-four reveals are RECEIVE, which is why the page reads as
+    one gesture repeated.~~ **Half wrong, and corrected by reading them.** That
+    was a count offered as evidence. Load's events genuinely arrive — it is the
+    section's operation; Voice's transcript arrives a line at a time; Pillars
+    carries a comment stating the metaphor outright, "the rule is ruled before it
+    is written on", and RECEIVE is that metaphor. Those are right. One of the
+    thirteen was wrong — the seams, which are chapter breaks and not arrivals —
+    and it now has TURN, a seventh pattern and the only one that moves outward
+    from a centre. **What remains open is the question the tally was standing in
+    for:** whether the page *feels* repetitive when scrolled is a judgement to be
+    made by watching it at length, not by counting attributes, and that has not
+    been done.
 16. **Button animations.** `.act` has a genuine semantic swap; the quieter
     controls and the in-demo buttons have not been looked at with the same eye.
 17. **The mobile pass, section by section.** PHASE 18 fixed the demo window and
