@@ -1,4 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
+/* The one list of states the cursor knows, imported rather than copied: a second
+   copy is a copy that can disagree, which is the fault this whole phase is about. */
+import { CURSOR_STATES } from '../../src/motion/cursor';
 
 /*
  * The manual-QA checklist (§39), automated.
@@ -675,4 +678,294 @@ test('the demo window says when it has more below', async ({ page }) => {
   const fits = await read();
   expect(fits.remaining).toBeLessThanOrEqual(1);
   expect(fits.says, 'a pane that fits still says it has more below').toBe(false);
+});
+
+/*
+ * THE CURSOR IS NOT ALLOWED TO BE WRONG.
+ *
+ * It replaced the native cursor over every control on the page, so it inherits
+ * the native cursor's contract, and the platform keeps that contract on scroll:
+ * `:hover` moves to a control that arrives under a still mouse, which means
+ * `cursor: pointer` would have changed there too. This module resolved the world
+ * on pointermove and on `data-cursor` changing, and nothing else, so every other
+ * way the page moves left it announcing an operation the reader was not on — the
+ * failure its own source calls worse than naming none.
+ */
+
+/** The cursor exists only where a real mouse does; everywhere else there is nothing to test. */
+async function cursorOrSkip(page: Page) {
+  await page.mouse.move(400, 400);
+  test.skip((await page.locator('.cursor').count()) === 0, 'no custom cursor on a coarse pointer');
+}
+
+test('the cursor agrees with the page after the page has moved under a still mouse', async ({
+  page,
+}) => {
+  await page.goto('./?intro=off');
+  await ready(page);
+  await cursorOrSkip(page);
+  await page.addStyleTag({ content: 'html{scroll-behavior:auto !important}' });
+
+  const b = (await page.locator('.act.hero__cta').boundingBox())!;
+  const x = Math.round(b.x + b.width / 2);
+  const y = Math.round(b.y + b.height / 2);
+  await page.mouse.move(x, y);
+
+  const look = () =>
+    page.evaluate(
+      ([x, y]) => {
+        const c = document.querySelector<HTMLElement>('.cursor');
+        const el = document.elementFromPoint(x, y);
+        const owner = el?.closest<HTMLElement>('[data-cursor]');
+        return {
+          says: c?.dataset.state ?? 'default',
+          should: owner?.dataset.cursor ?? 'default',
+          framed: document.querySelector('.cursor-frame')?.hasAttribute('data-on') ?? false,
+          inverted: c?.hasAttribute('data-inv') ?? false,
+          onInk: Boolean(el?.closest('.on-ink')),
+        };
+      },
+      [x, y],
+    );
+
+  /* Everything the cursor claims, checked against what is actually under the
+     pointer — the name, the frame, and the ground it draws itself for. */
+  const faults = async () => {
+    const a = await look();
+    const wrong: string[] = [];
+    if (a.says !== a.should) wrong.push(`names "${a.says}" over a "${a.should}"`);
+    if (a.framed !== (a.should !== 'default'))
+      wrong.push(a.framed ? 'frames something the pointer is not on' : 'frames nothing while on a control');
+    if (a.inverted !== a.onInk)
+      wrong.push(a.inverted ? 'inverted on paper' : 'ink on ink — the cursor is invisible');
+    return wrong.length ? wrong.join('; ') : 'agrees';
+  };
+
+  await expect.poll(faults).toBe('agrees');
+
+  /*
+   * From here the mouse never moves again; the page does all of the moving.
+   *
+   * The offsets are not round numbers, because round numbers proved nothing: the
+   * first version of this test scrolled to 400, 1200, 3000 … , passed at every
+   * one of them, and never once put a control under the pointer. So the page is
+   * aimed instead — each of these scrolls is the one that brings a particular
+   * control to the exact point the pointer is resting at. Two passes, because a
+   * reveal that has not fired yet is measured through its own transform.
+   */
+  const aimAt = async (index: number) => {
+    for (let pass = 0; pass < 2; pass++) {
+      await page.evaluate(
+        ([index, py]) => {
+          const el = document.querySelectorAll('[data-cursor]')[index] as HTMLElement;
+          const r = el.getBoundingClientRect();
+          window.scrollBy(0, r.top + r.height / 2 - py);
+        },
+        [index, y] as [number, number],
+      );
+      await page.waitForTimeout(120);
+    }
+  };
+
+  /* Only controls that sit in the pointer's own column, and only ones that
+     travel with the page — the masthead is fixed and never arrives anywhere. */
+  const candidates = await page.evaluate((px) => {
+    const out: number[] = [];
+    document.querySelectorAll('[data-cursor]').forEach((el, i) => {
+      const r = el.getBoundingClientRect();
+      if (r.width < 40 || r.height < 20) return;
+      if (getComputedStyle(el).position === 'fixed') return;
+      if (px < r.left + 6 || px > r.right - 6) return;
+      out.push(i);
+    });
+    return out;
+  }, x);
+
+  const met = new Set<string>();
+  const grounds = new Set<boolean>();
+  const record = async () => {
+    const a = await look();
+    met.add(a.should);
+    grounds.add(a.onInk);
+  };
+
+  for (const i of candidates.slice(0, 5)) {
+    await aimAt(i);
+    await expect.poll(faults, { message: `with control ${i} under the pointer the cursor ` }).toBe('agrees');
+    await record();
+  }
+
+  /* And the two the aiming cannot produce: a plain scroll that takes whatever was
+     held away again, and the night band, which is where the cursor was invisible. */
+  for (const plain of [900, 2500]) {
+    await page.evaluate((v) => window.scrollTo(0, v), plain);
+    await expect.poll(faults, { message: `with the page at ${plain} px the cursor ` }).toBe('agrees');
+    await record();
+  }
+  await page.evaluate((py) => {
+    const r = document.querySelector('#night')!.getBoundingClientRect();
+    window.scrollBy(0, r.top + r.height / 2 - py);
+  }, y);
+  await expect.poll(faults, { message: 'on the night band the cursor ' }).toBe('agrees');
+  await record();
+
+  /* A sweep that met nothing would pass while proving nothing, so it has to say
+     what it met: at least one control, and both grounds. */
+  expect(
+    [...met].some((s) => s !== 'default'),
+    'no control ever arrived under the resting pointer, so this proves nothing',
+  ).toBe(true);
+  expect([...grounds].sort(), 'the sweep never crossed between paper and ink').toEqual([false, true]);
+});
+
+test('the cursor keeps the name it is showing on the screen', async ({ page }) => {
+  /* The controls nearest the right edge are the masthead's decide button and the
+     language links — the two most likely to be aimed at — and the label sat below
+     and to the right of the pointer always. Measured before this gate: 15 px of
+     the name cut at 1152, 20 px at 1024, and the Uzbek wording is half again
+     longer than the Russian it was checked against. */
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await page.goto('./?intro=off');
+  await ready(page);
+  await cursorOrSkip(page);
+
+  const b = (await page.locator('.masthead__cta').boundingBox())!;
+  const aim = Math.round(b.x + b.width - 2);
+  await page.mouse.move(aim, Math.round(b.y + b.height / 2));
+
+  await expect
+    .poll(() =>
+      page.evaluate((aim) => {
+        const c = document.querySelector<HTMLElement>('.cursor')!;
+        /* The dot approaches the pointer over several frames, and the label is
+           drawn wherever the dot has got to — so a reading taken mid-flight is of
+           a label that has not reached the edge yet, and would call a cut label
+           clean. Wait until it has arrived, then ask. */
+        const m = new DOMMatrixReadOnly(getComputedStyle(c).transform);
+        if (Math.abs(m.m41 - aim) > 1) return 'the cursor is still travelling';
+        if (c.dataset.state === 'default') return 'the cursor named nothing at all';
+        const l = document.querySelector('.cursor__label')!.getBoundingClientRect();
+        if (l.right > window.innerWidth)
+          return `${Math.round(l.right - window.innerWidth)} px of the name is past the right edge`;
+        if (l.left < 0) return `${Math.round(-l.left)} px of the name is past the left edge`;
+        if (l.bottom > window.innerHeight)
+          return `${Math.round(l.bottom - window.innerHeight)} px of the name is below the fold`;
+        return 'on screen';
+      }, aim),
+    )
+    .toBe('on screen');
+});
+
+test('a switch is named for the operation it will actually perform', async ({ page }) => {
+  /*
+   * The cursor announces the operation before it happens, so a control that is
+   * two operations has to say which one it currently is. `motion/voice.ts` learnt
+   * this — its play button rewrites `data-cursor` when it becomes a stop button —
+   * and the automations list had the same shape and none of the lesson: four rows
+   * that all ship running, all declaring "run", so the cursor offered to start
+   * four automations that were already going and would be paused by the click.
+   */
+  await page.goto('./?intro=off');
+  await ready(page);
+  await cursorOrSkip(page);
+  await openTheProduct(page);
+  await showPane(page, 'automations');
+
+  const toggle = page.locator('.ui-autorow__toggle').first();
+  await toggle.hover();
+
+  const named = () =>
+    page.evaluate(() => {
+      const t = document.querySelector('.ui-autorow__toggle')!;
+      const c = document.querySelector<HTMLElement>('.cursor')!;
+      const running = !t.classList.contains('off');
+      const says = c.dataset.state ?? 'default';
+      const want = running ? 'stop' : 'run';
+      return says === want
+        ? `names the ${want} of a ${running ? 'running' : 'paused'} automation`
+        : `says "${says}" over a ${running ? 'running' : 'paused'} automation, which wants "${want}"`;
+    });
+
+  await expect.poll(named).toBe('names the stop of a running automation');
+
+  /* Pressed without the pointer moving, which is the whole difficulty: nothing
+     will come along later to correct a stale reading. */
+  await page.evaluate(() => (document.querySelector('.ui-autorow__toggle') as HTMLElement).click());
+  await expect.poll(named).toBe('names the run of a paused automation');
+
+  await page.evaluate(() => (document.querySelector('.ui-autorow__toggle') as HTMLElement).click());
+  await expect.poll(named).toBe('names the stop of a running automation');
+});
+
+test('every control declares a state the cursor actually knows', async ({ page }) => {
+  /*
+   * `resolveState` falls back to 'default' for a value it does not recognise, so
+   * a typo in `data-cursor` does not throw and does not show: the control simply
+   * stops being named, silently, which is the failure this page is least likely
+   * to notice. The unit test covers the fallback; this covers the markup.
+   */
+  await page.goto('./?intro=off');
+  await ready(page);
+  await openTheProduct(page);
+
+  const declared = await page.evaluate(() =>
+    [...document.querySelectorAll('[data-cursor]')].map((el) => ({
+      value: (el as HTMLElement).dataset.cursor ?? '',
+      where: (el.className || el.tagName).toString().split(' ')[0],
+    })),
+  );
+
+  expect(declared.length, 'nothing on the page declares a cursor state at all').toBeGreaterThan(10);
+  const unknown = declared
+    .filter((d) => !(CURSOR_STATES as readonly string[]).includes(d.value))
+    .map((d) => `${d.where} declares "${d.value}"`);
+  expect([...new Set(unknown)], 'a control names a state the cursor will ignore').toEqual([]);
+});
+
+test('the cursor comes back able to speak after the pointer stops being a mouse', async ({
+  page,
+  browserName,
+}) => {
+  /*
+   * This layer is torn down when the pointer stops being fine and rebuilt when it
+   * becomes fine again — a mouse unplugged from a hybrid machine and plugged back
+   * in. The nodes were rebuilt; the module's memory of the world was not, and
+   * every setter in it is guarded on "has this changed". So `state` still said
+   * `approve` while the fresh node said `default`, the guard held, and the cursor
+   * came back permanently mute: a dot over the decide button with no name on it,
+   * for the rest of the session.
+   */
+  test.skip(browserName !== 'chromium', 'the pointer-media flip is driven over CDP');
+  await page.goto('./?intro=off');
+  await ready(page);
+  await cursorOrSkip(page);
+
+  const b = (await page.locator('.act.hero__cta').boundingBox())!;
+  const x = Math.round(b.x + b.width / 2);
+  const y = Math.round(b.y + b.height / 2);
+
+  const named = () =>
+    page.evaluate(() => {
+      const c = document.querySelector<HTMLElement>('.cursor');
+      const l = document.querySelector('.cursor__label');
+      if (!c) return 'there is no cursor at all';
+      return `${c.dataset.state}/${l?.textContent ? 'named' : 'unnamed'}`;
+    });
+
+  await page.mouse.move(x, y);
+  await expect.poll(named).toBe('approve/named');
+
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+  await cdp.send('Emulation.setEmitTouchEventsForMouse', { enabled: true, configuration: 'mobile' });
+  await expect.poll(named).toBe('there is no cursor at all');
+
+  await cdp.send('Emulation.setEmitTouchEventsForMouse', { enabled: false, configuration: 'desktop' });
+  await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false });
+  await expect.poll(named).toBe('default/unnamed');
+
+  /* And now the whole point: it can still name what it is on. */
+  await page.mouse.move(x - 40, y);
+  await page.mouse.move(x, y);
+  await expect.poll(named).toBe('approve/named');
 });

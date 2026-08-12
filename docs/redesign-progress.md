@@ -1175,6 +1175,163 @@ where the page's feel actually changes. Recorded rather than quietly skipped.
 
 ---
 
+## PHASE 22 — The cursor is not allowed to be wrong
+
+Asked again for the cursor to be "really smart", and PHASE 21 had recorded it as
+deliberately not done: magnetism is forbidden for good reason, nothing else
+looked like more than ornament, so the effort went elsewhere. That refusal was
+right about *addition* and never asked the other question. This phase asked it:
+is the cursor, as it stands, telling the truth?
+
+It was not. Seven ways, every one of them measured before it was believed. Four
+share a single cause.
+
+**It resolved the world on pointermove, and on `data-cursor` changing — and
+nothing else.** So everything the page does on its own was invisible to it:
+
+- Rest on the hero's call to action and scroll. The label went on saying
+  «Решить» and the frame went on chasing the button: after a jump to `#night`
+  the frame was tracking it **11 901 px above the viewport**, still drawn, still
+  naming an operation the reader was nowhere near. Wheel, PageDown and anchor
+  navigation all did it.
+- Rest anywhere and let a control arrive. 260 px of wheel put the page's primary
+  call to action under a cursor that said nothing at all, so the one operation
+  that most needs naming could be clicked unnamed.
+- Open the index over a resting pointer: the pointer is on a row of the shift,
+  and the cursor has not noticed the panel exists.
+- And the one that shows. Scroll the night band under a resting pointer and the
+  dot stayed `rgb(21,20,15)` — ink on ink. `setGround` exists in this file for
+  exactly that, and it was only ever asked on pointermove, so the cursor went
+  *invisible* on the two sections it was written to survive. Scrolling is how a
+  reader reaches the night band.
+
+**The argument that settles it is that the platform does not behave this way.**
+`:hover` moves to a control that scrolls under a still mouse — measured, true —
+so the native `cursor: pointer` this replaced *would* have changed there. A
+custom cursor that does not is a regression against the thing it was put in
+front of. That is what makes this correctness rather than taste.
+
+Three more that fail the same promise for different reasons — the cursor naming
+something that is not so — and that only turned up because the question had
+stopped being "what could be added" and become "where is it wrong":
+
+- **The label ran off the screen.** It sat below and to the right of the pointer
+  always, and the controls nearest the right edge are the masthead's decide
+  button and the language links — the two most aimed at. 15 px of the name cut
+  at 1152, 20 px at 1024, and the Uzbek wording is half again longer than the
+  Russian it was checked against. It now takes whichever side fits, and only if
+  that side genuinely fits. Only the label moves: the dot stays exactly where the
+  pointer is, so the aim this module refuses to steal is still not stolen.
+- **A switch was named for the wrong half of itself.** `motion/voice.ts` learnt
+  in PHASE 20 that a play button becoming a stop button must rewrite
+  `data-cursor`. The automations list had the identical shape and none of the
+  lesson: four rows that all ship running, all declaring `run`, so the cursor
+  offered to *start* four automations that were already going and would be paused
+  by the click. The same lie, in a second place, found by asking whether every
+  declared state is an operation the control actually performs.
+- **And it could be struck mute for a whole session.** The layer is torn down
+  when the pointer stops being fine and rebuilt when it becomes fine again — a
+  mouse unplugged from a hybrid machine and plugged back in. The nodes were
+  rebuilt; the module's memory of the world was not, and every setter in it is
+  guarded on "has this changed", so `state` still said `approve` while the fresh
+  node said `default`, the guard held, and nothing was ever written again.
+  Measured over CDP by flipping the pointer media: the cursor comes back as a dot
+  with no name on it, over the decide button, permanently. This one was found by
+  reading the teardown rather than by using the page — but it was not *believed*
+  until the round trip was driven and watched.
+
+### What it cost
+
+One flag. Scroll (captured, so the demo's own panes count), resize, mutations
+(`data-cursor` exactly; `class`, `hidden` and insertions approximately, because
+the index panel opens by class and the exact filter missed it), the end of a
+transition or animation, and a held element whose box has gone empty. All of them
+only raise the flag; the work happens once, on the next frame, in the loop that
+was already running.
+
+Measured before choosing: `elementFromPoint` + `closest` costs 50–88 µs on this
+page, 0.5 % of a frame at worst — cheap, but 55× a rect read, which is why it is
+not simply done every frame. The flag also bounds the damage by construction:
+however noisy the sources get, this can never cost more than one hit test per
+frame, which is the number that was measured.
+
+And measured after, because a per-frame change in this repository is not allowed
+to be argued: the same scripted read of the whole page, mouse present and resting,
+three runs each, before and after.
+
+| | p50 | p95 | p99 | max | frames over 16.7 ms |
+|---|---|---|---|---|---|
+| before | 16.70 ms | 16.80 ms | 33.40 ms | 50.0 ms | 22.1 % |
+| after | 16.70 ms | 16.80 ms | 33.30 ms | 33.4 ms | 22.7 % |
+
+p95 is identical, and identical to the 16.8 ms PHASE 17 recorded. The only figures
+that move are the tail ones, and they move the *wrong* way for a regression story
+— the worse maximum is the run without the change. Nothing here is a cost.
+
+### Refuted along the way, including my own
+
+- **The voice buttons were not broken.** The markup toggles `hidden` across three
+  buttons, which the `data-cursor` observer would not see — so the fix looked
+  like it did not cover the case it was written for. It does: `voice.ts:167`
+  writes the attribute on the play button itself. Stated plainly because the
+  hypothesis was mine and it was wrong.
+- **The first staleness gate proved nothing.** It scrolled to 400, 1200, 3000 …,
+  passed at every offset, and never once put a control under the pointer. Its own
+  "this sweep has to say what it met" check caught that. It now aims the page so
+  a named control lands exactly on the resting pointer, and asserts it met one,
+  and crossed both grounds.
+- **The label gate passed on the broken code.** It sampled while the dot was still
+  travelling toward the aim point, where the label had not reached the edge yet.
+  It now waits for the cursor to arrive before it measures. A gate that reads a
+  value mid-flight is measuring the wrong instant, which is the third time this
+  log has recorded that lesson.
+- **WebKit was already correct.** It re-dispatches pointer events on scroll, so
+  the staleness was a Chromium and Firefox fault only. The gate is kept on all
+  three: it is the invariant that matters, not the engine that happened to break
+  it.
+
+Five gates, and every one of them was watched failing on the defect it is for
+before it was allowed to pass:
+
+- «names "approve" over a "default"; frames something the pointer is not on»
+- «18 px of the name is past the right edge»
+- «says "run" over a running automation, which wants "stop"»
+- a cursor that comes back «default/unnamed» after the pointer round trip
+- «auto__tab declares "vieww"» — the fifth is the cheap half of a check this
+  phase wishes had existed: every `data-cursor` in the rendered page has to be a
+  state the cursor knows, because `resolveState` falls back to `default` for
+  anything else. A typo does not throw and does not show; it just quietly stops
+  naming things. It was proved by putting a typo in `Automate.astro` and watching
+  the gate name it.
+
+Two of the five had to be rewritten before they were worth anything, which is
+recorded above rather than tidied away: the first passed while proving nothing,
+and the second passed on the broken code.
+
+### And one artefact that was mine, not the site's
+
+A full run reported **seventeen visual baselines failing at once**, all on the
+phone viewports. Nothing had touched them. The cause was that a second Playwright
+run had been started while the first was still going, to prove the typo gate —
+and `webServer` is `npm run build && npm run preview`, so the second run rebuilt
+`dist/` underneath the first one's preview server. The suite was photographing a
+site being replaced under it. Re-run alone: 71/71.
+
+`playwright.config.ts` already warns about the neighbouring version of this —
+"never reuse: a server left running from an earlier session serves a stale build"
+— and this is the same hazard from the other side. Two runs on one working tree
+share `dist/` no matter which ports they are given. Recorded because seventeen
+red baselines is exactly the sort of result that gets "fixed" by regenerating
+them, which would have written the artefact into the repository as the new truth.
+
+The whole suite green afterwards, and run in two clean halves after the artefact
+above: 60 files type-clean, 80 unit, contrast, 225 behavioural across the five
+engine projects with 10 skipped — the cursor gates skip themselves where there is
+no mouse, which is the correct answer on a phone — and 71 visual baselines
+pixel-identical.
+
+---
+
 ## OPEN ITEMS
 
 1. RU LCP is 2.6 s against the 2.5 s target; EN and UZ are inside budget.
@@ -1253,7 +1410,13 @@ where the page's feel actually changes. Recorded rather than quietly skipped.
     needs a Cloudflare Worker deployed against the owner's own Gemini key, per
     `worker/README.md`. Everything on this side is ready and turns on with one
     string. Deferred by the owner for now, deliberately.
-14. **The intro.** Asked to be "more wow"; untouched this phase.
+14. ~~**The intro.** Asked to be "more wow"; untouched this phase.~~ **Closed by
+    PHASE 21, and this entry was stale for a phase.** The sheet rules itself —
+    seven unequal hairlines drawn down the page under the operation, off
+    `data-intro`, which the inline head script sets before first paint, so the
+    ~600 ms that used to be an empty card outline is now the page preparing
+    itself. Measured at 700 ms: rules drawn, card still empty, which is exactly
+    the window that needed filling.
 15. ~~Thirteen of twenty-four reveals are RECEIVE, which is why the page reads as
     one gesture repeated.~~ **Half wrong, and corrected by reading them.** That
     was a count offered as evidence. Load's events genuinely arrive — it is the
@@ -1298,3 +1461,36 @@ where the page's feel actually changes. Recorded rather than quietly skipped.
 
     Standing lesson, now four times over: a probe that finds nothing has found
     nothing *about the probe* until the page has also been looked at.
+
+### Opened by PHASE 22
+
+20. **The cursor reads the start and the end of a transition, not the middle.**
+    A mutation says something began to move and `transitionend` says it arrived;
+    for the ~450 ms in between, what the cursor names is whatever was under the
+    pointer when the movement started. Nothing on this page needs the middle —
+    the index panel is the only thing that travels over a resting pointer, and it
+    is correct at both ends — and buying it would mean hit-testing every frame,
+    which is the 88 µs the whole flag arrangement exists to avoid. Named rather
+    than left to be discovered.
+22. **`journey.spec.ts:270` failed once, in a full suite run, and has not
+    repeated.** The first automations toggle was still `aria-pressed="true"` and
+    still `data-cursor="stop"` — both at their *initial* values — so that click's
+    handler did not run at all, rather than running twice or being undone. Not
+    reproduced since: 1 isolated run and 8 repeats on the same engine, all green,
+    and a second full suite. Deliberately not attributed to PHASE 22's change to
+    that handler, because no mechanism connects them — the change adds one
+    attribute write *after* the `aria-pressed` write inside the same handler, and
+    the observed failure is of the handler never being entered. Deliberately not
+    dismissed either. It is the second flake in this file that only appears under
+    a loaded full run, which is a hint about where to look: see item 10, which is
+    the same shape and still uncharacterised.
+
+21. **`data-cursor` is gated for spelling, not for truth.** The cheap half is
+    done — every declaration in the rendered page must be a state the cursor
+    knows, or it silently stops naming anything. The expensive half is not: that
+    the operation named is the operation that will happen. Two were checked by
+    hand this phase, and the kanban card really does drag (`product.ts:372`)
+    while the automations toggle really does toggle, which is how that lie was
+    caught. The other nineteen declarations are believed, not tested, and no
+    gate would have caught the automations one — it was spelled correctly and
+    meant the opposite.

@@ -8,10 +8,13 @@
  *
  * Constraints honoured:
  *  - fine pointers only; touch and coarse pointers never see it
- *  - transform-only, one rAF, no layout reads in the loop
+ *  - transform-only, one rAF; the loop reads layout only when the page has
+ *    told it something moved, never speculatively
  *  - pointer-events: none, so selection, inputs and links behave natively
  *  - the native cursor is kept everywhere it carries meaning (text, inputs)
  *  - no magnetic buttons
+ *  - and the one that governs all of it: IT IS NEVER WRONG. What it names is
+ *    what is under the pointer, whatever the page did to get there.
  */
 
 import { register, listen } from './lifecycle';
@@ -75,8 +78,76 @@ export function initCursor(labels: CursorLabels): () => void {
   let y = -100;
   let state: CursorState = 'default';
   /* The element the cursor currently has, if any. Held rather than re-resolved
-     per frame: the hit test belongs to pointermove and to the meaning watcher. */
+     per frame: the hit test runs when the pointer moves, and when the page says
+     it has moved something — never on spec. */
   let held: HTMLElement | null = null;
+
+  /*
+   * WHAT IS UNDER THE POINTER CHANGES WITHOUT THE POINTER MOVING.
+   *
+   * This module resolved the world on pointermove, and on `data-cursor` changing
+   * — which covers a control redefining itself, and nothing else. Everything the
+   * page does on its own was invisible to it, and all four of these were live:
+   *
+   *   Rest on the hero's call to action and scroll. The label went on saying
+   *   "Решить" and the frame went on chasing the button — measured at 11 901 px
+   *   above the viewport after a jump to #night, still framing it, still naming
+   *   an operation the reader was nowhere near.
+   *
+   *   Rest anywhere and let a control arrive under the pointer. 260 px of wheel
+   *   put the primary call to action under a cursor that said nothing at all, so
+   *   the one operation on the page that most needs naming could be clicked
+   *   unnamed.
+   *
+   *   Open the index over a resting pointer. The pointer is on a row of the
+   *   shift; the cursor has not noticed the panel exists.
+   *
+   *   And the one that shows: scroll the night band under a resting pointer and
+   *   the dot stays rgb(21,20,15) — ink on ink. `setGround` below exists for
+   *   exactly this, and it was only ever asked on pointermove, so the cursor
+   *   disappeared on the two sections it was written to survive.
+   *
+   * The settling argument is that the platform does not behave this way. `:hover`
+   * moves to a control that scrolls under a still mouse — measured, true — so the
+   * native `cursor: pointer` this replaced *would* have changed. Anything less is
+   * a regression against the thing it was put in front of.
+   *
+   * So: the page says when it may have moved, and the resolve happens once on the
+   * next frame. One `elementFromPoint` costs 50–88 µs here, 0.5 % of a frame at
+   * worst, and it is spent only on frames after something actually happened. The
+   * flag also bounds the damage by construction: however noisy the sources get,
+   * this can never cost more than one hit test per frame.
+   */
+  let dirty = false;
+  const invalidate = () => {
+    dirty = true;
+  };
+
+  /* Viewport and the label's own offsets, cached. The label's placement is
+     decided every frame and must not pay a layout read to do it. */
+  let vw = window.innerWidth;
+  let vh = window.innerHeight;
+  let offX = 11.2;
+  let offY = 10.4;
+  let labelW = 0;
+  let labelH = 0;
+  let flipX = false;
+  let flipY = false;
+  /* how close to the edge the label may come before it takes the other side */
+  const EDGE = 6;
+
+  /* The label's offset from the pointer lives in the stylesheet, in rem, so it
+     is read from there rather than duplicated as a number here. Once at build
+     and once per resize: when the label has taken the other side, its `left` is
+     `auto` and the previous reading stands. */
+  const measureOffsets = () => {
+    if (!labelNode) return;
+    const cs = getComputedStyle(labelNode);
+    const l = parseFloat(cs.left);
+    const t = parseFloat(cs.top);
+    if (Number.isFinite(l)) offX = l;
+    if (Number.isFinite(t)) offY = t;
+  };
 
   const build = () => {
     node = document.createElement('div');
@@ -107,6 +178,7 @@ export function initCursor(labels: CursorLabels): () => void {
 
     document.body.append(frame, node);
     document.documentElement.setAttribute('data-cursor-on', '');
+    measureOffsets();
   };
 
   const destroyNode = () => {
@@ -118,16 +190,76 @@ export function initCursor(labels: CursorLabels): () => void {
     frame = null;
     labelNode = null;
     held = null;
+    /*
+     * Everything the module remembers about the world goes with the nodes.
+     *
+     * This layer is torn down and rebuilt whenever the pointer stops being fine
+     * and becomes fine again — a mouse unplugged from a hybrid machine and
+     * plugged back in. `build()` starts the new node at `data-state="default"`,
+     * but these variables survived, and every setter here is guarded on "has it
+     * changed": `setState('approve')` when `state` already said `approve`
+     * returned without writing anything. Measured: after one coarse round trip
+     * the cursor comes back permanently mute — the dot over the decide button,
+     * `data-state` stuck at default, no name — for the rest of the session.
+     *
+     * The same applies to the ground, which would have come back believing it was
+     * still inverted, and to the label's measurements, which belong to a node
+     * that no longer exists.
+     */
+    state = 'default';
+    inverted = false;
+    labelW = 0;
+    labelH = 0;
+    flipX = false;
+    flipY = false;
+    dirty = false;
     document.documentElement.removeAttribute('data-cursor-on');
   };
 
   const loop = () => {
+    /* Something moved since the last frame; ask the page what is under the
+       pointer now. Once, here, rather than at every source that could have
+       caused it. */
+    if (dirty) {
+      dirty = false;
+      refresh();
+    }
+
     // exponential approach — fast enough that there is no perceived lag,
     // slow enough to read as one object rather than a jumping sprite
     const k = trail ? 0.28 : 1;
     x += (tx - x) * k;
     y += (ty - y) * k;
     if (node) node.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+
+    /*
+     * THE LABEL TAKES THE SIDE THAT FITS.
+     *
+     * It sat below and to the right of the dot always, which is fine until the
+     * pointer is near an edge — and the controls nearest the right edge of this
+     * page are the masthead's "Решить" and the language links, the two most
+     * likely to be aimed at. Measured: at 1152 the CTA cuts its own label by
+     * 15 px over its last 15 px, at 1024 by 20 px, and the Uzbek wording is half
+     * again longer than the Russian it was checked against. A cursor whose whole
+     * purpose is to name the operation must not put the name off the screen.
+     *
+     * Only the label moves. The dot stays exactly where the pointer is — this
+     * page has a comparison table and a kanban board on it, and the reader keeps
+     * every pixel of aim they had. It flips only if the other side actually
+     * fits, so a narrow window cannot push it off the opposite edge instead.
+     */
+    if (node && labelW) {
+      const wantX = x + offX + labelW > vw - EDGE && x - offX - labelW > EDGE;
+      const wantY = y + offY + labelH > vh - EDGE && y - offY - labelH > EDGE;
+      if (wantX !== flipX) {
+        flipX = wantX;
+        node.toggleAttribute('data-flip-x', wantX);
+      }
+      if (wantY !== flipY) {
+        flipY = wantY;
+        node.toggleAttribute('data-flip-y', wantY);
+      }
+    }
 
     /*
      * One rect read per frame, and only while something is actually held.
@@ -147,6 +279,13 @@ export function initCursor(labels: CursorLabels): () => void {
         frame.style.transform = `translate3d(${r.left.toFixed(1)}px, ${r.top.toFixed(1)}px, 0)`;
         frame.style.width = `${r.width.toFixed(1)}px`;
         frame.style.height = `${r.height.toFixed(1)}px`;
+      } else {
+        /* An empty box means the thing being framed has left the layout — hidden,
+           unmounted, or collapsed — while the cursor was holding it. Whatever did
+           that, the frame must not go on drawing a box around it at its last
+           remembered size, so the world is re-read instead. This costs nothing:
+           the rect is already in hand. */
+        invalidate();
       }
     }
     raf = requestAnimationFrame(loop);
@@ -189,6 +328,12 @@ export function initCursor(labels: CursorLabels): () => void {
     state = next;
     node.dataset.state = next;
     labelNode.textContent = next === 'default' ? '' : (labels[next] ?? '');
+    /* One measurement per change of wording, so the placement decision in the
+       loop is arithmetic on numbers already in hand. Nine words per locale, each
+       measured the first time it is used. */
+    const r = labelNode.getBoundingClientRect();
+    labelW = r.width;
+    labelH = r.height;
   };
 
   const onMove = (e: PointerEvent) => {
@@ -230,7 +375,36 @@ export function initCursor(labels: CursorLabels): () => void {
     setGround(under);
   };
 
-  const meaningWatcher = new MutationObserver(refresh);
+  /*
+   * The watcher answers two different questions, so it watches two things.
+   *
+   * `data-cursor` is the exact one: the contract is that the attribute *is* the
+   * meaning, so a control redefining itself is seen precisely. `class`, `hidden`
+   * and insertions are the approximate one — they are how something comes to be
+   * over the pointer that was not there before. The index panel is the measured
+   * case, and it opens by toggling a class, so the exact filter alone missed it.
+   *
+   * Approximate is affordable here because the callback only raises a flag: the
+   * work is done once on the next frame no matter how many records arrive. The
+   * module's own writes are skipped, or setting the label's text would invalidate
+   * the reading that produced it.
+   */
+  const meaningWatcher = new MutationObserver((records) => {
+    for (const m of records) {
+      const t = m.target;
+      if (node && (node === t || node.contains(t))) continue;
+      if (frame && (frame === t || frame.contains(t))) continue;
+      invalidate();
+      return;
+    }
+  });
+
+  const onResize = () => {
+    vw = window.innerWidth;
+    vh = window.innerHeight;
+    measureOffsets();
+    invalidate();
+  };
 
   const onLeave = () => {
     active = false;
@@ -252,12 +426,36 @@ export function initCursor(labels: CursorLabels): () => void {
     raf = requestAnimationFrame(loop);
     meaningWatcher.observe(document.body, {
       subtree: true,
+      childList: true,
       attributes: true,
-      attributeFilter: ['data-cursor'],
+      attributeFilter: ['data-cursor', 'class', 'hidden'],
     });
     disposers.push(
       () => meaningWatcher.disconnect(),
       listen(window, 'pointermove', onMove as EventListener, { passive: true }),
+      /* Capture, because the document is not the only thing that scrolls: the
+         demo's own panes do too, and a pane scrolling under a resting pointer is
+         the same lie as the page doing it. Scroll events do not bubble, so
+         listening on the document without capture would hear only the page. */
+      listen(document, 'scroll', invalidate, { passive: true, capture: true }),
+      listen(window, 'resize', onResize, { passive: true }),
+      /*
+       * A mutation says something *began* to move; these say it has arrived.
+       *
+       * The index panel is the case that needs both. It opens by transitioning
+       * its clip, so at the frame the class lands the panel does not cover the
+       * pointer yet and the reading taken there is of the page behind it — the
+       * cursor was left one step behind, naming the index only once the index
+       * had closed again. Escape-closing while the pointer rests on a row is the
+       * everyday version: the panel goes, and without this the label goes on
+       * offering to open a section that is no longer on the screen.
+       *
+       * The start and the end are read, not the middle: tracking a transition
+       * frame by frame would mean hit-testing every frame, which is the cost this
+       * whole arrangement exists to avoid. Nothing on this page needs the middle.
+       */
+      listen(document, 'transitionend', invalidate, { passive: true }),
+      listen(document, 'animationend', invalidate, { passive: true }),
       listen(document, 'pointerdown', onDown, { passive: true }),
       listen(document, 'pointerup', onUp, { passive: true }),
       listen(document, 'pointerleave', onLeave),

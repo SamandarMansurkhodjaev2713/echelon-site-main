@@ -1029,6 +1029,23 @@ html.js [data-reveal].is-in {
     background var(--dur-fast) var(--ease-standard);
 }
 
+/*
+ * Near an edge the label takes the other side — see the placement block in
+ * motion/cursor.ts, which decides this from the pointer position and the label's
+ * measured width. Deliberately placed *before* the shown-state rule below: both
+ * selectors weigh the same, so `transform: none` there still wins while the
+ * label is up, and this only supplies the direction it enters from.
+ */
+.cursor[data-flip-x] .cursor__label {
+  right: 0.7rem;
+  left: auto;
+  transform: translate3d(0.25rem, 0, 0);
+}
+.cursor[data-flip-y] .cursor__label {
+  bottom: 0.65rem;
+  top: auto;
+}
+
 .cursor:not([data-state='default']) .cursor__label {
   opacity: 1;
   transform: none;

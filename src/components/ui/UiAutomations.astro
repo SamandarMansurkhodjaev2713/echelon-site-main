@@ -25,12 +25,19 @@ const a = dict.ui.automations;
         <span class="ui-autorow__badge" data-active={a.active} data-paused={a.paused}>
           {a.active}
         </span>
+        {/* A switch is two operations, not one, and the contextual cursor reads
+            `data-cursor` to decide which one it announces. Every row here ships
+            running, so a fixed "run" had the cursor offering to start four
+            automations that were already going and would in fact be paused by
+            the click — the same lie the voice button carried until
+            `motion/voice.ts` began writing this attribute, in a second place.
+            `motion/product.ts` keeps it true from the first press onward. */}
         <button
           type="button"
           class={`ui-autorow__toggle${row.active ? '' : ' off'}`}
           aria-label={`${a.toggleLabel}: ${row.name}`}
           aria-pressed={row.active ? 'true' : 'false'}
-          data-cursor="run"
+          data-cursor={row.active ? 'stop' : 'run'}
         />
       </div>
     ))

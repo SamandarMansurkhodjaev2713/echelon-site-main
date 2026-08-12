@@ -387,6 +387,10 @@ function initAutomations(stage: HTMLElement) {
     const handler = () => {
       const off = toggle.classList.toggle('off');
       toggle.setAttribute('aria-pressed', String(!off));
+      /* The control has just become the other operation, and the contextual
+         cursor reads this attribute to decide what to announce. Left alone it
+         went on offering to run an automation it would pause. */
+      toggle.dataset.cursor = off ? 'run' : 'stop';
       badge.textContent = off ? pausedText : activeText;
       badge.classList.toggle('ui-autorow__badge--paused', off);
       store.remember('actions', 'toggled-automation');
