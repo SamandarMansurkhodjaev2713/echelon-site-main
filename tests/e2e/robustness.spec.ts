@@ -222,7 +222,7 @@ test('a fast scroll to the bottom and back leaves nothing half-drawn', async ({ 
    * ever produced and the reader is left looking at a blank band. That element
    * never receives `is-in`, and this still names it. Asking for `is-in` is the
    * sharper question, not the softer one — and the stylesheet's side of the
-   * bargain is covered by sixty-six visual baselines, which are captured with
+   * bargain is covered by seventy-one visual baselines, which are captured with
    * every reveal settled.
    */
   const stuck = () =>
@@ -364,4 +364,315 @@ test('the page depicts one shift, not two days', async ({ page }) => {
   }
   // one shift, plus the handover the next morning — under a day, end to end
   expect(samples[samples.length - 1]! - samples[0]!).toBeLessThan(24 * 60);
+});
+
+/*
+ * ============================================================
+ * NOTHING MAY BE CLIPPED OUT OF EXISTENCE
+ * ============================================================
+ *
+ * journey.spec.ts asks whether the *document* is wider than the window. That
+ * gate is real — inject a 3000 px block at 390 px and it fires, `overflow-x:
+ * clip` on the body notwithstanding — but it is silent about a box nested inside
+ * the page that hides its own content, and that is where the two worst faults
+ * this site has had both lived:
+ *
+ *   - the ledger's ECHELON column, off the right edge of a phone inside a
+ *     wrapper that scrolled sideways with nothing to say that it did;
+ *   - the demo window's composer and its three chips, 181 px under the fold of
+ *     a box whose CSS said `overflow: hidden` while product.ts scrolled it
+ *     anyway. The machine could move that box; the person could not. The vault
+ *     pane lost thirteen rows the same way, and no sweep of the live DOM finds
+ *     either, because five of the six panes are `hidden` and a walk goes
+ *     straight past them.
+ *
+ * Both shipped green. Two questions are asked below and only the first can be
+ * waived — an allowlist that could excuse lost text would excuse the very thing
+ * this exists to catch.
+ */
+
+/* Boxes that hide part of their content on purpose. Each entry is a mechanism,
+   not a tolerance: remove it and the element stops working rather than merely
+   looking different. */
+const CLIPS_ON_PURPOSE: Array<{ sel: string; axis: 'x' | 'y' | 'both'; why: string }> = [
+  {
+    sel: '.act',
+    axis: 'both',
+    why: 'the label swaps by translating a second span up from 105 %, and overflow:hidden is what parks it out of sight at rest. On x, at 360 px, the proactive card squeezes the button by 14 px of its own padding — no text is lost, and the second assertion is what holds it to that.',
+  },
+  {
+    sel: '.tape',
+    axis: 'y',
+    why: 'below 75rem the rail is a single line showing only the newest row; the others are stacked absolutely underneath it.',
+  },
+  {
+    sel: '.prod__stage',
+    axis: 'both',
+    why: 'the sheet leaves. On x they overhang so their shadows never show a cut edge, and overflow-clip-margin is set to exactly that overhang. On y the clip is the whole point of the rule: the leaves part upward and downward out of the stage, and unclipped the top one travels over the heading and the lead and reads as the text being erased. The only element ever outside this box is a decorative, aria-hidden, empty leaf — 182 px below it closed and 189 open — which is why the second assertion still holds here.',
+  },
+  {
+    sel: '.prod__stagewrap',
+    axis: 'x',
+    why: 'on a phone the stage goes edge to edge on a negative inline margin, and the wrap clips the bleed so it never reaches the document.',
+  },
+  {
+    sel: '.ui-content',
+    axis: 'y',
+    why: 'the demo window scrolls, and says so — the .is-more contract is asserted in the test below.',
+  },
+];
+
+const PANES = ['chat', 'graph', 'vault', 'kanban', 'automations', 'analytics'];
+
+/** Walk the page so lazy scenes build, then park the sheet fully open. */
+async function openTheProduct(page: Page) {
+  await page.evaluate(async () => {
+    const step = window.innerHeight * 0.6;
+    for (let y = 0; y < document.body.scrollHeight; y += step) {
+      window.scrollTo(0, y);
+      await new Promise((r) => setTimeout(r, 40));
+    }
+  });
+  await page.evaluate(() => {
+    const stage = document.querySelector<HTMLElement>('.prod__stage');
+    stage?.style.setProperty('--open', '1');
+    stage?.setAttribute('data-open', '');
+  });
+  await page.locator('#product').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(250);
+}
+
+const showPane = (page: Page, id: string) =>
+  page.evaluate((want) => {
+    for (const p of document.querySelectorAll<HTMLElement>('[data-prod-panel]')) {
+      p.hidden = p.dataset.prodPanel !== want;
+    }
+  }, id);
+
+test('no box hides its own content without a reason, and none hides text at all', async ({
+  page,
+}) => {
+  await page.goto('./?intro=off&motion=off');
+  await ready(page);
+  await openTheProduct(page);
+
+  const unexcused: string[] = [];
+  const lostText: string[] = [];
+
+  for (const [w, h] of [
+    [360, 800],
+    [390, 844],
+    [834, 1112],
+    [1440, 900],
+  ] as const) {
+    await page.setViewportSize({ width: w, height: h });
+    await page.waitForTimeout(200);
+
+    /* The document is swept once per viewport; after that only the demo subtree
+       is swept again per pane. Sweeping all of it six times over instead means
+       twenty-four full-document getComputedStyle walks per viewport, which is
+       minutes of work spent re-measuring sections that no pane switch can move
+       — and on a machine whose compositor is already marginal, load of that
+       shape is what turns a green suite red for reasons that are not the code's. */
+    const sweeps = [
+      { where: `${w}px`, root: null as string | null, pane: 'chat' },
+      ...PANES.map((p) => ({ where: `${w}px, ${p} pane`, root: '.prod__stage', pane: p })),
+    ];
+
+    for (const sweep of sweeps) {
+      await showPane(page, sweep.pane);
+      /* two frames, not a stopwatch: waiting on the frames the layout is
+         actually settled in is both quicker and less of a guess */
+      await page.evaluate(
+        () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
+      );
+
+      const found = await page.evaluate((rootSel: string | null) => {
+        const clipped: Array<{ sel: string; axis: string; by: number; text: string }> = [];
+        const lost: Array<{ sel: string; host: string; text: string }> = [];
+        const CLIPS = ['hidden', 'clip'];
+
+        const name = (el: Element) => {
+          const cls =
+            typeof el.className === 'string' && el.className.trim()
+              ? '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.')
+              : '';
+          return el.tagName.toLowerCase() + (el.id ? `#${el.id}` : '') + cls;
+        };
+
+        const root = rootSel ? document.querySelector(rootSel) : document.documentElement;
+        if (!root) return { clipped, lost };
+        /* the root itself is a box like any other, and querySelectorAll omits it */
+        const within = [root, ...root.querySelectorAll('*')];
+
+        /* Resolved once per element and kept. The ancestor walk below asks for
+           the same handful of parents once per text leaf per axis, and on the
+           whole-document sweep that is thousands of redundant resolutions —
+           enough to make this the second most expensive test in the suite. */
+        const seen = new Map<Element, CSSStyleDeclaration>();
+        const styleOf = (el: Element) => {
+          let v = seen.get(el);
+          if (!v) {
+            v = getComputedStyle(el);
+            seen.set(el, v);
+          }
+          return v;
+        };
+
+        for (const el of within) {
+          const cs = styleOf(el);
+          if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+          const r = el.getBoundingClientRect();
+          /* 1 px boxes are sr-only text, not content */
+          if (r.width <= 2 || r.height <= 2) continue;
+
+          for (const axis of ['x', 'y'] as const) {
+            const ov = axis === 'x' ? cs.overflowX : cs.overflowY;
+            if (ov === 'visible') continue;
+            /* A single-line ellipsis is a truncation that announces itself: the
+               reader can see the sentence was cut, which is the whole
+               difference between this and a column parked off the edge of a
+               phone. The vault's rows are the case in hand — they clip up to
+               108 px of a summary, draw the ellipsis, and carry the untruncated
+               string in data-summary for the card the row opens. Exempt as a
+               rule rather than by class name, so the next one is covered too. */
+            if (axis === 'x' && cs.textOverflow === 'ellipsis') continue;
+            const by =
+              axis === 'x' ? el.scrollWidth - el.clientWidth : el.scrollHeight - el.clientHeight;
+            if (by <= 1) continue;
+            clipped.push({
+              sel: name(el),
+              axis,
+              by,
+              text: (el.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 50),
+            });
+          }
+
+        }
+
+        /*
+         * Question two, and this one cannot be waived: text a reader has no way
+         * of getting to.
+         *
+         * Per axis, the *nearest* ancestor that establishes an overflow is the
+         * one that decides. If it scrolls, the text is reachable and the walk
+         * stops there; only if it clips is the text gone. Asking every clipping
+         * ancestor independently instead — which is the obvious way to write
+         * this, and the way it was written first — reports the composer as lost
+         * for no better reason than being scrolled out of view of the window
+         * frame drawn around its own scroller, and a gate that cries about
+         * working code is a gate that gets switched off.
+         */
+        for (const kid of within) {
+          if (kid.children.length > 0) continue;
+          const t = (kid.textContent ?? '').trim();
+          if (!t) continue;
+          const kcs = styleOf(kid);
+          if (kcs.display === 'none' || kcs.visibility === 'hidden') continue;
+          const kr = kid.getBoundingClientRect();
+          /* a 1 px box is text for a screen reader, which is reached by being
+             read aloud rather than by being scrolled to */
+          if (kr.width <= 2 || kr.height <= 2) continue;
+
+          for (const axis of ['x', 'y'] as const) {
+            let host = kid.parentElement;
+            while (host) {
+              const hcs = styleOf(host);
+              const ov = axis === 'x' ? hcs.overflowX : hcs.overflowY;
+              if (ov === 'visible') {
+                host = host.parentElement;
+                continue;
+              }
+              if (!CLIPS.includes(ov)) break; // auto or scroll — reachable
+              const hr = host.getBoundingClientRect();
+              const bt = hr.top + parseFloat(hcs.borderTopWidth);
+              const bl = hr.left + parseFloat(hcs.borderLeftWidth);
+              const outside =
+                axis === 'y'
+                  ? kr.top >= bt + host.clientHeight - 0.5 || kr.bottom <= bt + 0.5
+                  : kr.left >= bl + host.clientWidth - 0.5 || kr.right <= bl + 0.5;
+              if (outside) {
+                lost.push({
+                  sel: name(kid),
+                  host: name(host),
+                  text: t.replace(/\s+/g, ' ').slice(0, 50),
+                });
+              }
+              break;
+            }
+          }
+        }
+
+        return { clipped, lost };
+      }, sweep.root);
+
+      const where = sweep.where;
+      for (const c of found.clipped) {
+        const parts = c.sel.split(/(?=[.#])/);
+        const excused = CLIPS_ON_PURPOSE.some(
+          (a) => (a.axis === 'both' || a.axis === c.axis) && parts.includes(a.sel),
+        );
+        if (!excused) {
+          unexcused.push(`${where}: ${c.sel} hides ${c.by}px on ${c.axis} — "${c.text}"`);
+        }
+      }
+      for (const l of found.lost) {
+        lostText.push(`${where}: "${l.text}" is entirely outside ${l.host}`);
+      }
+    }
+  }
+
+  /* Reported separately, because they fail for different reasons and want
+     different fixes: the first is a box nobody has justified, the second is
+     words a reader cannot get to by any means. */
+  expect([...new Set(unexcused)], 'a box hides content and is not in CLIPS_ON_PURPOSE').toEqual([]);
+  expect([...new Set(lostText)], 'text sits outside a box the reader cannot scroll').toEqual([]);
+});
+
+test('the demo window says when it has more below', async ({ page }) => {
+  /* `.ui-content` earns its place on the allowlist above only while this holds.
+     A scroller that does not advertise itself is the ledger fault again: on a
+     phone, content reachable only by a gesture nothing suggests is content that
+     does not exist. Scrollbars do not count — a touch device draws none until
+     the scroll is already under way. */
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('./?intro=off&motion=off');
+  await ready(page);
+  await openTheProduct(page);
+
+  const read = () =>
+    page.evaluate(() => {
+      const c = document.querySelector<HTMLElement>('.ui-content')!;
+      return {
+        remaining: Math.round(c.scrollHeight - c.scrollTop - c.clientHeight),
+        says: c.classList.contains('is-more'),
+      };
+    });
+  const settle = () =>
+    page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+
+  await showPane(page, 'chat');
+  await settle();
+  const top = await read();
+  expect(top.remaining, 'the chat pane no longer overflows at 390 px').toBeGreaterThan(1);
+  expect(top.says, 'more sits below and the window does not say so').toBe(true);
+
+  await page.evaluate(() => {
+    const c = document.querySelector<HTMLElement>('.ui-content')!;
+    c.scrollTop = c.scrollHeight;
+  });
+  await settle();
+  const bottom = await read();
+  expect(bottom.remaining).toBeLessThanOrEqual(1);
+  expect(
+    bottom.says,
+    'nothing is below and the window still fades — which dims the composer',
+  ).toBe(false);
+
+  /* A pane that fits must not claim otherwise. */
+  await showPane(page, 'kanban');
+  await settle();
+  const fits = await read();
+  expect(fits.remaining).toBeLessThanOrEqual(1);
+  expect(fits.says, 'a pane that fits still says it has more below').toBe(false);
 });

@@ -60,12 +60,61 @@ export function initProduct(): ((id: string) => void) | undefined {
     register(() => n.removeEventListener('click', handler));
   }
 
+  initScrollHint(stage);
   initChat(stage);
   initVault(stage);
   initKanban(stage);
   initAutomations(stage);
 
   return select;
+}
+
+/* ---------- the scroll hint ---------- */
+/*
+ * The window's content box scrolls rather than clips (see `.ui-content` in
+ * ui.css). On a pointer device the thin scrollbar says so. On a touch device
+ * scrollbars are not drawn until a scroll is already under way, which is too
+ * late to be an affordance — and this site has been here before: the ledger's
+ * off-screen column was reachable by a sideways drag nothing advertised, and on
+ * a phone that is not content that is hard to reach, it is content that does
+ * not exist. So the box fades its bottom edge while, and only while, something
+ * is still underneath it.
+ */
+function initScrollHint(stage: HTMLElement) {
+  const box = stage.querySelector<HTMLElement>('.ui-content');
+  if (!box) return;
+
+  let queued = false;
+  const sync = () => {
+    queued = false;
+    box.classList.toggle('is-more', box.scrollHeight - box.scrollTop - box.clientHeight > 1);
+  };
+  /* Every source below can fire in bursts — a scroll, a pane swap, six bubbles
+     arriving in sequence — and the answer is a layout read. Coalesce to one
+     read per frame rather than one per event. */
+  const queue = () => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(sync);
+  };
+
+  listen(box, 'scroll', queue, { passive: true });
+
+  /* The height changes without a scroll: panes swap, the thread grows, the
+     fonts land and reflow everything under them. */
+  const ro = new ResizeObserver(queue);
+  ro.observe(box);
+  const mo = new MutationObserver(queue);
+  mo.observe(box, { childList: true, subtree: true, attributeFilter: ['hidden'] });
+  register(() => {
+    ro.disconnect();
+    mo.disconnect();
+  });
+
+  /* Synchronously, not queued: the first state has to be right in the frame the
+     page is first painted in, or a screenshot taken before the rAF lands
+     records a box that had more below it and did not say so. */
+  sync();
 }
 
 /* ---------- scripted chat ---------- */

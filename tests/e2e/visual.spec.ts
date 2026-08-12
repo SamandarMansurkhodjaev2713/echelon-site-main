@@ -45,6 +45,17 @@ const SCENES = [
   { id: 'teach', at: 0.15 },
   { id: 'day', at: 0.2 },
   { id: 'product', at: 0.55 },
+  /*
+   * The same section again, parked far enough down to put the *foot* of the demo
+   * window in frame. `product` at 0.55 catches its head, and on a phone the
+   * window is taller than the viewport, so everything below the assistant's
+   * reply — the chips, the composer, and the fade that says the box has more
+   * under it — fell outside every shot. That is not a small omission: the
+   * composer and the chips are exactly what was missing on a phone until
+   * `.ui-content` stopped clipping and started scrolling, and the fix would have
+   * shipped with no pixel anywhere looking at it.
+   */
+  { id: 'product-foot', el: 'product', at: 0.72 },
   { id: 'memory', at: 0.2 },
   { id: 'automate', at: 0.5 },
   { id: 'client', at: 0.25 },
@@ -170,7 +181,8 @@ test.describe('visual', () => {
           await ready(page);
           if (scene.id === 'handover') await fillReport(page);
           await freeze(page);
-          await park(page, scene.id, scene.at);
+          /* a scene may frame a second view of a section it does not name */
+          await park(page, ('el' in scene && scene.el) || scene.id, scene.at);
 
           /* Masked, not screenshotted: a canvas paints its own frames, the
              session clock is real time, and the handover report's contents

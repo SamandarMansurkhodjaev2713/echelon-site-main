@@ -798,6 +798,138 @@ sixty-six visual baselines, every one captured with the reveals settled.
 
 ---
 
+## PHASE 18 — The box the machine could scroll and the person could not ✅
+
+Opened by going after two findings this log had left lying around, and both of
+them turned out to be wrong. What the measuring found instead was worse than
+either.
+
+### Two claims, refuted
+
+**The horizontal-overflow gates were suspected of being blind.** `body` carries
+`overflow-x: clip`, which propagates to the viewport, and three tests assert
+`documentElement.scrollWidth <= clientWidth + 1`. If the clip suppressed
+scrollable width, none of them could ever fail. Tested rather than reasoned
+about: a 3000 px block injected into the body at 390 px gives `scrollWidth` 3000
+against `clientWidth` 390, and the assertion fires. The gates are real. Worth
+recording because "your overflow test cannot fail" is exactly the kind of finding
+that sounds profound and is false.
+
+**`bound__tasks` was logged in 855d55b as clipping 12 px of its own content.** It
+clips nothing. Its computed `overflow-x` is `visible`; the gate row spans
+6.39–383.61 inside a 390 px viewport and its text sits on the 18.4 px gutter. The
+12 px is the signal wash's deliberate bleed — `padding-inline` +12, `margin-inline`
+−12 — and the report came from reading `scrollWidth − clientWidth` without asking
+whether anything actually clips. Third instance of the same error, after the −2 px
+and the reveal test: a question about a state, answered by measuring a frame.
+
+### What was actually wrong
+
+`product.ts` calls `scrollIntoView()` on every bubble it appends to the demo
+chat. `.ui-content`, the box it scrolls, was `overflow: hidden`. **That box was
+being scrolled by the program and could not be scrolled by the person**, and the
+two do not have to agree: `overflow: hidden` permits a programmatic scroll and
+denies a manual one. Measured after three chips: a 1280 laptop holding 101 px
+below the fold, and a 390 phone parked at `scrollTop` 210 with 175 px still under
+it, none of it reachable by hand.
+
+At rest it was worse, and it was not confined to the chat:
+
+| pane | 360 | 390 | 834 | 1280/1440 |
+|---|---|---|---|---|
+| chat | 212 px | 181 px | 37 px | — |
+| vault | 314 px | 296 px | — | — |
+
+In the chat that hid all three suggestion chips — the demo's only interactive
+affordance — and the composer. **A chat window with no input box reads as a
+screenshot**, which is the one thing this section cannot afford, its whole claim
+being that this is the real product and not a picture of one. It is the same
+fault cf16eee fixed for `.ui-side`, in the box next to it, left standing. The
+vault lost thirteen rows. graph, kanban, automations and analytics were clean.
+
+`.ui-content` is now `overflow-y: auto` with a thin scrollbar; `overflow-x` stays
+clipped, because a horizontal scrollbar inside a demo window reads as the page's
+own in the wrong place, and nothing there is ever wider than the box. Verified
+across 48 pane × viewport × locale combinations: nothing unreachable anywhere,
+and 1280/1440 unchanged.
+
+*A scrollbar is not an affordance on a phone*, because a touch device draws none
+until the scroll is already under way — and this site has been here before, with
+the ledger's column reachable by a sideways drag nothing advertised. So the box
+fades its bottom edge while, and only while, something is under it, keyed off the
+measured remainder rather than off a scroll having happened. A permanent fade —
+which is what `.ui-side` ships — would dim whatever the scroll ends on, and in
+the chat that is the composer, and a dimmed composer reads as a disabled one.
+
+### Five of the six panes are `hidden`, and a sweep walks straight past them
+
+The first sweep of the live DOM found the chat and reported six containers. It
+could not see the vault, because a pane that is not selected is `hidden`, and
+`display: none` is invisible to `getComputedStyle` arithmetic. Only cycling all
+six panes found the worse of the two faults. Any audit of this page that does not
+drive its own controls is reporting on a sixth of the product.
+
+### The gate
+
+Two questions in `robustness.spec.ts`, and only the first can be waived.
+
+1. **A box that hides its own content must say why.** `CLIPS_ON_PURPOSE` carries
+   five entries, each a mechanism rather than a tolerance — the `.act` label
+   swap, the tape's one-line rail, the sheet leaves on both axes, the stage's
+   phone bleed, and `.ui-content` itself, which is admitted only against the
+   contract in (3). Plus one general rule: a single-line `text-overflow:
+   ellipsis` is a truncation that announces itself, which is what separates the
+   vault's summaries — cut by up to 108 px, drawn with an ellipsis, and carrying
+   the full string in `data-summary` for the card the row opens — from a column
+   parked off the edge of a phone.
+2. **No text may sit entirely outside a box the reader cannot scroll.** No
+   allowlist; an exemption that could excuse lost text would excuse the thing
+   this exists to catch. Per axis the *nearest* overflow-establishing ancestor
+   decides: if it scrolls the text is reachable, and only if it clips is the text
+   gone. Written the obvious way first — asking every clipping ancestor
+   independently — it reported the composer as lost for being scrolled out of
+   view of the window frame around its own scroller, and a gate that cries about
+   working code is a gate that gets switched off.
+3. **The demo window says when it has more below.** On at the top, off at the
+   bottom, off on a pane that fits.
+
+Proven able to fail, three times: reverted to `overflow: hidden`, it names the
+three chips, the composer and the thirteen vault rows — 40 findings.
+
+Building it found a sixth container none of the hand sweeps had: `.prod__stage`
+clips on **y** as well as x, and only once the sheet is parted. That is the
+mechanism — unclipped, the top leaf travels over the heading and reads as the
+text being erased — and the only thing ever outside that box is a decorative,
+aria-hidden, empty leaf.
+
+### The fade had no pixel looking at it
+
+All 71 baselines passed unchanged after the fix, which was the wrong kind of good
+news. The product baselines are viewport-height shots parked at 0.55, and on a
+phone the demo window is taller than the viewport, so its foot — the chips, the
+composer, and the new fade — fell below every frame. A visible change had shipped
+into a blind spot. `product-foot` parks the same section at 0.72; five new
+baselines, 71 in all, and on desktop that shot covers the composer, the chips and
+the lower half of the app sidebar, none of which any pixel had protected before.
+
+### What was run, and what was not
+
+Types clean, 80 unit tests, 71 visual baselines twice consecutively, the full
+chromium and mobile projects at 42/42, and both new gates confirmed on chromium,
+firefox and webkit.
+
+The five-project matrix was **not** run to completion here, and the reason is the
+one recorded above under RUNNING THE SUITE LOCALLY. As the session went on the
+same tests slowed from 30 s to over a minute and a mobile-small run came back
+with 18 failures; `rotating a phone keeps the page intact` timed out at 45 s in
+that run and passes in **3.2 s** run alone. That is the workstation, not the
+page, and pushing it further is how the previous session ended. The gate's own
+cost was cut on the way past — full-document sweeps once per viewport instead of
+once per pane, computed styles memoised, frames waited on instead of stopwatches
+— taking it from 24 s to 10 s. CI runs the matrix on Linux and is the authority.
+
+---
+
 ## OPEN ITEMS
 
 1. RU LCP is 2.6 s against the 2.5 s target; EN and UZ are inside budget.
@@ -822,7 +954,7 @@ sixty-six visual baselines, every one captured with the reveals settled.
    obvious-looking remote, wearing different clothes. Ask it by name:
    `gh run list -R SamandarMansurkhodjaev2713/echelon-site-main`.
 6. **The visual baselines cannot pass on the CI runner.** Playwright puts the
-   platform in the snapshot file name, so the 66 `…-visual-win32.png` files have no
+   platform in the snapshot file name, so the 71 `…-visual-win32.png` files have no
    `…-visual-linux.png` counterparts and `ubuntu-latest` would fail every one of
    them as a missing snapshot — which, since `test` gates `build` and `build` gates
    `deploy`, means nothing would ever deploy. Three ways out, and choosing between
@@ -846,3 +978,24 @@ sixty-six visual baselines, every one captured with the reveals settled.
 9. ~~The voice tape reads as an unfilled form before anything has been played.~~
    **Closed by PHASE 17** — the box opens when the tape has carried something; at
    rest only the baseline is drawn.
+10. **`journey.spec.ts:54` asserts a state that is gone by the time it looks.**
+    `expect(html).toHaveAttribute('data-intro', '')` is an assertion about the
+    intro *while it is running*, with no tolerance, so on a machine that gets
+    ahead of the runner it fails with Playwright's unhelpful "serializes to the
+    same string". Seen once in four chromium runs on 12 Aug. CI's `retries: 1`
+    absorbs it, which is why it has never been seen there. Logged rather than
+    patched: it is unrelated to the fault PHASE 18 was fixing, and re-timing an
+    assertion that has not been characterised is the same move this log has had
+    to undo three times. Characterise it first, then fix it.
+11. **`.ui-side` still fades permanently.** PHASE 18 gave `.ui-content` a fade
+    that is present only while there is more below, precisely because a standing
+    fade dims whatever the scroll ends on. The sidebar next to it — whose
+    22 px this borrowed — still carries the unconditional `mask-image` it was
+    given in cf16eee, so its last item is dimmed even once you have reached it.
+    Smaller stakes than the composer, and the same argument.
+12. **The demo's scrolled-to-bottom state has no baseline.** `product-foot`
+    covers the fade at rest; the composer-visible, fade-absent state is a
+    *state*, not a scroll offset, so it is gated behaviourally instead, by
+    "the demo window says when it has more below". That split is deliberate and
+    consistent with how the core's colours are gated, but it is worth naming:
+    no pixel checks what the bottom of that window looks like.

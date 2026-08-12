@@ -203,14 +203,44 @@
   padding-inline: 3px;
 }
 
+/*
+ * A scroll container, not a clip.
+ *
+ * `product.ts` calls scrollIntoView() on every bubble it appends, so this box
+ * was already being scrolled — by the program. `overflow: hidden` permits that
+ * and denies it to the person, and the two do not have to agree: after three
+ * chips a 1280 laptop held 101 px below the fold, and a 390 phone sat parked at
+ * scrollTop 210 with 175 px still under it, none of it reachable by hand.
+ *
+ * At rest on a phone it cost the chat its three chips and its composer — and a
+ * chat window with no input box reads as a screenshot, which is the one thing
+ * this section cannot afford — and cost the vault thirteen of its rows.
+ * Measured, per pane: chat 212 px at 360 and 181 at 390, vault 314 and 296,
+ * chat 37 px on an 834 tablet; nothing at 1280 or 1440, so the wide layouts are
+ * unchanged. graph, kanban, automations and analytics were already clean.
+ *
+ * y scrolls. x stays clipped, because a horizontal scrollbar inside a demo
+ * window reads as the page's own scrollbar in the wrong place, and nothing here
+ * is ever wider than the box — asserted rather than assumed, in journey.spec.ts.
+ */
 .ui-content {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+/* The fade says "there is more below" and says it only while that is true. A
+   permanent one would dim whatever the scroll ends on — in the chat that is the
+   composer, and a dimmed composer reads as a disabled one. 22 px is the
+   sidebar's number, for the same reason: the last row stays legible. */
+.ui-content.is-more {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent);
 }
 
 /* — Chat — */
