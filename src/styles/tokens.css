@@ -196,7 +196,11 @@
   --signal-edge: rgba(226, 103, 63, 0.3);
   --rule: var(--rule-inv);
   --rule-soft: var(--rule-inv-soft);
-  --rule-strong: #56534a;
+  /* 3.42:1 on --paper-ink. Was #56534a, which is 2.40 — under the 3:1 a
+     functional border owes, on a band that has shipped since PHASE 16. Nothing
+     caught it because the inverted scope was only ever checked for its type;
+     scripts/contrast.mjs now asks about its borders too. */
+  --rule-strong: #6e6a5f;
 
   /* A dark band paints its ground fully and keeps it. The machine still surfaces
      here — more strongly than anywhere else on the page — but through the band's

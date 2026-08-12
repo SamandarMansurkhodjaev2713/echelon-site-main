@@ -10,42 +10,26 @@
  *   - the recorded product voice (RU/EN mp3)
  *   - the live Gemini session, dormant until a worker URL is configured
  *
- * Both feed `getLevel` and `getSpectrum`. When WebAudio is unavailable or an
- * autoplay policy blocks the context, the audio still plays and both fall back
- * to a steady trace: the section degrades to the tape it was before, rather than
- * to a dead canvas.
+ * Both feed `getLevel`. When WebAudio is unavailable or an autoplay policy
+ * blocks the context, the audio still plays and it falls back to a steady trace:
+ * the section degrades to the tape it was before, rather than to a dead canvas.
  *
  * The tape draws ~90 ticks of rolling level history and stays underneath the
- * core — it is the history of the voice where the core is its present shape, and
- * it is the part that survives with no analyser at all.
+ * sphere — it is the history of the voice where the sphere is its present shape,
+ * and it is the part that survives with no analyser at all.
+ *
+ * Amplitude is the whole interface. An earlier core resolved 24 frequency bands
+ * into its latitudes; the product's sphere does not do that — it answers
+ * loudness with its whole body — and a spectrum plumbed in here would be the
+ * site inventing behaviour the thing it depicts does not have.
  */
 
 import { register, raf, listen } from './lifecycle';
 import { prefersReducedMotion } from './media';
 import { VOICE_WORKER_URL, VOICE_SESSION_MAX_S } from '../lib/config';
-import { initCore, CORE_BANDS, type CorePhase, type CoreEntity } from './core';
+import { initSphere, type SpherePhase } from '../lib/sphere';
 
 const TICKS = 90;
-
-/**
- * Bucket an analyser's bins into the core's bands.
- *
- * Only the bottom of the spectrum is used. At a 48 kHz context the upper half of
- * the bins is above ~12 kHz, which for speech is silence — spreading the bands
- * over the whole range would leave most of the sphere permanently still and make
- * the core look broken rather than quiet.
- */
-function fillBands(analyser: AnalyserNode, bins: Uint8Array, out: Float32Array): void {
-  analyser.getByteFrequencyData(bins as Uint8Array<ArrayBuffer>);
-  const used = Math.max(CORE_BANDS, Math.floor(bins.length * 0.42));
-  const per = Math.max(1, Math.floor(used / CORE_BANDS));
-  for (let b = 0; b < CORE_BANDS; b++) {
-    let sum = 0;
-    const start = b * per;
-    for (let i = 0; i < per; i++) sum += bins[start + i] ?? 0;
-    out[b] = sum / (per * 255);
-  }
-}
 
 export function initVoice(): () => void {
   const root = document.querySelector<HTMLElement>('[data-voice]');
@@ -59,10 +43,10 @@ export function initVoice(): () => void {
   const stateEl = root.querySelector<HTMLElement>('[data-voice-state]');
   const msg = (k: string) => root.dataset[k] ?? '';
 
-  /* The phase drives both the status line and the core's posture, so they can
+  /* The phase drives both the status line and the sphere's posture, so they can
      never describe different things at the same moment. */
-  let phase: CorePhase = 'idle';
-  const setState = (text: string, next: CorePhase = 'idle') => {
+  let phase: SpherePhase = 'idle';
+  const setState = (text: string, next: SpherePhase = 'idle') => {
     phase = next;
     if (stateEl) stateEl.textContent = text;
   };
@@ -72,8 +56,6 @@ export function initVoice(): () => void {
   const history = new Float32Array(TICKS);
   let level = 0;
   let getLevel: () => number = () => 0;
-  /** Fills `out` with CORE_BANDS energies, low → high. Silent by default. */
-  let getSpectrum: (out: Float32Array) => void = (out) => out.fill(0);
   let dpr = 1;
   let w = 0;
   let h = 0;
@@ -133,27 +115,18 @@ export function initVoice(): () => void {
     ctx.globalAlpha = 1;
   };
 
-  /* ---------- the core ----------
-     Given the same two pull functions the tape uses, so the drawn sphere and the
-     drawn tape are always describing the same audio. */
+  /* ---------- the sphere ----------
+     The product's own ConstellationSphere, given the same level function the
+     tape reads, so the object and its history always describe the same audio.
+     It takes amplitude only: the sphere's deformation in the app is a whole-body
+     response to loudness, not a spectrum analyser, and resolving bands into it
+     here would be the site claiming something the product does not do. */
   const coreCanvas = root.querySelector<HTMLCanvasElement>('[data-voice-core]');
   if (coreCanvas) {
-    let entities: CoreEntity[] = [];
-    try {
-      const parsed: unknown = JSON.parse(root.dataset.entities ?? '[]');
-      if (Array.isArray(parsed)) entities = parsed as CoreEntity[];
-    } catch {
-      /* a malformed list must not take the whole section down */
-    }
-    initCore(
-      coreCanvas,
-      {
-        level: () => getLevel(),
-        spectrum: (out) => getSpectrum(out),
-        phase: () => phase,
-      },
-      entities,
-    );
+    initSphere(coreCanvas, {
+      level: () => getLevel(),
+      phase: () => phase,
+    });
   }
 
   const reduced = prefersReducedMotion();
@@ -180,14 +153,12 @@ export function initVoice(): () => void {
   let actx: AudioContext | null = null;
   let analyser: AnalyserNode | null = null;
   let buf: Uint8Array<ArrayBuffer> | null = null;
-  let bins: Uint8Array<ArrayBuffer> | null = null;
 
   const stopPlayback = () => {
     if (!audio) return;
     audio.pause();
     audio.currentTime = 0;
     getLevel = () => 0;
-    getSpectrum = (out) => out.fill(0);
     if (playLabel) playLabel.textContent = root.dataset.labelPlay ?? '';
     /* The button's meaning is carried by `data-cursor`, not inferred from its
        text, because the contextual cursor reads exactly that attribute. Leaving
@@ -213,7 +184,6 @@ export function initVoice(): () => void {
         analyser = actx.createAnalyser();
         analyser.fftSize = 512;
         buf = new Uint8Array(new ArrayBuffer(analyser.frequencyBinCount));
-        bins = new Uint8Array(new ArrayBuffer(analyser.frequencyBinCount));
         src.connect(analyser);
         analyser.connect(actx.destination);
       } catch {
@@ -236,11 +206,6 @@ export function initVoice(): () => void {
         sum += x * x;
       }
       return Math.min(1, Math.sqrt(sum / buf.length) * 2.6);
-    };
-    getSpectrum = (out) => {
-      if (!audio || audio.paused) return out.fill(0);
-      if (!analyser || !bins) return out.fill(0.3);
-      fillBands(analyser, bins, out);
     };
     if (playLabel) playLabel.textContent = root.dataset.labelStop ?? '';
     if (playBtn) playBtn.dataset.cursor = 'stop';
@@ -266,7 +231,6 @@ export function initVoice(): () => void {
     live?.stop();
     live = null;
     getLevel = () => 0;
-    getSpectrum = (out) => out.fill(0);
     talkBtn?.removeAttribute('hidden');
     playBtn?.removeAttribute('hidden');
     stopBtn?.setAttribute('hidden', '');
@@ -318,10 +282,6 @@ export function initVoice(): () => void {
         },
       );
       getLevel = () => Math.min(1, (live?.getLevel() ?? 0) * 2.6);
-      // The live path reports amplitude, not spectrum. The core therefore
-      // breathes as a whole instead of resolving bands — a truthful degradation
-      // rather than a fabricated equaliser.
-      getSpectrum = (out) => out.fill(Math.min(1, (live?.getLevel() ?? 0) * 2.1));
       killTimer = window.setTimeout(endLive, VOICE_SESSION_MAX_S * 1000);
     } catch (err) {
       setState(

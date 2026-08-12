@@ -86,6 +86,15 @@ const { dict, locale } = Astro.props;
     /* the header is a rule on paper, not a floating glass bar */
     backdrop-filter: saturate(1.1) blur(8px);
     -webkit-backdrop-filter: saturate(1.1) blur(8px);
+    /* Crossing into a dark band swaps the whole token set under this element
+       (see the observer in the script). Transitioning the three resolved colours
+       turns that swap into the bar passing through a doorway rather than into a
+       cut — and it is deliberately slower than --dur-normal, because the thing
+       actually moving is the page behind it, not the bar. */
+    transition:
+      background-color var(--dur-expressive) var(--ease-standard),
+      border-color var(--dur-expressive) var(--ease-standard),
+      color var(--dur-expressive) var(--ease-standard);
   }
 
   .masthead__row {
@@ -432,6 +441,62 @@ const { dict, locale } = Astro.props;
       timer = window.setTimeout(build, 180);
     });
     register(() => window.clearTimeout(timer));
+  }
+
+  /*
+   * The masthead over a dark band.
+   *
+   * The header is a sticky bar of 88 % paper with ink type on it, and it stayed
+   * exactly that while the night and voice sections — near-black, full width —
+   * scrolled underneath. What a reader saw was a cream slab lying across the
+   * darkest part of the page with the headline cut in half behind it: not a
+   * header that belongs to the page, a foreign object parked on top of it.
+   *
+   * The fix is one class rather than a second set of rules, because every colour
+   * in this component already comes from a token: adding `.on-ink` to the header
+   * redefines --paper, --ink, --machine, --signal and --rule underneath it, and
+   * the brand, the clock, the language switch, the shift scale and the read
+   * hairline all invert together and cannot disagree.
+   *
+   * Which band is underneath is asked with an observer rather than measured on
+   * scroll: the root is squeezed to a strip the height of the header itself, so
+   * a dark section "intersects" exactly when it is behind the bar.
+   */
+  const mast = document.querySelector<HTMLElement>('[data-masthead]');
+  const darkBands = Array.from(document.querySelectorAll<HTMLElement>('main .on-ink'));
+
+  if (mast && darkBands.length) {
+    const behind = new Set<Element>();
+    let io: IntersectionObserver | null = null;
+
+    const watch = () => {
+      io?.disconnect();
+      behind.clear();
+      const h = Math.round(mast.getBoundingClientRect().height) || 56;
+      const bottom = Math.max(0, window.innerHeight - h);
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) behind.add(e.target);
+            else behind.delete(e.target);
+          }
+          mast.classList.toggle('on-ink', behind.size > 0);
+        },
+        { rootMargin: `0px 0px -${bottom}px 0px`, threshold: 0 },
+      );
+      for (const band of darkBands) io.observe(band);
+    };
+
+    watch();
+    let reWatch = 0;
+    listen(window, 'resize', () => {
+      window.clearTimeout(reWatch);
+      reWatch = window.setTimeout(watch, 180);
+    });
+    register(() => {
+      window.clearTimeout(reWatch);
+      io?.disconnect();
+    });
   }
 </script>
 

@@ -99,29 +99,34 @@ for (const [when, stop] of Object.entries(RAMP)) {
 }
 
 /* ---------------------------------------------------------------------------
-   CORE LABELS (motion/core.ts). The entity names on the voice core are the only
-   type on the page that no other gate can reach: they are painted into a canvas
-   at a computed alpha rather than declared as a colour, so the palette checks
-   above never see them and axe-core has no element to inspect.
+   THE INVERTED BAND (.on-ink — night, voice).
 
-   They were carried by the same alpha as the dots and the rings, which rests at
-   0.45 while nothing is playing — the state every visitor arrives in. That drew
-   the name at 2.7:1 and the kind under it at 1.7:1, and the kind cleared AA in
-   no state at all, not even mid-sentence at full brightness. The two constants
-   below are the ones the module actually uses; lowering either one fails this
-   file rather than quietly dimming the thing the section exists to show.
+   This scope used to be checked for its type and nothing else, which was enough
+   while the only thing in it was type. The voice section now carries the
+   product's sphere on its own stage, and around it a row of entity chips with a
+   real border — so the functional-border rule has to hold on ink as well, and
+   nothing was asking.
+
+   The entity names themselves need no special case any more, and that is the
+   point of having moved them. They were painted into the canvas at a computed
+   alpha, which is invisible to both this file and axe-core, and PHASE 17 had to
+   hand-gate two alpha constants to keep them legible. As markup they are
+   `--ink` and `--machine-inv` on `--paper-ink`, which the checks above already
+   cover, and axe reads them like any other words.
    --------------------------------------------------------------------------- */
-const CORE = { label: 0.72, kind: 0.92 };
+const STAGE_CORE = '#261A0B'; //  the medallion's lit centre
+const STAGE_EDGE = '#0C0805'; //  and its darkest edge
 
-for (const [when, stop] of Object.entries(RAMP)) {
-  for (const [which, base] of Object.entries(stop)) {
-    const ground = over(base, BEHIND, VEIL);
-    checks.push(
-      [`core name — ink @${CORE.label} on ${which} @${when}`, over(P.ink, ground, CORE.label), ground, 4.5],
-      [`core kind — machine @${CORE.kind} on ${which} @${when}`, over(P.machine, ground, CORE.kind), ground, 4.5],
-    );
-  }
-}
+checks.push(
+  ['ruleStrong on ink (functional border, inverted)', '#6E6A5F', P.ink, 3],
+  ['inkMuted-inv on ink', '#C6C2B6', P.ink, 4.5],
+  ['inkSoft-inv on ink', '#A9A59A', P.ink, 4.5],
+  /* Nothing is set on the stage today — the sphere is aria-hidden and every
+     label sits outside it. These two say what the stage would cost if that ever
+     changed, so the answer is on record before somebody puts a caption there. */
+  ['paper on stage centre (if type ever lands there)', P.paper, STAGE_CORE, 4.5],
+  ['machineInv on stage edge (if type ever lands there)', P.machineInv, STAGE_EDGE, 4.5],
+);
 
 let fails = 0;
 for (const [name, fg, bg, min] of checks) {

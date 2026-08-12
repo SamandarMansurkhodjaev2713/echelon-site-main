@@ -40,7 +40,8 @@ const mark = (text: string, marks: readonly string[]) => {
   The tape stays underneath it. The core shows the shape of the voice; the tape
   shows its history, and it is the thing that still works if WebAudio does not.
 -->
-<section class="voice band" id="voice" data-shift="23:40">
+<section class="voice band on-ink" id="voice" data-shift="23:40" data-field-surface="0.55">
+  <canvas class="band-field" data-band-field aria-hidden="true"></canvas>
   <div class="page voice__grid">
     <div class="voice__intro">
       <p class="label">{v.label}</p>
@@ -65,8 +66,41 @@ const mark = (text: string, marks: readonly string[]) => {
       data-label-stop={v.stopRecording}
     >
       <div class="voice__core">
-        <canvas class="voice__core-canvas" data-voice-core aria-hidden="true"></canvas>
-        <p class="voice__core-label label">{v.coreLabel}</p>
+        <div class="voice__stage" aria-hidden="true">
+          <canvas class="voice__core-canvas" data-voice-core></canvas>
+        </div>
+      </div>
+
+      <!--
+        What it is holding, as text.
+
+        These five names used to be painted into the canvas, which cost PHASE 17
+        a bespoke contrast gate: type declared as a computed alpha is invisible
+        to both scripts/contrast.mjs and axe-core, so it had to be measured by
+        hand at every stop of the ambient ramp. As markup they are selectable,
+        announced, and gated by the same two tools as every other word on the
+        page — and the sphere goes back to being exactly the object the product
+        draws, which is the whole point of putting it here.
+      -->
+      <div class="voice__memory">
+        <p class="voice__memory-label label">{v.coreLabel}</p>
+        <!-- ARCHIVE, and stAggered: the pattern for something settling into
+             memory, which is exactly what these are. RECEIVE was the first
+             choice and was wrong twice over — it is the pattern for an event
+             arriving on a line, and its 0.9 s left-to-right clip on a pill this
+             small wipes across the word itself, so the names stayed unreadable
+             for the better part of two seconds after the row had arrived. -->
+        <ul class="voice__entities" data-stagger>
+          {
+            v.coreEntities.map((e) => (
+              <li class="voice__entity" data-reveal="archive">
+                <span class="voice__entity-dot" aria-hidden="true" />
+                <span class="voice__entity-name">{e.label}</span>
+                <span class="voice__entity-kind sys">{e.kind}</span>
+              </li>
+            ))
+          }
+        </ul>
       </div>
 
       <div class="voice__controls">
@@ -144,18 +178,76 @@ const mark = (text: string, marks: readonly string[]) => {
     margin-top: 1rem;
   }
 
+  /*
+    The stage the sphere stands on, and it is the product's own: the same warm
+    medallion the voice panel uses in the app, and a radius, because in this
+    system the journal is flat and only the machine is rounded. Everything else
+    in the section is a hairline on ink; this one object is allowed to glow,
+    because it is the one object that is actually running.
+  */
   .voice__core {
     position: relative;
-    display: grid;
-    justify-items: center;
+  }
+  .voice__stage {
+    position: relative;
+    border: 1px solid #2a2116;
+    border-radius: var(--radius-lg);
+    background: radial-gradient(circle at 50% 42%, #261a0b 0%, #15100a 58%, #0c0805 100%);
+    overflow: hidden;
+    /* A fixed ratio, so nothing reflows as the state line changes underneath. */
+    aspect-ratio: 5 / 4;
+  }
+  /* the warm spill the panel throws onto the ink around it */
+  .voice__stage::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow: inset 0 0 60px rgba(255, 150, 40, 0.05);
   }
   .voice__core-canvas {
+    position: absolute;
+    inset: 0;
     width: 100%;
-    /* A fixed ratio, so the canvas never resizes as the labels come and go. */
-    aspect-ratio: 5 / 4;
-    height: auto;
+    height: 100%;
   }
-  .voice__core-label {
+
+  .voice__memory {
+    margin-top: 1.25rem;
+  }
+  .voice__memory-label {
+    font-size: var(--step-micro);
+    color: var(--machine);
+  }
+  .voice__entities {
+    margin-top: 0.6rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.5rem;
+  }
+  .voice__entity {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    padding: 0.3rem 0.65rem 0.32rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-pill);
+  }
+  .voice__entity-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #ffae3c;
+    /* the sphere's own gold, so the names read as belonging to it */
+    flex: none;
+    align-self: center;
+  }
+  .voice__entity-name {
+    font-size: var(--step-small);
+    color: var(--ink);
+  }
+  .voice__entity-kind {
     font-size: var(--step-micro);
     color: var(--machine);
   }
@@ -170,9 +262,13 @@ const mark = (text: string, marks: readonly string[]) => {
     font-size: 0.7em;
     color: var(--signal);
   }
+  /* Beside the control, not banished to the far edge. `margin-left: auto` put
+     the state line 550 px from the button it describes on a wide screen, which
+     reads as two unrelated things rather than as a control and its readout. */
   .voice__state {
-    margin-left: auto;
     color: var(--machine);
+    padding-left: 0.25rem;
+    border-left: 1px solid var(--rule);
   }
 
   /* The tape: the voice's history, under its present shape. Shorter than it was
@@ -264,8 +360,8 @@ const mark = (text: string, marks: readonly string[]) => {
       gap: 0.25rem;
     }
     .voice__state {
-      margin-left: 0;
-      width: 100%;
+      border-left: 0;
+      padding-left: 0;
     }
   }
 </style>
