@@ -202,6 +202,19 @@ test.describe('visual', () => {
           const dynamic = [
             page.locator('canvas:not([data-field]):not([data-band-field])'),
             page.locator('[data-hand-elapsed]'),
+            /*
+             * The shift scale, for the same reason as the elapsed clock: its
+             * notch positions are computed from the document's measured height
+             * at load and again when the fonts land, so a run that gets there a
+             * frame earlier places fourteen notches a pixel or two differently.
+             * That is about 200 px of difference in a header strip, and it was
+             * failing one arbitrary shot per run — a different one each time,
+             * which is the signature of a value that depends on when the machine
+             * arrived rather than on what the page looks like. The bar's contents
+             * are asserted behaviourally in journey.spec.ts; nothing here is
+             * about where its ticks land.
+             */
+            page.locator('[data-shiftbar]'),
           ];
           if (scene.id === 'handover') dynamic.push(page.locator('[data-hand-report]'));
 

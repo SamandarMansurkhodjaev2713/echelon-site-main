@@ -26,6 +26,36 @@ const [displayA, displayB] = h.display.split('\n');
   -->
   <div class="hero__scrim" aria-hidden="true">
     <p class="hero__scrim-mark sys">{beats[0]?.time?.slice(0, 5)}</p>
+    <!--
+      The page is ruled before it is written on.
+
+      The sheet was blank cream with one small card on it, which is what a
+      loading screen looks like however good the card is. These are the rules of
+      the page being prepared underneath the operation — seven hairlines drawing
+      themselves down the sheet, unequal because a page of records is unequal,
+      quieter and slower than the beats so they never compete with them. It is
+      the same gesture the whole site is now written in: the menu prints its
+      index a line at a time, sections are fed out from under their rule, and
+      this is that gesture at the only scale bigger than a section — the page
+      itself.
+
+      Decorative and inert: absolutely positioned spans on a scrim that only
+      exists while the intro does, animating transform alone, so the intro's
+      promise that it cannot cause layout shift still holds exactly.
+    -->
+    {
+      [
+        { at: 26, w: 1, d: 120 },
+        { at: 33, w: 0.62, d: 260 },
+        { at: 40, w: 0.84, d: 380 },
+        { at: 55, w: 0.46, d: 620 },
+        { at: 62, w: 1, d: 740 },
+        { at: 69, w: 0.71, d: 860 },
+        { at: 82, w: 0.38, d: 1040 },
+      ].map((r) => (
+        <span class="hero__rule" style={`--at:${r.at}%;--w:${r.w};--d:${r.d}ms`} />
+      ))
+    }
   </div>
 
   <div class="page hero__grid">
@@ -263,6 +293,37 @@ const [displayA, displayB] = h.display.split('\n');
   :global(html[data-intro-phase='settle']) .hero__scrim-mark {
     opacity: 0;
     transition: opacity var(--dur-normal) var(--ease-standard);
+  }
+
+  /* The ruled page. `--at` places it, `--w` sets how far it runs, `--d` is when
+     it is drawn — scaleX from the left, which is how every other rule on this
+     site is drawn, so the sheet is being ruled rather than decorated. */
+  .hero__rule {
+    position: absolute;
+    top: var(--at);
+    left: 50%;
+    width: min(100% - var(--gutter) * 2, var(--page) - var(--gutter) * 2);
+    height: 1px;
+    background: var(--rule);
+    transform: translateX(-50%) scaleX(0);
+    transform-origin: left center;
+    opacity: 0.85;
+  }
+  :global(html[data-intro]) .hero__rule {
+    transform: translateX(-50%) scaleX(var(--w));
+    transition: transform var(--dur-scene) var(--ease-editorial) var(--d);
+  }
+  /* They go with the sheet, and faster than they arrived: a page being cleared
+     is not a performance. */
+  :global(html[data-intro-phase='settle']) .hero__rule {
+    opacity: 0;
+    transition: opacity var(--dur-normal) var(--ease-standard);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero__rule {
+      display: none;
+    }
   }
 
   :global(html[data-intro]) .hero__scrim {
