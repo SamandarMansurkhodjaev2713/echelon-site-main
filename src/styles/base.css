@@ -627,6 +627,23 @@ html.js [data-reveal='handover'] {
   transition-timing-function: cubic-bezier(0.4, 0.5, 0.5, 1);
 }
 
+/* TURN — the shift changes hands.
+ *
+ * The only pattern that moves outward from a centre, because the three seams are
+ * the only things on this page set from one. Everything else here is a record
+ * being written left to right, and a chapter break is not that: the page is not
+ * receiving an event, it is turning over. The mark parts to let the new hour
+ * through, and the hairline between its halves draws itself into the gap they
+ * leave.
+ *
+ * The direction is per element, via --turn-x, because the two halves have to
+ * travel opposite ways and one pattern cannot say both.
+ */
+html.js [data-reveal='turn'] {
+  opacity: 0;
+  transform: translate3d(var(--turn-x, 0), 0, 0);
+}
+
 html.js [data-reveal].is-in {
   opacity: 1;
   transform: none;

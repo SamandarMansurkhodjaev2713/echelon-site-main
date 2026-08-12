@@ -29,12 +29,25 @@ const { time, state, note, shift } = Astro.props;
 
 <div class="seam" data-field-surface="1" data-shift={shift ?? time}>
   <div class="page seam__page">
-    <p class="seam__mark" data-reveal="receive">
+    <!--
+      TURN, not RECEIVE.
+
+      A seam is the page's chapter break — the paper stops, the field takes over
+      and the hour changes hands. It was arriving with the same left-to-right
+      wipe as every event on every other section, which is the pattern for
+      something being written into the record. This is not that: nothing is
+      arriving here, the shift is turning over. So the mark parts from its own
+      centre — the only thing on this page set from one — and the hairline draws
+      itself outward into the gap the two halves leave.
+    -->
+    <p class="seam__mark" data-reveal="turn">
       <span class="seam__time sys">{time}</span>
       <span class="seam__rule" aria-hidden="true"></span>
       <span class="seam__state">{state}</span>
     </p>
-    <p class="seam__note" data-reveal="receive">{note}</p>
+    <!-- ARCHIVE: the note comes to rest under the mark rather than arriving
+         beside it, which is the second gesture this break was missing. -->
+    <p class="seam__note" data-reveal="archive">{note}</p>
   </div>
 </div>
 
@@ -65,12 +78,28 @@ const { time, state, note, shift } = Astro.props;
     text-transform: uppercase;
   }
 
+  /* The two halves travel opposite ways, so the direction is per element. Only
+     the parent fades — fading these as well would be one arrival played twice. */
+  .seam__time,
+  .seam__state {
+    transform: translate3d(var(--turn-x, 0), 0, 0);
+    transition: transform var(--dur-scene) var(--ease-editorial);
+  }
   .seam__time {
+    --turn-x: 0.9rem;
     color: var(--signal);
   }
-
   .seam__state {
+    --turn-x: -0.9rem;
     color: var(--ink);
+  }
+  :global(html.js) .seam__mark.is-in .seam__time,
+  :global(html.js) .seam__mark.is-in .seam__state {
+    transform: none;
+  }
+  :global(html:not(.js)) .seam__time,
+  :global(html:not(.js)) .seam__state {
+    transform: none;
   }
 
   /* A hairline that draws itself as the seam arrives — the log line being
@@ -81,7 +110,9 @@ const { time, state, note, shift } = Astro.props;
     height: 1px;
     background: var(--rule-strong);
     transform: scaleX(0);
-    transform-origin: left center;
+    /* From the centre, into the gap the two halves open — the seam is symmetric
+       and this line was the one thing in it still being written left to right. */
+    transform-origin: center;
     transition: transform var(--dur-scene) var(--ease-editorial) 120ms;
   }
   :global(html.js) .seam__mark.is-in .seam__rule {
