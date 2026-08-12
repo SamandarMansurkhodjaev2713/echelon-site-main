@@ -12,10 +12,21 @@ const [displayA, displayB] = h.display.split('\n');
 ---
 
 <section class="hero" id="top" data-shift="08:50">
-  <!-- The intro is not an overlay with its own content: it is a plain paper
-       scrim over everything except the operation. The operation's rows are the
-       hero's real rows, so nothing has to be matched up afterwards. -->
-  <div class="hero__scrim" aria-hidden="true"></div>
+  <!--
+    The intro is not an overlay with its own content: it is a plain paper scrim
+    over everything except the operation. The operation's rows are the hero's
+    real rows, so nothing has to be matched up afterwards.
+
+    The scrim carries the page's own furniture — a full-width hairline under an
+    hour, exactly as every section below it does. It was a blank cream rectangle
+    with a small bordered card floating in the middle of it, which is what a
+    loading screen looks like; the mark is what makes this the shift's first
+    entry instead. The hour is taken from the operation's own first row rather
+    than written here, so it cannot disagree with the rows underneath it.
+  -->
+  <div class="hero__scrim" aria-hidden="true">
+    <p class="hero__scrim-mark sys">{beats[0]?.time?.slice(0, 5)}</p>
+  </div>
 
   <div class="page hero__grid">
     <div class="hero__lede">
@@ -219,6 +230,39 @@ const [displayA, displayB] = h.display.split('\n');
     opacity: 0;
     pointer-events: none;
     visibility: hidden;
+  }
+
+  /* The same mark every section carries: an hour over a full-width hairline,
+     inset by the page gutter so it lines up with the column the operation and
+     the headline both sit in. */
+  .hero__scrim-mark {
+    position: absolute;
+    top: clamp(4.5rem, 12vh, 8rem);
+    left: 50%;
+    width: min(100% - var(--gutter) * 2, var(--page) - var(--gutter) * 2);
+    transform: translateX(-50%);
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--rule);
+    font-size: var(--step-micro);
+    font-weight: 560;
+    letter-spacing: var(--track-label);
+    color: var(--machine);
+    /* It arrives after the sheet, so the reader sees paper and then a shift
+       starting on it, rather than both at once. */
+    opacity: 0;
+    transform: translateX(-50%) translateY(-0.4rem);
+  }
+  :global(html[data-intro]) .hero__scrim-mark {
+    opacity: 1;
+    transform: translateX(-50%);
+    transition:
+      opacity var(--dur-expressive) var(--ease-standard) 120ms,
+      transform var(--dur-expressive) var(--ease-editorial) 120ms;
+  }
+  /* It leaves with the sheet it is printed on. */
+  :global(html[data-intro-phase='settle']) .hero__scrim-mark {
+    opacity: 0;
+    transition: opacity var(--dur-normal) var(--ease-standard);
   }
 
   :global(html[data-intro]) .hero__scrim {
