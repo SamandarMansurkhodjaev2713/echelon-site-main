@@ -459,6 +459,26 @@ export function initField(opts: FieldOptions = {}): () => void {
   let night = 0;
   let busy = 0.25;
 
+  /* Where the reader is, in document coordinates. Stays at -1 until a pointer
+     actually appears, so a touch-only visit and the frozen path both keep the
+     unbiased board — and the visual baselines therefore cannot depend on where a
+     mouse happened to be. One assignment per event, no work; the bias is applied
+     where routes are chosen, not per frame. */
+  let pointerX = -1;
+  let pointerY = -1;
+  if (!staticOnly) {
+    listen(
+      window,
+      'pointermove',
+      (e) => {
+        const p = e as PointerEvent;
+        pointerX = p.clientX;
+        pointerY = p.clientY + window.scrollY;
+      },
+      { passive: true },
+    );
+  }
+
   const stopShift = onShift((s: ShiftState) => {
     night = s.night;
     busy = busyAt(s.progress);
@@ -767,12 +787,25 @@ export function initField(opts: FieldOptions = {}): () => void {
       // colour parser, which clamped it; the globalAlpha setter would instead
       // have thrown the assignment away and kept the previous station's value.
       ctx.globalAlpha = a > 1 ? 1 : a;
+      /*
+       * A station that knows something is bigger, not merely brighter.
+       *
+       * `hit` carries both things a station can know — that work arrived here,
+       * and that the reader is beside it — and it used to spend all of that on
+       * alpha. Measured, that came to a 1.4 % change in the ink of a 300 px box:
+       * true, and utterly unfelt. Size is what the eye actually reads at this
+       * scale, so a noticed station grows by up to its own radius again. It also
+       * makes an arriving event's landing legible, which is the one moment this
+       * layer exists to show and which nothing marked before.
+       */
+      const grow = 1 + hit;
       if (k === 1) {
         // Projects are squares: a thing with edges and a deadline.
-        ctx.fillRect(Math.round(x) - 2.5, Math.round(y) - 2.5, 5, 5);
+        const s = 5 * grow;
+        ctx.fillRect(Math.round(x) - s / 2, Math.round(y) - s / 2, s, s);
       } else {
         ctx.beginPath();
-        ctx.arc(x, y, owner ? 3.6 : 2.2, 0, Math.PI * 2);
+        ctx.arc(x, y, (owner ? 3.6 : 2.2) * grow, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -799,7 +832,7 @@ export function initField(opts: FieldOptions = {}): () => void {
     if (Math.random() > (1.8 + busy * 6.2) * dt) return;
     for (let e = 0; e < EVENTS; e++) {
       if (evRoute[e]! >= 0) continue;
-      evRoute[e] = Math.floor(Math.random() * routeCount);
+      evRoute[e] = pickRoute();
       evT[e] = 0;
       evSpeed[e] = 0.35 + Math.random() * 0.5;
       evKind[e] = Math.random() > 0.86 ? 1 : 0;
@@ -807,12 +840,76 @@ export function initField(opts: FieldOptions = {}): () => void {
     }
   }
 
+  /*
+   * WHERE THE WORK GOES — and it goes where you are.
+   *
+   * This layer's whole claim is that it is what the machine is doing while you
+   * read, and until now it did the same thing whether anybody was there or not:
+   * routes chosen uniformly at random, a switchboard running to an empty room.
+   *
+   * The cheapest honest way to make it notice a reader is not to light up
+   * whatever is under the cursor — every site does that, and it says only "you
+   * are hovering". Instead the *destination* is biased: three candidate routes
+   * are sampled and the one delivering nearest the pointer wins. So work keeps
+   * arriving all over the board, and rather more of it arrives near the part of
+   * the page being read. Attention, which is the thing the layer is named for.
+   *
+   * Three samples, not a scan of every route: this runs inside the frame budget
+   * that forbids allocation and sorting, and at three the pull is already legible
+   * without the board collapsing into a cursor-follower.
+   */
+  function pickRoute(): number {
+    const r0 = Math.floor(Math.random() * routeCount);
+    if (pointerX < 0) return r0;
+    let best = r0;
+    let bestD = Infinity;
+    for (let k = 0; k < 3; k++) {
+      const r = k === 0 ? r0 : Math.floor(Math.random() * routeCount);
+      const b = rB[r]!;
+      const dx = sx[b]! - pointerX;
+      const dy = sy[b]! + originY - pointerY;
+      const d = dx * dx + dy * dy;
+      if (d < bestD) {
+        bestD = d;
+        best = r;
+      }
+    }
+    return best;
+  }
+
   /** Advance the simulation. Owned by the fixed canvas, which always exists. */
   function step(dt: number): void {
     t += dt;
     tick += (TICK_SPEED + busy * 46) * dt;
     spawn(dt);
-    for (let i = 0; i < S; i++) if (sHit[i]! > 0) sHit[i] = Math.max(0, sHit[i]! - dt * 1.4);
+    /*
+     * Decay, and notice.
+     *
+     * `sHit` means "something arrived here" and fades at 1.4/s. The same channel
+     * now carries the other thing a station can know: that the reader is beside
+     * it. Within 130 px the station is held a little awake — never as bright as a
+     * real arrival, which stays at 1 — so the board acknowledges a hand moving
+     * across it without pretending work happened where it did not.
+     *
+     * It rides the loop that was already here rather than adding one, and it is
+     * the only per-frame use of the pointer: the routing bias reads it once per
+     * spawn, not per station per frame.
+     */
+    const notice = pointerX >= 0;
+    const py = pointerY - originY;
+    for (let i = 0; i < S; i++) {
+      if (notice) {
+        const dx = sx[i]! - pointerX;
+        const dy = sy[i]! - py;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < 130 * 130) {
+          const near = 1 - Math.sqrt(d2) / 130;
+          const want = near * near * 0.55;
+          if (sHit[i]! < want) sHit[i] = want;
+        }
+      }
+      if (sHit[i]! > 0) sHit[i] = Math.max(0, sHit[i]! - dt * 1.4);
+    }
     for (let e = 0; e < EVENTS; e++) {
       const r = evRoute[e]!;
       if (r < 0) continue;
