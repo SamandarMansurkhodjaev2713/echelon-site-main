@@ -1362,8 +1362,13 @@ missing. Traces were being retained on failure and thrown away with the runner.
 
 Both halves are fixed: the html reporter is on in CI, and the upload is now
 attached to the e2e step specifically with `if-no-files-found: error`, so it
-cannot go quiet a second time. Verified rather than assumed —
-`playwright-report/index.html` exists after a CI-mode run.
+cannot go quiet a second time.
+
+And it was verified the only way that means anything — by making the runner fail
+on purpose. A throwaway branch with one deliberately wrong assertion produced a
+red run and a **2.0 MB `playwright-report` artefact**: `index.html`, the trace
+viewer, and both traces, the attempt and the retry. This morning the same step,
+on a red run, produced nothing at all.
 
 ### The runner, asked directly
 
@@ -1430,6 +1435,12 @@ The cursor comes back, follows the pointer, resolves the button and names the
 operation correctly — and cannot be seen, for the rest of the session. Worse than
 the muteness PHASE 22 fixed, and shipped by the fix for it.
 
+Fixed by one line, and then checked against the deployed site rather than against
+the pipeline's word: the same round trip driven at
+`…github.io/echelon-site-main/` now ends with `data-visible` set,
+`visibility: visible`, `opacity: 1`, still naming «Решить». A green pipeline says
+the artefact was built and published; it does not say the page behaves.
+
 **The gate passed over it, and that is the finding.** It asked for `data-state`
 and whether the label had text — exactly the two fields that stayed right. Naming
 the fields to check means guessing in advance which one the next miss will be in.
@@ -1495,19 +1506,23 @@ writes the same attribute on `pointerenter`, unguarded, and a test moving a mous
 into the page fires exactly that. The claim was wrong, and it was wrong in the
 three places I had already written it down.
 
-The gate is therefore a floor and is now described as one: it goes red when the
-attribute stops being written at all, and green if either writer survives —
-watched doing both before either was believed. The rebuild case needs the round
-trip because it is the one moment when the unguarded writer *cannot* fire: the
-pointer never left, so it never enters.
+The gate is therefore a floor and is now described as one. Removing the guarded
+write was watched leaving it green; removing both writes was watched turning it
+red. It says the layer can be seen at all, not which writer said so. The rebuild
+case still needs the round trip, because that is the one moment when the
+unguarded writer *cannot* fire: the pointer never left, so it never enters.
 
 ### One more probe that found nothing about the page
 
-The first synthetic probe ran the CDP sequence on a blank document and reported
-that `MediaQueryList` `change` events never fire at all — which would have been a
-much bigger finding, and was false. Media query notifications are delivered
-during a style update, and a document with nothing in it may never schedule one.
-On the real page the events arrive: `[F]` on the way down, `[T]` on the way back.
+The first synthetic probe ran the CDP sequence on an `about:blank` document and
+reported that `MediaQueryList` `change` events never fire at all — which would
+have been a much bigger finding, and was false. A second version with real
+content and a running rAF loop said the same thing and was wrong in the same way:
+it was still `about:blank`, which is the part that mattered and the part I had
+"fixed" without checking. On the real page, served over http, the events arrive —
+`[F]` on the way down, `[T]` on the way back. Why a blank document does not
+deliver them was not chased, and did not need to be once the page itself had been
+looked at.
 
 **Standing lesson, now five times over: a probe that finds nothing has found
 nothing *about the probe* until the page has also been looked at.** The first
@@ -1515,6 +1530,25 @@ version of the runner diagnostic made the junior version of the same mistake —
 collected its rows and printed them at the end, threw on a `page.reload()` that
 wiped the page's own state, and reported nothing at all. A diagnostic prints as
 it goes.
+
+### And a second artefact that was the machine, not the site
+
+A full local run reported **every firefox test failing**, twenty-six of them, all
+on the 45 s timeout, all hung on whatever call happened to be in flight. Nothing
+in this phase touches firefox. The cause was that another project's Playwright
+suite was running on the same machine at the same time, with its own workers, and
+a third project's eslint beside it; firefox is the heaviest of the three engines
+to start and was simply the first to miss the budget. Run by itself afterwards,
+one of the same tests passes in 6.8 s.
+
+This is the sibling of the artefact PHASE 22 recorded. That one was two runs
+sharing a working tree and therefore `dist/`; this one is two runs sharing a
+machine and therefore its cores. Both present as a broad, confident regression in
+code that was not touched, and the second is worse, because there is nothing in
+this repository to warn you: the contention is entirely outside it. The remedy
+used here was to run the two projects that carry information CI cannot — the
+visual baselines and one behavioural engine — and let the runner answer for the
+rest.
 
 ---
 

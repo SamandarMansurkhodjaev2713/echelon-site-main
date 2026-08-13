@@ -710,12 +710,13 @@ test('the cursor can actually be seen once the mouse has moved', async ({ page }
    * could have failed; the visual baselines are no help either, because they hide
    * `.cursor` outright and say why.
    *
-   * This is a floor, not a trap, and it was measured to be one: two things write
-   * `data-visible` — the first pointer move and `pointerenter` — so breaking
-   * either alone leaves this green, and it was watched staying green before that
-   * was believed. It goes red when the attribute stops being written at all.
-   * Unlike the round trip below it runs on every engine, including the runner,
-   * which is the point: the round trip cannot.
+   * This is a floor, not a trap, and it was measured to be one. Two things write
+   * `data-visible`: the first pointer move, and `pointerenter`. Removing the
+   * first was watched leaving this **green** — a mouse arriving in the page fires
+   * the second — and removing both was watched turning it **red**. So it says
+   * that the layer can be seen at all, and not which writer said so. Unlike the
+   * round trip below it runs on every engine, including the runner, which is the
+   * point: the round trip cannot.
    */
   await page.goto('./?intro=off');
   await ready(page);
