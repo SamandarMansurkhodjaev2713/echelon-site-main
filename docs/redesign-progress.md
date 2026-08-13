@@ -1722,6 +1722,43 @@ voice on. Recorded as item 26 rather than half-done here.
 
 ---
 
+## PHASE 26 — The assertion that was a stopwatch
+
+Open item 10 has been sitting there since PHASE 18 with an explicit instruction
+attached: *characterise it first, then fix it.* `journey.spec.ts:54` asserted
+`data-intro` — a state the intro sets before first paint and removes 2 240 ms
+later — so what it really asked was whether the harness could get there in time.
+
+**Characterised.** The attribute lands at 32–49 ms, and the assertion that read
+it ran at 135–270 ms, five runs. So the margin is about **two seconds**: the
+assertion fails only if the machine needs longer than that to make one DOM read.
+Two seconds is a very good margin and exactly the wrong shape — wide enough to
+pass every time anyone is watching, narrow enough to fail once in four runs on a
+loaded machine. And "loaded" is not hypothetical here: PHASE 24 measured a load
+under which whole tests exceeded forty-five seconds.
+
+**Fixed by asking a different question.** The page now keeps its own record —
+an init script, installed before any of the page's own scripts, that stamps both
+edges of `data-intro` from a `MutationObserver`. The test reads the record. What
+the suite wants to know is that the visitor was shown the operation first, and
+that is answerable after the fact; whether the state is *still* there when the
+harness looks is a fact about the machine and was never worth gating.
+
+**And the floor that was missing.** Nothing asserted how long the intro lasted.
+The 380 ms short intro is a real mode of that module — taken on a repeat visit —
+so the full intro degrading into it would have read as green in every run. There
+is a floor now, and it was watched failing: with `DONE_AT` cut to 380 the test
+reports *the first visit played something shorter than an intro*, at 481 ms.
+
+The helper was wrong once on the way, and the new assertion is what caught it:
+`page.evaluate(() => window)` does not serialise to the record it looks like it
+returns, so both edges read 0 and the floor went red on a correct page. A test
+that fails loudly for the wrong reason is still better than one that passes
+quietly for the wrong reason — but it is written down, because it is the third
+probe in two days to report a number that was about the probe.
+
+---
+
 ## OPEN ITEMS
 
 1. RU LCP is 2.6 s against the 2.5 s target; EN and UZ are inside budget.
@@ -1770,7 +1807,11 @@ voice on. Recorded as item 26 rather than half-done here.
 9. ~~The voice tape reads as an unfilled form before anything has been played.~~
    **Closed by PHASE 17** — the box opens when the tape has carried something; at
    rest only the baseline is drawn.
-10. **`journey.spec.ts:54` asserts a state that is gone by the time it looks.**
+10. ~~**`journey.spec.ts:54` asserts a state that is gone by the time it
+    looks.**~~ **Closed by PHASE 26**, characterised first as the note below
+    asked: the margin is about two seconds, and the assertion was a question
+    about the machine rather than about the page. The page keeps its own record
+    now, and the intro gained the duration floor it never had. Original note:
     `expect(html).toHaveAttribute('data-intro', '')` is an assertion about the
     intro *while it is running*, with no tolerance, so on a machine that gets
     ahead of the runner it fails with Playwright's unhelpful "serializes to the

@@ -15,6 +15,60 @@ async function visit(page: Page, url: string) {
   await page.waitForSelector('html[data-ready]', { state: 'attached' });
 }
 
+/**
+ * Have the page keep its own record of the intro, before its own scripts run.
+ *
+ * `data-intro` is set before first paint and removed 2 240 ms later, so asking
+ * the live DOM whether it is there is a race between the page's clock and the
+ * harness's latency — a question about the machine, not about the site.
+ * Characterised rather than guessed: the attribute lands at 32–49 ms and the
+ * assertion that read it ran at 135–270 ms, leaving about **two seconds** of
+ * margin. Two seconds is enough to pass almost always and fail sometimes, which
+ * is the worst thing a gate can be; and this session measured a load — another
+ * project's Playwright suite on the same machine — under which whole tests
+ * exceeded 45 s, so a two-second stall before one DOM read is not hypothetical.
+ *
+ * The page records both edges instead. What the suite actually wants to know is
+ * that the visitor was shown the operation first, and for long enough to be an
+ * intro rather than a flash; both of those are answerable from the record, and
+ * neither can be outrun.
+ */
+async function watchIntro(page: Page) {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __introAt: number | null; __introGone: number | null };
+    w.__introAt = null;
+    w.__introGone = null;
+    const note = (el: Element) => {
+      const on = el.hasAttribute('data-intro');
+      if (on && w.__introAt === null) w.__introAt = performance.now();
+      if (!on && w.__introAt !== null && w.__introGone === null) w.__introGone = performance.now();
+    };
+    const attach = () => {
+      const el = document.documentElement;
+      if (!el) return false;
+      note(el);
+      new MutationObserver(() => note(el)).observe(el, {
+        attributes: true,
+        attributeFilter: ['data-intro'],
+      });
+      return true;
+    };
+    /* The init script can run before there is a documentElement to watch. */
+    if (!attach()) {
+      const t = setInterval(() => attach() && clearInterval(t), 2);
+    }
+  });
+}
+
+/* Two numbers, named. Returning `window` itself from `evaluate` does not
+   serialise to the record — it serialises to nothing useful, and the floor
+   assertion below read 0 for both edges until this was made explicit. */
+const introRecord = (page: Page) =>
+  page.evaluate(() => {
+    const w = window as unknown as { __introAt: number | null; __introGone: number | null };
+    return { at: w.__introAt, gone: w.__introGone };
+  });
+
 /** Scroll the teach panel into view and wait until its controls are live. */
 async function openTeach(page: Page) {
   await page.locator('#teach').scrollIntoViewIfNeeded();
@@ -48,13 +102,24 @@ async function noPageErrors(page: Page) {
 /* 1 ---------------------------------------------------------------- */
 test('opens RU, the intro completes, the hero is readable', async ({ page }) => {
   const errors = await noPageErrors(page);
+  await watchIntro(page);
   await freshVisit(page);
 
-  // during the intro the operation is the only thing on screen
-  await expect(page.locator('html')).toHaveAttribute('data-intro', '');
+  // the visitor is shown the operation first — asked of the page's own record,
+  // because the state itself is gone 2 240 ms in and outrunning it is luck
+  await expect.poll(async () => (await introRecord(page)).at !== null).toBe(true);
 
   // and it finishes on its own, well inside the 3 s ceiling
   await expect(page.locator('html')).toHaveAttribute('data-intro-done', '', { timeout: 3000 });
+
+  /* Long enough to be an intro. Nothing asserted a floor before, so the full
+     intro degrading to the 380 ms short one — which is a real mode of this
+     module, taken on a repeat visit — would have read as green. */
+  const seen = await introRecord(page);
+  expect(
+    Math.round((seen.gone ?? 0) - (seen.at ?? 0)),
+    'the first visit played something shorter than an intro',
+  ).toBeGreaterThan(1200);
 
   const h1 = page.locator('h1');
   await expect(h1).toBeVisible();
