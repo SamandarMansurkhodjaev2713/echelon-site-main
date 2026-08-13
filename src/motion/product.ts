@@ -194,22 +194,32 @@ function initVault(stage: HTMLElement) {
   let card: HTMLElement | null = null;
   let opener: HTMLElement | null = null;
 
+  /* `aria-expanded` and `data-cursor` are two statements about the same fact, so
+     they are made in one place. A row whose card is up will be *closed* by the
+     next click, and the cursor names the operation that will happen, not the one
+     that got here: ten rows said «Открыть» over the click that puts the card
+     away. Same defect as the automations toggle, ten times over. */
+  const setRowOpen = (row: HTMLElement, open: boolean) => {
+    row.setAttribute('aria-expanded', String(open));
+    row.dataset.cursor = open ? 'close' : 'open';
+  };
+
   const closeCard = () => {
     card?.remove();
     card = null;
-    for (const r of rows) r.setAttribute('aria-expanded', 'false');
+    for (const r of rows) setRowOpen(r, false);
     opener?.focus();
     opener = null;
   };
 
   for (const row of rows) {
-    row.setAttribute('aria-expanded', 'false');
+    setRowOpen(row, false);
     const handler = () => {
       const reopening = opener === row;
       closeCard();
       if (reopening) return;
       opener = row;
-      row.setAttribute('aria-expanded', 'true');
+      setRowOpen(row, true);
 
       card = document.createElement('div');
       card.className = 'ui-vault__card';

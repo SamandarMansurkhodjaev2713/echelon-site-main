@@ -25,6 +25,17 @@ export const CURSOR_STATES = [
   'default',
   'view',
   'open',
+  /*
+   * The word the page was missing.
+   *
+   * Eleven controls on this page reverse: the masthead's index and the ten rows
+   * of the vault open a thing and then close the same thing. Every one of them
+   * declared `open` in both states, so with the panel up and the pointer resting
+   * on the control that would put it away, the cursor said «Открыть». That is
+   * the automations lie — a control naming the half of itself that has already
+   * happened — and it was three times as common as the case that was fixed.
+   */
+  'close',
   'run',
   'hold',
   'drag',
@@ -39,6 +50,7 @@ export type CursorState = (typeof CURSOR_STATES)[number];
 export interface CursorLabels {
   view: string;
   open: string;
+  close: string;
   run: string;
   hold: string;
   drag: string;

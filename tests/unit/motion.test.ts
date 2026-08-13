@@ -113,10 +113,15 @@ describe('reveal patterns', () => {
 });
 
 describe('cursor state machine', () => {
-  it('declares the ten semantic states', () => {
-    expect(CURSOR_STATES).toHaveLength(10);
+  it('declares the eleven semantic states', () => {
+    expect(CURSOR_STATES).toHaveLength(11);
     expect(CURSOR_STATES).toContain('approve');
     expect(CURSOR_STATES).toContain('speak');
+    /* `close` is not decoration either. Eleven controls on this page open a
+       thing and then close the same thing, and without a word for the second
+       half they all announced the first — the automations lie, in the eleven
+       places nobody had asked about. */
+    expect(CURSOR_STATES).toContain('close');
     /* `stop` is not a synonym for `hold`. `hold` means the machine is waiting on
        you; `stop` means pressing this halts something that is running. The play
        control becomes the second one mid-interaction, and the cursor has to be

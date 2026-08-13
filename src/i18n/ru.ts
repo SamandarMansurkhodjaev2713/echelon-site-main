@@ -550,6 +550,7 @@ export const ru = {
   cursor: {
     view: 'Смотреть',
     open: 'Открыть',
+    close: 'Закрыть',
     run: 'Запустить',
     hold: 'Ждёт вас',
     drag: 'Перетащить',

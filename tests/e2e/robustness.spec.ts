@@ -1044,6 +1044,99 @@ test('a switch is named for the operation it will actually perform', async ({ pa
 
   await page.evaluate(() => (document.querySelector('.ui-autorow__toggle') as HTMLElement).click());
   await expect.poll(named).toBe('names the stop of a running automation');
+
+  /*
+   * And the second half of the same question, on the control that turned out to
+   * be ten controls: a vault row opens a card and the next click puts it away.
+   * Checked here rather than only in the declaration sweep because a declaration
+   * is not a name until the cursor has drawn it — `close` is a word this page
+   * did not have until now, and a state with no label renders as a dot.
+   */
+  await showPane(page, 'vault');
+  const row = page.locator('.ui-vault__row').first();
+  await row.hover();
+
+  const rowNamed = () =>
+    page.evaluate(() => {
+      const r = document.querySelector('.ui-vault__row')!;
+      const c = document.querySelector<HTMLElement>('.cursor')!;
+      const label = document.querySelector('.cursor__label')?.textContent ?? '';
+      const open = r.getAttribute('aria-expanded') === 'true';
+      return `${open ? 'card up' : 'card down'}: ${c.dataset.state}/${label || '(unnamed)'}`;
+    });
+
+  await expect.poll(rowNamed).toMatch(/^card down: open\/.+/);
+  const shutLabel = (await rowNamed()).split('/')[1];
+
+  await page.evaluate(() => (document.querySelector('.ui-vault__row') as HTMLElement).click());
+  await expect.poll(rowNamed).toMatch(/^card up: close\/.+/);
+  const openLabel = (await rowNamed()).split('/')[1];
+  expect(openLabel, 'the open and shut states of a row draw the same word').not.toBe(shutLabel);
+});
+
+test('no control that reverses names only one half of itself', async ({ page }) => {
+  /*
+   * The general form of the test above, and it was worth writing because the
+   * specific one was true and the page was still lying in eleven other places.
+   *
+   * The automations toggle was caught by hand: four rows that ship running, all
+   * declaring `run`, so the cursor offered to start what the click would pause.
+   * That is a *shape*, not an incident. Any control whose click reverses — press
+   * it twice and you are back where you began — announces the wrong half of
+   * itself the moment it is in the other state, and `every control declares a
+   * state the cursor actually knows` cannot see it, because the declaration is
+   * spelled correctly and means the opposite.
+   *
+   * So this asks every such control the only question that settles it: click it,
+   * click it again, and if the state came back then the name must have changed
+   * too. Found, when it was first run: the masthead's index and all ten rows of
+   * the vault, every one of them saying «Открыть» over the click that closes.
+   *
+   * Latching controls are not toggles and are not required to rename themselves:
+   * the vault's filters and the teach options go false → true → true, because
+   * choosing the chosen one changes nothing. The test tells them apart by what
+   * they do rather than by what they are called.
+   */
+  await page.goto('./?intro=off&motion=off');
+  await ready(page);
+  await openTheProduct(page);
+  /* Every pane at once: these controls live in six different panels and the
+     question is about all of them, not about whichever one is on top. */
+  await page.evaluate(() => {
+    for (const p of document.querySelectorAll<HTMLElement>('[data-prod-panel]')) p.hidden = false;
+  });
+
+  const found = await page.evaluate(() => {
+    const rows: Array<{ what: string; seq: string; reversing: boolean; renamed: boolean }> = [];
+    for (const el of document.querySelectorAll<HTMLElement>(
+      '[data-cursor][aria-expanded], [data-cursor][aria-pressed]',
+    )) {
+      const key = el.hasAttribute('aria-expanded') ? 'aria-expanded' : 'aria-pressed';
+      const read = () => [el.getAttribute(key) ?? '', el.dataset.cursor ?? ''] as const;
+      const [a0, c0] = read();
+      el.click();
+      const [a1, c1] = read();
+      el.click();
+      const [a2] = read();
+      const cls = (el.className || el.tagName).toString().split(/\s+/)[0];
+      rows.push({
+        what: `${el.tagName.toLowerCase()}.${cls} "${(el.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 18)}"`,
+        seq: `${a0}/${c0} -> ${a1}/${c1}`,
+        reversing: a0 !== a1 && a0 === a2,
+        renamed: c0 !== c1,
+      });
+    }
+    return rows;
+  });
+
+  const reversing = found.filter((r) => r.reversing);
+  expect(
+    reversing.length,
+    'nothing on the page reverses, so this gate is checking nothing',
+  ).toBeGreaterThan(10);
+
+  const oneSided = reversing.filter((r) => !r.renamed).map((r) => `${r.what} ${r.seq}`);
+  expect([...new Set(oneSided)]).toEqual([]);
 });
 
 test('every control declares a state the cursor actually knows', async ({ page }) => {

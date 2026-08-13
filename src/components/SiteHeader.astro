@@ -909,6 +909,11 @@ const INDEX = shiftIndex(dict);
     const setOpen = (next: boolean) => {
       open = next;
       toggle.setAttribute('aria-expanded', String(next));
+      /* `aria-expanded` and `data-cursor` are two statements about the same
+         fact, so they are written together. With the panel up, the next click
+         puts it away, and the cursor has to name that operation and not the one
+         that got here — it said «Открыть» over the control that closes. */
+      toggle.dataset.cursor = next ? 'close' : 'open';
       panel.classList.toggle('is-open', next);
       /* The shift scale hangs its hour labels below the bar, which is exactly
          where the panel opens; with both on screen the notches printed across

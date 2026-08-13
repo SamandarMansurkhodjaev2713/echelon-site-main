@@ -1636,6 +1636,92 @@ is what settled it.
 
 ---
 
+## PHASE 25 — The word the page did not have
+
+Open item 21 asked for the expensive half of the cursor's contract: not that
+every `data-cursor` is spelled correctly — that has a gate — but that **the
+operation named is the operation that will happen**. Twenty-two declarations, two
+of them checked by hand in PHASE 22, nineteen believed.
+
+The audit did not produce a list of nineteen verdicts. It produced a shape, and
+the shape is the automations bug generalised: **a control whose click reverses
+names the wrong half of itself in one of its two states.** Press it twice and you
+are back where you began; the name is right in one state and false in the other,
+and it is spelled correctly the whole time, so the spelling gate is blind to it.
+
+Asked of the whole page: twenty-three controls declare a cursor state *and* a
+reversible aria state. Clicking each of them twice sorts them without any need to
+know what they are called:
+
+- **latching, and correctly unchanged** — the vault's five filters and the three
+  teach options go `false → true → true`. Choosing the chosen one changes
+  nothing, so `view` and `approve` stay true in both states.
+- **reversing, and renaming** — the four automations toggles, `true/stop →
+  false/run`. That is the PHASE 22 fix, still holding.
+- **reversing, and not renaming — eleven of them.** The masthead's index and
+  every one of the vault's ten rows: `false/open → true/open`. With the panel up,
+  or the card up, the pointer resting on the control that will put it away, the
+  cursor said «Открыть».
+
+Three times as many as the case that was found by hand, and none of them would
+have been found by reading, because each one is correct in the state you happen
+to be looking at.
+
+### One word, eleven controls
+
+The page had no name for the second half. `close` is now the eleventh cursor
+state — «Закрыть» · Close · Yopish, wording the dictionaries already carried for
+the vault's own card. `aria-expanded` and `data-cursor` are written in one place
+in both files now, in `setOpen` and in a `setRowOpen` helper, because they are
+two statements about the same fact and two writers are two writers that can
+disagree.
+
+### The gate is the general form
+
+Click it, click it again, and if the state came back then the name must have
+changed. Latching controls identify themselves and are exempt — by what they do,
+not by what they are called. Watched failing on the previous code, and the
+failure is the finding, eleven lines of it:
+
+```
+button.masthead__index "Разделы"        false/open -> true/open
+button.ui-vault__row   "алишер Человек" false/open -> true/open
+… nine more rows
+```
+
+It also asserts that more than ten controls reverse at all, so it cannot pass by
+finding nothing, and it reads declarations rather than the cursor layer — so it
+runs on all five projects, phones included, where the cursor itself does not
+exist.
+
+A declaration is not a name until the cursor has drawn it, so the end-to-end half
+is checked too, on the hardest case: the pointer rests on a row, the card opens
+*under it*, and the cursor is required to re-read the world and draw «Закрыть».
+That is the invalidation PHASE 22 built, carrying a word that did not exist then.
+
+### Refuted, including the one that looked worst
+
+- **The boundary gate's *reject* button declares `approve`.** It reads like the
+  worst lie on the page and is not one: the label for that state is «Решить» ·
+  Decide · Hal qilish in all three locales, and both buttons of a decision gate
+  decide. The state's internal name is not what the reader sees.
+- **The vault's filters and the teach options look like toggles.** They latch.
+  Measured, not assumed — that is what the second click is for.
+- **`speak` on the play button.** Its label is «Слушать», and the person does
+  listen. Correct.
+
+### Still wrong, and deliberately left
+
+The voice section's «Поговорить» button declares `speak`, whose label is
+«Слушать» — but the person is the one who will speak. It is a real mismatch and
+it is not fixed here: the button ships `hidden` by contract because
+`VOICE_WORKER_URL` is empty (item 13), so it cannot be seen, cannot be gated, and
+the correct repair is a vocabulary change — `speak` currently means *listen*,
+which is the confusion underneath. That belongs to the phase that turns the live
+voice on. Recorded as item 26 rather than half-done here.
+
+---
+
 ## OPEN ITEMS
 
 1. RU LCP is 2.6 s against the 2.5 s target; EN and UZ are inside budget.
@@ -1788,15 +1874,14 @@ is what settled it.
     a loaded full run, which is a hint about where to look: see item 10, which is
     the same shape and still uncharacterised.
 
-21. **`data-cursor` is gated for spelling, not for truth.** The cheap half is
-    done — every declaration in the rendered page must be a state the cursor
-    knows, or it silently stops naming anything. The expensive half is not: that
-    the operation named is the operation that will happen. Two were checked by
-    hand this phase, and the kanban card really does drag (`product.ts:372`)
-    while the automations toggle really does toggle, which is how that lie was
-    caught. The other nineteen declarations are believed, not tested, and no
-    gate would have caught the automations one — it was spelled correctly and
-    meant the opposite.
+21. ~~**`data-cursor` is gated for spelling, not for truth.**~~ **Closed by
+    PHASE 25.** The expensive half turned out to have a shape rather than
+    nineteen separate answers: a control whose click *reverses* names the wrong
+    half of itself in one of its two states, correctly spelled throughout.
+    Eleven were doing it — the masthead index and all ten vault rows, every one
+    saying «Открыть» over the click that closes. The page now has a word for the
+    second half, and a gate that sorts reversing controls from latching ones by
+    clicking them twice.
 
 ### Opened by PHASE 23
 
@@ -1833,3 +1918,26 @@ is what settled it.
     in the suite protects a dimming. The direction, if it is worth the cost, is a
     second visual project with a tight threshold over a short list of regions
     that carry no ramp — not a global change.
+
+### Opened by PHASE 25
+
+26. **The «Поговорить» button names the wrong side of a conversation.** It
+    declares `speak`, whose label is «Слушать» · Listen · Tinglash, and the
+    person clicking it is the one who will speak. The underlying confusion is in
+    the vocabulary rather than in the button: `speak` is the state of the *play*
+    control, where the sphere speaks and the reader listens, so the name and the
+    label have meant opposite things since the state was introduced. Not fixed
+    with the eleven above, deliberately: the control ships `hidden` by contract
+    while `VOICE_WORKER_URL` is empty (item 13), so it cannot be seen or gated,
+    and renaming a state that is drawn correctly everywhere else is a change that
+    should be made when the live voice is turned on and can be watched.
+27. **`product-foot` flakes.** Seen twice in one session, one baseline of the
+    five each time — 233 px on the first, unrecorded on the second — and green
+    on an isolated re-run both times, so the artefacts were cleaned before they
+    could be read. It is the third intermittent in this file that only shows
+    under a loaded full run (items 10 and 22 are the others), and this session
+    measured one mechanism that fits that description — another project's
+    Playwright suite competing for the machine — but contention explains a
+    *timeout*, not a pixel, so that is a lead and not an answer. Characterise it
+    by keeping the diff: run the group in a loop with `--retries=0` until it goes
+    red, and read the `-diff.png` before anything else touches it.

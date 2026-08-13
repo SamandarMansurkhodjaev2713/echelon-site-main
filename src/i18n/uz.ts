@@ -528,6 +528,7 @@ export const uz: Dict = {
   cursor: {
     view: 'Ko’rish',
     open: 'Ochish',
+    close: 'Yopish',
     run: 'Ishga tushirish',
     hold: 'Sizni kutyapti',
     drag: 'Surish',

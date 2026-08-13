@@ -525,6 +525,7 @@ export const en: Dict = {
   cursor: {
     view: 'View',
     open: 'Open',
+    close: 'Close',
     run: 'Run',
     hold: 'Waiting on you',
     drag: 'Drag',
