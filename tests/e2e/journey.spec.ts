@@ -328,11 +328,39 @@ test('the real product demo works: every pane, the graph, the chat, the board', 
     timeout: 6000,
   });
 
-  // an automation can be paused
+  /*
+   * An automation can be paused — and the row of them is read whole, not just
+   * the one that was clicked.
+   *
+   * This line failed once, in a loaded full run, and has never repeated: the
+   * first toggle was found still `aria-pressed="true"` and still
+   * `data-cursor="stop"`, both at their initial values, so that click's handler
+   * had not run. One isolated run, eight repeats and two full suites since,
+   * all green, and no reproduction — which is exactly the case where the useful
+   * work is not another guess at the cause but making the next occurrence
+   * legible. Asking for all four states turns "the first toggle did not change"
+   * into a sentence that says whether *nothing* was clicked or whether the click
+   * landed on a neighbour, which are different faults with different fixes.
+   *
+   * It is also a stronger assertion than the one it replaces: pausing one
+   * automation must not disturb the other three.
+   */
   await nav('automations').click();
   const toggle = page.locator('#product .ui-autorow__toggle').first();
+  const switches = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>('#product .ui-autorow__toggle')]
+        .map((t) => `${t.getAttribute('aria-pressed')}/${t.dataset.cursor}`)
+        .join(' '),
+    );
+
+  expect(await switches(), 'the automations do not all ship running').toBe(
+    'true/stop true/stop true/stop true/stop',
+  );
   await toggle.click();
-  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await expect
+    .poll(switches)
+    .toBe('false/run true/stop true/stop true/stop');
 
   // a task can be moved with the keyboard alone
   await nav('kanban').click();

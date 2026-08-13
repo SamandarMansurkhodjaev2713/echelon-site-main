@@ -1902,8 +1902,19 @@ probe in two days to report a number that was about the probe.
     is correct at both ends — and buying it would mean hit-testing every frame,
     which is the 88 µs the whole flag arrangement exists to avoid. Named rather
     than left to be discovered.
-22. **`journey.spec.ts:270` failed once, in a full suite run, and has not
-    repeated.** The first automations toggle was still `aria-pressed="true"` and
+22. **`journey.spec.ts:270` failed once and still has not repeated — so the
+    work went into making the next occurrence legible.** Two refutations first:
+    the click did not beat the handler, because `initProduct()` runs
+    synchronously in the component's module script, which is earlier in document
+    order than the script that sets `data-ready`, so the toggles are wired before
+    any test can look; and it is not the assertion, because the one failure
+    reproduced in this session was a 45 s **timeout** on WebKit, a different
+    fault entirely (see item 28). The line now reads all four switches instead of
+    the one that was clicked, so a future failure says whether *nothing* was
+    clicked or whether the click landed on a neighbour — different faults with
+    different fixes, indistinguishable under the old assertion. It also gained a
+    guarantee it never had: pausing one automation must not disturb the other
+    three. Original note: The first automations toggle was still `aria-pressed="true"` and
     still `data-cursor="stop"` — both at their *initial* values — so that click's
     handler did not run at all, rather than running twice or being undone. Not
     reproduced since: 1 isolated run and 8 repeats on the same engine, all green,
@@ -1982,3 +1993,27 @@ probe in two days to report a number that was about the probe.
     *timeout*, not a pixel, so that is a lead and not an answer. Characterise it
     by keeping the diff: run the group in a loop with `--retries=0` until it goes
     red, and read the `-diff.png` before anything else touches it.
+
+### Opened by PHASE 26
+
+28. **`the real product demo works` lives on the edge of its budget on WebKit.**
+    Measured this session: 25.3 s alone on a quiet machine, 38.6 s alone on a
+    busy one, and a **45 s timeout** with one competing worker — which is exactly
+    how CI runs it, `workers: 2`. Where the time goes, on WebKit, isolated:
+
+    ```
+    six pane switches   11.2 s   ← half the test
+    the graph builds    +1.6 s
+    the chat answers    +5.1 s
+    the automations     +3.5 s
+    the kanban          +2.1 s
+    ```
+
+    Eleven seconds for six clicks is the whole problem, and it is WebKit's click
+    path rather than anything the page does — chromium runs the same test in
+    5.7 s. Two ways out, and they are not equivalent: splitting the test in two
+    halves the exposure and keeps every assertion, while `test.slow()` triples
+    the budget on every engine and hides the growth. Neither applied yet: the
+    test is green in CI today, and a large test is not something to restructure
+    at the end of a long session. Recorded with the numbers so the decision is
+    about the numbers.
