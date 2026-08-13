@@ -34,12 +34,18 @@ jobs:
       - run: npm run test:unit
       - run: npx playwright install --with-deps chromium firefox webkit
       - run: npm run test:e2e
+        id: e2e
+      # Only when the suite itself failed — `check` and `test:unit` run before it
+      # and leave no report, and an upload that finds nothing is how this step
+      # came to be silently empty for the whole life of the repository. It is an
+      # error now rather than a warning, so it cannot go quiet a second time.
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: failure() && steps.e2e.conclusion == 'failure'
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+          if-no-files-found: error
 
   build:
     needs: test

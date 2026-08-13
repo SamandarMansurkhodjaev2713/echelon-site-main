@@ -31,7 +31,18 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   workers: process.env.CI ? 2 : undefined,
-  reporter: process.env.CI ? [['github'], ['list']] : [['list']],
+  /*
+   * The `html` reporter is here so that a CI failure leaves something behind.
+   *
+   * It did not, and the workflow's "upload the report if it failed" step has been
+   * decorative for the whole life of the repository: `playwright-report/` is
+   * written by the html reporter and by nothing else, so with `github` and `list`
+   * alone the path never existed and `upload-artifact` produced no artifact at
+   * all — verified on the run that this phase started from, which failed on the
+   * runner and left zero artifacts. Traces are already retained on failure, and
+   * the html report is what carries them out of the runner.
+   */
+  reporter: process.env.CI ? [['github'], ['list'], ['html', { open: 'never' }]] : [['list']],
   timeout: 45_000,
   /*
    * The screenshot tolerance is derived, not guessed.

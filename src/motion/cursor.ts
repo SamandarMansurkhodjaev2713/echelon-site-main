@@ -205,8 +205,31 @@ export function initCursor(labels: CursorLabels): () => void {
      * The same applies to the ground, which would have come back believing it was
      * still inverted, and to the label's measurements, which belong to a node
      * that no longer exists.
+     *
+     * `active` is the one that list missed, and it is the worst of them. It means
+     * "the pointer has moved at least once, so we know where it is", and it gates
+     * the write of `data-visible`, which is what lifts the layer out of
+     * `opacity: 0; visibility: hidden`. Carried across a rebuild it reads as
+     * already true, so that write never runs on the fresh node.
+     *
+     * `onEnter` writes the same attribute and is *not* guarded, which is why this
+     * is survivable at all in the ordinary case — but `pointerenter` fires when
+     * the pointer enters the document, and a pointer that was inside the whole
+     * time never enters it again. A rebuild happens under a pointer that is
+     * already there, so the unguarded writer is exactly the one that cannot help.
+     * Measured: after one round trip the cursor is rebuilt, follows
+     * the pointer, resolves the hero's call to action and sets `data-state` to
+     * `approve` with the label reading «Решить» — and is `visibility: hidden` for
+     * the rest of the session, moving away and back included.
+     *
+     * The gate written for the rebuild watched `data-state` and the label, which
+     * are exactly the two things that stayed right, so it passed over an invisible
+     * cursor. It now compares the whole appearance against the same reading taken
+     * before the round trip, which is the only version of this check that does not
+     * have to guess in advance which field the next miss will be in.
      */
     state = 'default';
+    active = false;
     inverted = false;
     labelW = 0;
     labelH = 0;

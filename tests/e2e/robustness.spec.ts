@@ -698,6 +698,48 @@ async function cursorOrSkip(page: Page) {
   test.skip((await page.locator('.cursor').count()) === 0, 'no custom cursor on a coarse pointer');
 }
 
+test('the cursor can actually be seen once the mouse has moved', async ({ page }) => {
+  /*
+   * The dimension nothing was watching.
+   *
+   * Every other gate here reads what the layer *says* — `data-state`, the label,
+   * which element it frames — and not one of them read whether any of it can be
+   * seen. `.cursor` ships `opacity: 0; visibility: hidden` and is lifted out of
+   * that by one attribute. PHASE 23 shipped a cursor that named every operation
+   * correctly and was invisible for the whole session, and nothing in the suite
+   * could have failed; the visual baselines are no help either, because they hide
+   * `.cursor` outright and say why.
+   *
+   * This is a floor, not a trap, and it was measured to be one: two things write
+   * `data-visible` — the first pointer move and `pointerenter` — so breaking
+   * either alone leaves this green, and it was watched staying green before that
+   * was believed. It goes red when the attribute stops being written at all.
+   * Unlike the round trip below it runs on every engine, including the runner,
+   * which is the point: the round trip cannot.
+   */
+  await page.goto('./?intro=off');
+  await ready(page);
+  await cursorOrSkip(page);
+
+  const b = (await page.locator('.act.hero__cta').boundingBox())!;
+  await page.mouse.move(Math.round(b.x + b.width / 2), Math.round(b.y + b.height / 2));
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const c = document.querySelector<HTMLElement>('.cursor');
+        if (!c) return { seen: 'there is no cursor at all' };
+        const cs = getComputedStyle(c);
+        return {
+          seen: c.hasAttribute('data-visible') ? 'shown' : 'still hidden',
+          visibility: cs.visibility,
+          opacity: Number(cs.opacity),
+        };
+      }),
+    )
+    .toEqual({ seen: 'shown', visibility: 'visible', opacity: 1 });
+});
+
 test('the cursor agrees with the page after the page has moved under a still mouse', async ({
   page,
 }) => {
@@ -934,6 +976,12 @@ test('the cursor comes back able to speak after the pointer stops being a mouse'
    * `approve` while the fresh node said `default`, the guard held, and the cursor
    * came back permanently mute: a dot over the decide button with no name on it,
    * for the rest of the session.
+   *
+   * That was fixed by making the teardown forget what it knew. It missed
+   * `active`, and this test passed over the result because it asked only about
+   * the two fields that were right. A rebuilt cursor named the operation correctly
+   * and was `visibility: hidden` for the rest of the session — worse than mute,
+   * and invisible to a gate that never looked at whether it could be seen.
    */
   test.skip(browserName !== 'chromium', 'the pointer-media flip is driven over CDP');
   await page.goto('./?intro=off');
@@ -944,28 +992,94 @@ test('the cursor comes back able to speak after the pointer stops being a mouse'
   const x = Math.round(b.x + b.width / 2);
   const y = Math.round(b.y + b.height / 2);
 
-  const named = () =>
+  /*
+   * The whole appearance, not two fields of it.
+   *
+   * The first version of this test asked for `data-state` and whether the label
+   * had text, and both of those survived the bug it was written to catch: the
+   * rebuilt cursor resolved the button, said `approve`, wrote «Решить» — and was
+   * `visibility: hidden`, because `active` was the one variable the teardown
+   * failed to forget, and `active` gates the only write of `data-visible` that
+   * can reach a pointer which is already inside the page.
+   * Naming the fields to check means guessing in advance which one the next miss
+   * will be in. Reading all of them and comparing against the same reading taken
+   * before the round trip does not.
+   */
+  const look = () =>
     page.evaluate(() => {
       const c = document.querySelector<HTMLElement>('.cursor');
-      const l = document.querySelector('.cursor__label');
-      if (!c) return 'there is no cursor at all';
-      return `${c.dataset.state}/${l?.textContent ? 'named' : 'unnamed'}`;
+      const f = document.querySelector<HTMLElement>('.cursor-frame');
+      const r = f?.getBoundingClientRect();
+      const cs = c && getComputedStyle(c);
+      return {
+        present: Boolean(c),
+        state: c?.dataset.state ?? '',
+        label: document.querySelector('.cursor__label')?.textContent ?? '',
+        visible: c?.hasAttribute('data-visible') ?? false,
+        visibility: cs?.visibility ?? '',
+        opacity: cs ? Math.round(Number(cs.opacity)) : 0,
+        inverted: c?.hasAttribute('data-inv') ?? false,
+        framing: f?.hasAttribute('data-on') ?? false,
+        frame: r ? `${Math.round(r.width)}x${Math.round(r.height)}` : '',
+        layerOn: document.documentElement.hasAttribute('data-cursor-on'),
+      };
     });
 
   await page.mouse.move(x, y);
-  await expect.poll(named).toBe('approve/named');
+  /* `opacity` is transitioned, so the reading is only taken once it has arrived:
+     a baseline captured mid-fade would record 0 and the comparison at the end
+     would be against a cursor that had not finished appearing. */
+  await expect
+    .poll(look)
+    .toMatchObject({ state: 'approve', visible: true, visibility: 'visible', opacity: 1 });
+  const fresh = await look();
 
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
   await cdp.send('Emulation.setEmitTouchEventsForMouse', { enabled: true, configuration: 'mobile' });
-  await expect.poll(named).toBe('there is no cursor at all');
+  await expect.poll(look).toMatchObject({ present: false, layerOn: false });
 
   await cdp.send('Emulation.setEmitTouchEventsForMouse', { enabled: false, configuration: 'desktop' });
   await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false });
-  await expect.poll(named).toBe('default/unnamed');
 
-  /* And now the whole point: it can still name what it is on. */
+  /*
+   * THE INSTRUMENT HAS TO BE CHECKED BEFORE ITS READING IS BELIEVED.
+   *
+   * `Emulation.setTouchEmulationEnabled(false)` does not undo the flip. It puts
+   * back the *platform's* pointer, and Playwright's fine pointer in headless is
+   * not the platform's — it is a launch flag,
+   * `--blink-settings=primaryPointerType=4,…`. On win32 the platform agrees with
+   * the flag and the round trip looks symmetrical; on the ubuntu runner there is
+   * no pointing device at all, so it lands on `pointer: none` and stays there.
+   * Measured on the runner: after the call, `(pointer: none)` and `(any-pointer:
+   * none)` both match, and nothing hands it back — not waiting, not disabling
+   * again, not `clearDeviceMetricsOverride`, not a viewport change, not a second
+   * CDP session, not detaching. Only a reload, which rebuilds the module from
+   * scratch and so has nothing to say about a module that was kept.
+   *
+   * So this reads the pointer rather than assuming it, and says which of the two
+   * possible faults it is. The teardown above has already been asserted by then,
+   * on the runner as well as here; only the rebuild needs a pointer to come back.
+   */
+  const pointer = await page.evaluate(() => ({
+    fine: matchMedia('(hover: hover) and (pointer: fine)').matches,
+    none: matchMedia('(pointer: none)').matches,
+  }));
+  test.skip(
+    !pointer.fine,
+    `this runner cannot undo touch emulation: the pointer came back as ` +
+      `${pointer.none ? 'none' : 'neither fine nor none'}, so the round trip did not happen`,
+  );
+
+  /* A rebuilt layer is at rest until the mouse says otherwise: it has heard
+     nothing from the pointer yet, so it names nothing. On the broken code this
+     line alone went red — `active` survived, so the fresh node was resolved
+     against the last known pointer position and came back already saying
+     «Решить», invisibly. */
+  await expect.poll(look).toMatchObject({ present: true, state: 'default', label: '', layerOn: true });
+
+  /* And now the whole point: a rebuilt cursor is a cursor, in every respect. */
   await page.mouse.move(x - 40, y);
   await page.mouse.move(x, y);
-  await expect.poll(named).toBe('approve/named');
+  await expect.poll(look).toEqual(fresh);
 });

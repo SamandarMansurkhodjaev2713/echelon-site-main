@@ -1332,6 +1332,192 @@ pixel-identical.
 
 ---
 
+## PHASE 23 — The gate watched the two fields that were right
+
+PHASE 22 was pushed and the session ended waiting for CI to report. It reported
+**failure**, and since `test` gates `build` and `build` gates `deploy`, none of
+that phase ever reached the live page. One test failed, on one engine, twice —
+the main attempt and the retry:
+
+```
+✘ [chromium] › robustness.spec.ts:925 › the cursor comes back able to speak
+    Expected: "default/unnamed"
+    Received: "there is no cursor at all"
+```
+
+Firefox and WebKit skip it; it is driven over CDP. It passes on win32. So the
+first question was not "what is broken" but "which of the two possible things is
+broken" — the page failing to rebuild the cursor, or the instrument failing to
+give the pointer back — and **the test could not tell them apart**, because it
+reported only what it could see of the cursor.
+
+### The evidence that was supposed to exist, and never could
+
+The run left **no artefacts at all**. The workflow has uploaded
+`playwright-report/` on failure since the beginning, and `playwright-report/` is
+written by the `html` reporter and by nothing else; CI's reporter list was
+`[github, list]`. So the step has never had anything to upload in the entire life
+of the repository, and `upload-artifact` warns rather than fails when its path is
+missing. Traces were being retained on failure and thrown away with the runner.
+
+Both halves are fixed: the html reporter is on in CI, and the upload is now
+attached to the e2e step specifically with `if-no-files-found: error`, so it
+cannot go quiet a second time. Verified rather than assumed —
+`playwright-report/index.html` exists after a CI-mode run.
+
+### The runner, asked directly
+
+A throwaway branch, chromium only, printing the media features themselves at
+every step of the round trip. The row that settles it:
+
+```
+0  at rest            fine=Y  p:fine=Y  p:coarse=n  p:none=n  touch=0  cursor=approve
+A1 touch emulation on fine=n  p:fine=n  p:coarse=Y  p:none=n  touch=5  cursor=NONE
+A4 touch emulation off fine=n p:fine=n  p:coarse=n  p:none=Y  touch=0  cursor=NONE
+```
+
+Turning touch emulation **off** does not put back a fine pointer. It puts back
+`pointer: none` — no pointing device at all — and stays there. Nothing recovers
+it: not waiting, not disabling again with `maxTouchPoints: 0`, not
+`clearDeviceMetricsOverride`, not re-enabling and disabling, not a viewport
+change, not a second CDP session, not detaching the first. Only `page.reload()`,
+which rebuilds the module from scratch and therefore has nothing to say about a
+module that was *kept*.
+
+What is measured is the behaviour above and one fact about the harness: the fine
+pointer on a headless runner is not a property of the machine, it is a launch
+flag Playwright adds — `--blink-settings=primaryHoverType=2,availableHoverTypes=2,`
+`primaryPointerType=4,availablePointerTypes=4`, and only when headless, verified
+in `playwright-core`. The explanation that fits both platforms is that the
+emulator hands back the *platform's* value rather than the flag's: on a headless
+Linux box with no input devices that is none, while on win32 the platform agrees
+with the flag, so the same call looks symmetrical and the fault cannot show
+there. That mechanism is inferred from the two measurements, not observed
+directly, and nothing here depends on it being right — the round trip is
+one-way on the runner either way.
+
+Two other instruments were tried and refuted before this one was accepted:
+`Emulation.setEmulatedMedia` does not drive `pointer`/`hover` at all, and
+`setDeviceMetricsOverride({mobile: true})` does not touch them either.
+
+So the round trip is **not performable on a headless Linux runner**. The test now
+reads the pointer after the flip and says so, instead of blaming the page: the
+teardown half is asserted before the skip and remains real cover on every runner,
+and only the rebuild half needs a pointer to come back.
+
+### And the defect the hunt walked into
+
+Chasing the instrument meant reading the teardown again, and PHASE 22's fix —
+make the module forget what it knew when the node is destroyed — **missed
+`active`**, which is the one that decides whether any of it can be seen.
+
+`active` means "the pointer has moved at least once, so we know where it is", and
+it gates the write of `data-visible`; `.cursor` without `data-visible` is
+`opacity: 0; visibility: hidden`. Carried across a rebuild it reads as already
+true, so that write never runs on the fresh node. `pointerenter` writes the same
+attribute unguarded — which is why this is survivable in the ordinary case — but
+a pointer that was inside the document the whole time never enters it again, and
+a rebuild happens under exactly such a pointer. The unguarded writer is the one
+that cannot help here. Measured on win32, where the round trip does work:
+
+```
+before the round trip  state=approve  label="Решить"  data-visible=true   visibility=visible  opacity=1
+after,  moved back     state=approve  label="Решить"  data-visible=false  visibility=hidden   opacity=0
+after,  away and back  state=approve  label="Решить"  data-visible=false  visibility=hidden   opacity=0
+```
+
+The cursor comes back, follows the pointer, resolves the button and names the
+operation correctly — and cannot be seen, for the rest of the session. Worse than
+the muteness PHASE 22 fixed, and shipped by the fix for it.
+
+**The gate passed over it, and that is the finding.** It asked for `data-state`
+and whether the label had text — exactly the two fields that stayed right. Naming
+the fields to check means guessing in advance which one the next miss will be in.
+It now takes the whole appearance while resting on the button, does the round
+trip, and requires the rebuilt cursor to match that reading in every respect:
+state, label, `data-visible`, computed visibility and opacity, inversion, whether
+the frame is drawn and its box, and `data-cursor-on` on the root.
+
+Shown failing on the broken code twice, deliberately. With the fix removed it
+goes red on the resting state — `active` surviving means the fresh node is
+resolved against the last pointer position and comes back already saying «Решить»
+invisibly. With that line disabled as well, the appearance comparison catches it
+alone, and the diff is the whole defect and nothing else:
+
+```
+-   "opacity": 1,        +   "opacity": 0,
+-   "visibility": "visible",  +   "visibility": "hidden",
+-   "visible": true,     +   "visible": false,
+    "state": "approve",  "label": "Решить",  "frame": "372x58",  "framing": true
+```
+
+### Considered and declined
+
+The obvious conclusion is that a hand-maintained list of variables to forget will
+be missed a third time, and that the fix is structural. **And the structure
+already exists in this repository, unused.** `motion/lifecycle.ts` exports
+`scene(query, setup)` — "build a scene only while a media query matches; destroy
+it the moment it stops matching" — which calls `setup()` afresh on every match,
+so the state lives in a closure that is *created* per rebuild and cannot be
+inherited. Nothing calls it: not one file in `src/`, not one in `tests/`.
+`initCursor` hand-rolls the same state machine with a closure made once, which is
+the entire reason this class of bug is available to it at all.
+
+Not adopted in this phase, and the reason is specific rather than caution.
+`scene` tracks liveness with its own `dispose` variable, while the cursor is also
+torn down by a path `scene` cannot see: a `touchstart` means "this is not a mouse
+session" and detaches the layer while the media query still says fine. Today's
+handler asks `node`, which is the real state; `scene` would ask `dispose`, which
+would by then be stale — it would believe a torn-down layer is alive, and the
+next flip would double-dispose before recovering. That is a real behavioural
+difference and it deserves its own change, not a footnote to this one. Recorded
+so the next attempt starts from the obstacle instead of rediscovering it.
+
+Meanwhile the audit was done rather than trusted: of the fourteen mutable
+variables in the module, `active` was the only genuine miss. `tx/ty/x/y` are the
+last known pointer position and are still true — and resetting `active` makes the
+first move after a rebuild snap to the pointer anyway. `offX/offY` are
+re-measured by `build()`. `vw/vh` are the viewport.
+
+### The floor under it, and a claim of mine the floor refuted
+
+Nothing in the suite asserted that the cursor is *visible*. Not once, on any
+engine — the string `data-visible` did not appear in `tests/` at all. The
+appearance comparison above closes that, and then skips itself on the runner, so
+a second and much cheaper gate carries the same question everywhere: move the
+mouse onto the call to action, and require the layer to be `visibility: visible`
+at `opacity: 1`.
+
+That gate then caught **me**. It was written on the strength of "`active` is the
+only thing that ever writes `data-visible`", which is what the module reads like;
+so removing that write should have turned it red. It stayed green. `onEnter`
+writes the same attribute on `pointerenter`, unguarded, and a test moving a mouse
+into the page fires exactly that. The claim was wrong, and it was wrong in the
+three places I had already written it down.
+
+The gate is therefore a floor and is now described as one: it goes red when the
+attribute stops being written at all, and green if either writer survives —
+watched doing both before either was believed. The rebuild case needs the round
+trip because it is the one moment when the unguarded writer *cannot* fire: the
+pointer never left, so it never enters.
+
+### One more probe that found nothing about the page
+
+The first synthetic probe ran the CDP sequence on a blank document and reported
+that `MediaQueryList` `change` events never fire at all — which would have been a
+much bigger finding, and was false. Media query notifications are delivered
+during a style update, and a document with nothing in it may never schedule one.
+On the real page the events arrive: `[F]` on the way down, `[T]` on the way back.
+
+**Standing lesson, now five times over: a probe that finds nothing has found
+nothing *about the probe* until the page has also been looked at.** The first
+version of the runner diagnostic made the junior version of the same mistake — it
+collected its rows and printed them at the end, threw on a `page.reload()` that
+wiped the page's own state, and reported nothing at all. A diagnostic prints as
+it goes.
+
+---
+
 ## OPEN ITEMS
 
 1. RU LCP is 2.6 s against the 2.5 s target; EN and UZ are inside budget.
@@ -1494,3 +1680,25 @@ pixel-identical.
     caught. The other nineteen declarations are believed, not tested, and no
     gate would have caught the automations one — it was spelled correctly and
     meant the opposite.
+
+### Opened by PHASE 23
+
+23. **The rebuild half of the cursor round trip cannot be gated on the runner.**
+    Measured: `Emulation.setTouchEmulationEnabled(false)` hands back the
+    platform's pointer, a headless Linux runner has none, and nothing in CDP
+    reverses it — eight levers tried, only a reload, which defeats the point. The
+    test asserts the teardown on every runner and then skips the rebuild, naming
+    the reason it is skipping. This is the same shape as item 6: a check that
+    needs an environment CI does not have. The direction to try is a runner where
+    the fine pointer is a fact about the machine rather than a launch flag —
+    headed under a virtual display — and whether that actually reports a fine
+    pointer is **unverified**, so it is a direction and not yet an answer.
+24. **Nothing checks what the cursor looks like.** `visual.spec.ts` hides
+    `.cursor` and `.cursor-frame` outright — `display: none !important`, with the
+    stated reason that it follows the pointer and is behaviour rather than
+    layout. That is right for a layout baseline, and it does mean the dot, the
+    label, the crop marks and the inversion on the dark bands have no pixel
+    looking at them at all. PHASE 23's defect was a cursor that could not be
+    seen, and seventy-one baselines could not have caught it, because they hide
+    it on purpose. The behavioural gates now compare the appearance as attributes
+    and computed values, which is the substitute, not the thing.
