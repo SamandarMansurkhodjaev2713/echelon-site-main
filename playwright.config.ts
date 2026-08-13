@@ -43,7 +43,22 @@ export default defineConfig({
    * the html report is what carries them out of the runner.
    */
   reporter: process.env.CI ? [['github'], ['list'], ['html', { open: 'never' }]] : [['list']],
-  timeout: 45_000,
+  /*
+   * 45 s was not enough for WebKit on the runner, and the failure it produced
+   * said nothing about the page.
+   *
+   * Measured: `the page depicts one shift, not two days` takes 35.8 s on WebKit
+   * on this machine, alone, and it passes. On `ubuntu-latest` — two cores, and
+   * this config asks for two workers — the same test hit 45.9 s twice, main
+   * attempt and retry, so the suite went red over an engine's speed rather than
+   * over the site. `the real product demo works` is the same shape: 25.3 s
+   * quiet, 38.6 s busy, of which eleven are six pane switches on WebKit against
+   * 5.7 s for that whole test on Chromium.
+   *
+   * Raised rather than papered over: the slowness is recorded as item 28 with
+   * its breakdown, and a real hang still fails, one minute later than before.
+   */
+  timeout: 60_000,
   /*
    * The screenshot tolerance is derived, not guessed.
    *

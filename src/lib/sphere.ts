@@ -354,14 +354,31 @@ export function initSphere(canvas: HTMLCanvasElement, source: SphereSource): () 
 
   let stopLoop = () => {};
   if (still) {
-    /* One deterministic frame. `waveT` is advanced to a fixed, non-zero point so
-       the still picture is a sphere caught mid-breath rather than a perfectly
-       undeformed ball, which is what the sphere never actually looks like. */
-    waveT = 1.4;
-    spinT = 0.6;
     const settle = () => {
-      /* the displacement filter needs a few passes to reach the shape its inputs
-         imply; without them the frozen frame is a smooth ball */
+      /*
+       * ONE FRAME, AND THE SAME ONE EVERY TIME IT IS ASKED FOR.
+       *
+       * `waveT` starts at a fixed, non-zero point so the still picture is a
+       * sphere caught mid-breath rather than a perfectly undeformed ball, which
+       * is what the sphere never actually looks like. The passes are here
+       * because the displacement filter needs a few to reach the shape its
+       * inputs imply; without them the frozen frame is a smooth ball.
+       *
+       * All of it is set *inside* settle, and that is the point. `draw` advances
+       * the phase, carries a smoothing filter and sorts the painter's order in
+       * place, so a second settle does not repeat the first — it continues it.
+       * And settle is called again when the fonts land, and on every resize. So
+       * the "deterministic frame" was a function of how many times it had been
+       * asked for: measured at four loads per viewport, four of the five sizes
+       * produced two different pictures. That is also why the canvas could not
+       * be let into the visual baselines, which is open item 8.
+       */
+      waveT = 1.4;
+      spinT = 0.6;
+      prevX.fill(0);
+      prevY.fill(0);
+      disp.fill(0);
+      for (let i = 0; i < N; i++) order[i] = i;
       for (let i = 0; i < 24; i++) draw(0, 1 / 60);
     };
     settle();

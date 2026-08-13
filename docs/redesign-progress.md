@@ -1799,11 +1799,30 @@ probe in two days to report a number that was about the probe.
    ids and the seams carry none. PHASE 17 closed the `load` / `voice` / `ledger`
    half of this gap; an id on each seam and five more baselines would close the
    rest.
-8. The voice core's canvas is masked in the baselines, so its *drawing* is
-   unprotected — only its type is, by `npm run contrast`. Exempting it the way the
-   attention field is exempted would require the frozen frame to be proven a pure
-   function of viewport, including what the FFT driver returns at rest. Worth
-   doing; not attempted here.
+8. **The voice core's canvas is masked in the baselines, so its *drawing* is
+   unprotected** — only its type is, by `npm run contrast`. Attempted in
+   PHASE 26 and **not closed**, but the attempt found a defect and narrowed the
+   item, so it is worth reading in full.
+
+   The exemption costs a proof: the frozen frame must be a pure function of
+   viewport. Measured at four loads per viewport, it was not — four of the five
+   sizes produced two different pictures. The cause is that `settle()` was not
+   idempotent. `draw` advances the phase, carries a smoothing filter and sorts
+   the painter's order in place; `settle` set the phase *outside* itself and then
+   ran twenty-four passes, so a second settle continued the first rather than
+   repeating it — and settle runs again when the fonts land and **on every
+   resize**. Not only a test problem: with reduced motion on, the still sphere
+   changed picture every time the window was resized.
+
+   Fixed by setting every initial condition inside `settle`, and verified
+   directly — six loads at one viewport, each asked for the frame three times
+   through the page's own resize path, all eighteen identical.
+
+   What remains is rarer and unexplained: about one load in five still lands on a
+   second frame, at no particular viewport, on a settled build. Until that is
+   found the canvas stays masked, because a baseline that is right four times in
+   five is worse than no baseline. Next step is mechanical: capture both variants
+   and diff them — *where* they differ names the input.
 9. ~~The voice tape reads as an unfilled form before anything has been played.~~
    **Closed by PHASE 17** — the box opens when the tape has carried something; at
    rest only the baseline is drawn.

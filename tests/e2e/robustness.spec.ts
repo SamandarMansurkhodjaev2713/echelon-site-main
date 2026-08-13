@@ -739,7 +739,13 @@ test('nothing fades its own bottom edge with nothing under it', async ({ page })
   ] as const) {
     await page.setViewportSize({ width: w, height: h });
     await page.waitForTimeout(200);
-    for (const found of await sweep(null)) lying.push(`${w}px: ${found}`);
+    /* The whole document once, not once per viewport. A `getComputedStyle` walk
+       over every element is the expensive thing here — this test cost 22.8 s on
+       WebKit doing it twice, which is half of what the slowest test in the suite
+       has to spare, and the suite runs two workers on a two-core runner. The
+       narrow viewport's own masked scroller is `.ui-content`, which the pane
+       sweep below reaches at both sizes. */
+    if (w === 1440) for (const found of await sweep(null)) lying.push(`${w}px: ${found}`);
     for (const pane of PANES) {
       await showPane(page, pane);
       await page.evaluate(
