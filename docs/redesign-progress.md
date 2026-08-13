@@ -1552,6 +1552,90 @@ rest.
 
 ---
 
+## PHASE 24 — A fade for a scroll that does not exist
+
+Open item 11 said the demo's sidebar "still fades permanently", so its last item
+is dimmed *even once you have reached it*. Measured before it was fixed, and the
+item was half wrong in the interesting direction: **the sidebar never scrolls at
+all.** Its content is exactly the height of its box — 544 of 544 — at 1024, 1280,
+1440 and 1536, in all three locales, in all six panes. There is no "once you have
+reached it". The fade is not a fade that outstays its welcome; it is a promise of
+more below that has never once been true.
+
+The comment above it in `ui.css` said "the list is taller than the window", which
+was true when cf16eee wrote it and had quietly stopped being true. That is the
+part worth keeping: the reason was sound, and the layout moved out from under it.
+
+The fix is the one `.ui-content` already had, made shared rather than copied.
+`initScrollHint` now watches both boxes, one rule carries the fade for both, and
+22 px stays one number instead of two. A box fades its bottom edge while, and
+only while, something is under it.
+
+### The gate is the general form, because the specific one was next door
+
+`the demo window says when it has more below` knows the name `.ui-content`. The
+defect was one element away from it for two phases. So the new gate asks the page
+instead of asking a class name: **every scroll container that masks its bottom
+edge must have something below the fold**, swept whole-document per viewport and
+per pane inside the demo.
+
+Watched failing first, and the shape of the failure is the finding — seven lines,
+every one of them the same element:
+
+```
+"1440px: nav.ui-side fades its bottom with 0px below it"
+"1440px, chat pane: nav.ui-side fades its bottom with 0px below it"
+… graph, vault, kanban, automations, analytics
+```
+
+It has a second half, which matters more than the first: removing a fade that is
+never true and removing the fade are the same edit if nobody checks. So it grows
+the list past its box the way a future edit would — by adding rows — and requires
+the sidebar to say so. That half was watched failing too, on a build where
+`.ui-side.is-more` had been dropped from the rule: *the fade did not come back
+when it became true*.
+
+### Why no pixel caught this, measured rather than assumed
+
+The sidebar's faded band is inside the frame in six committed baselines —
+`product` and `product-foot`, at 1440, 1280 and 834 — verified by instrumenting
+the visual test itself rather than by reproducing its staging and hoping. Removing
+the fade moves **3 467 pixels**, in exactly that band and nowhere else: the diff's
+bounding box is `x 60..259, y 460..481` and the sidebar's rect is `60,-62
+200x544`. That is five times `maxDiffPixelRatio`, which is 648 px at 1440×900.
+
+And every baseline passes, in both states, on freshly built output each time.
+
+The reason is the *other* knob. `toHaveScreenshot` decides twice: `threshold`
+says how different one pixel must be to count at all, and `maxDiffPixelRatio`
+says how many counted pixels are allowed. This repository derived the second
+carefully and left the first at its default of 0.2, deliberately, because the
+ambient light ramp shifts the paper 3–5 % per channel and a tighter per-pixel
+threshold would fire on it constantly. The sidebar's fade changes a channel by at
+most 25 of 255 — under 10 % — so **not one of those 3 467 pixels counts**. Shown,
+not argued: at `threshold: 0.02` one baseline starts counting 274 of them.
+
+So the gate that reads as the strictest thing in the suite — bit-identical
+baselines, a tolerance derived to catch a single hairline — is by construction
+blind to any change that is large in area and small in contrast. That is a
+reasonable trade and it was made for a reason; it is now written down, because
+"71/71 pixel-identical" has been read in this log as "nothing changed" more than
+once, and it does not mean that.
+
+### Two probes of mine that were wrong before they were right
+
+Reading ink row by row inside the sidebar reported `ink=198` — the full width of
+the sample — on every row, which is not a measurement, it is a saturated one: it
+compared against a background colour I had assumed rather than sampled. And when
+the baselines passed in a state they should have failed, I suspected a stale
+build, because a preview server of mine had been sharing `dist/` with the runs
+all session — the artefact PHASE 22 recorded, in its second costume. It was not
+that: killed the server, rebuilt clean, ran the instrumented test, and the served
+build was the right one both times. The suspicion was reasonable and the control
+is what settled it.
+
+---
+
 ## OPEN ITEMS
 
 1. RU LCP is 2.6 s against the 2.5 s target; EN and UZ are inside budget.
@@ -1609,12 +1693,11 @@ rest.
     patched: it is unrelated to the fault PHASE 18 was fixing, and re-timing an
     assertion that has not been characterised is the same move this log has had
     to undo three times. Characterise it first, then fix it.
-11. **`.ui-side` still fades permanently.** PHASE 18 gave `.ui-content` a fade
-    that is present only while there is more below, precisely because a standing
-    fade dims whatever the scroll ends on. The sidebar next to it — whose
-    22 px this borrowed — still carries the unconditional `mask-image` it was
-    given in cf16eee, so its last item is dimmed even once you have reached it.
-    Smaller stakes than the composer, and the same argument.
+11. ~~**`.ui-side` still fades permanently.**~~ **Closed by PHASE 24, and the
+    item was wrong about why.** It read as a fade that outstays its welcome. The
+    sidebar never scrolls at all — 544 of 544, at four widths and in three
+    locales — so the fade was a promise of more below that was never once true.
+    Both boxes are now on one watcher and one rule.
 12. **The demo's scrolled-to-bottom state has no baseline.** `product-foot`
     covers the fade at rest; the composer-visible, fade-absent state is a
     *state*, not a scroll offset, so it is gated behaviourally instead, by
@@ -1736,3 +1819,17 @@ rest.
     seen, and seventy-one baselines could not have caught it, because they hide
     it on purpose. The behavioural gates now compare the appearance as attributes
     and computed values, which is the substitute, not the thing.
+
+### Opened by PHASE 24
+
+25. **The visual gate is blind to low-contrast changes of any size.** Measured in
+    PHASE 24: a change covering 3 467 pixels — five times `maxDiffPixelRatio` —
+    passes all seventy-one baselines because no single pixel of it moves more
+    than 25 of 255, which is under `toHaveScreenshot`'s per-pixel `threshold` of
+    0.2. At 0.02 a baseline counts 274 of them. The default is deliberate and
+    lowering it globally is not free: the ambient light ramp moves the paper
+    3–5 % per channel and would fire constantly. So the honest position is that
+    the pixel gate protects *layout and high-contrast* regressions, and nothing
+    in the suite protects a dimming. The direction, if it is worth the cost, is a
+    second visual project with a tight threshold over a short list of regions
+    that carry no ramp — not a global change.

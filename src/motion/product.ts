@@ -81,9 +81,14 @@ export function initProduct(): ((id: string) => void) | undefined {
  * is still underneath it.
  */
 function initScrollHint(stage: HTMLElement) {
-  const box = stage.querySelector<HTMLElement>('.ui-content');
-  if (!box) return;
+  /* Both boxes, because both make the claim. The sidebar carried the fade
+     unconditionally and never scrolled, so it spent every frame promising more
+     below while dimming the last item it had. One watcher, one rule, one number:
+     a box fades its bottom edge while, and only while, something is under it. */
+  for (const box of stage.querySelectorAll<HTMLElement>('.ui-content, .ui-side')) watch(box);
+}
 
+function watch(box: HTMLElement) {
   let queued = false;
   const sync = () => {
     queued = false;

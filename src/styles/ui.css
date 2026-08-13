@@ -75,20 +75,23 @@
   gap: 2px;
   background: var(--ui-bg);
   /*
-   * The list is taller than the window, and it was simply cut — the last group
+   * A real desktop sidebar scrolls, and this one may: if the list ever grows
+   * taller than the window it must not simply be cut, with the last group
    * heading sliced through the middle of its own letters. That does not read as
    * "the list continues", it reads as a broken render, which is the one thing
-   * this section cannot afford: its whole claim is that this is the real product
-   * and not a picture of one.
+   * this section cannot afford — its whole claim is that this is the real
+   * product and not a picture of one.
    *
-   * A real desktop sidebar scrolls. The fade is what says so, and it earns its
-   * place over a scrollbar because a scrollbar drawn inside a demo window on a
-   * landing page reads as a page scrollbar in the wrong position. Kept to 22 px
-   * so the last item is still legible when you reach it.
+   * The fade that says so is below, on `.is-more`, and only while it is true.
+   * It was unconditional here from cf16eee until PHASE 24, and by then the
+   * layout had moved on: measured, the list is exactly the height of its box —
+   * 544 of 544, at 1024, 1280, 1440 and 1536, in all three locales — so it never
+   * scrolls. A fade over a list that ends where its box ends promises nothing; it
+   * only dims its own bottom band, which is where the last item is. 3 467 pixels
+   * of the shot change when it is taken away, by up to 25 of 255 in a channel.
    */
   overflow-y: auto;
   scrollbar-width: thin;
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent);
 }
 
 .ui-side__brand {
@@ -236,10 +239,13 @@
 }
 
 /* The fade says "there is more below" and says it only while that is true. A
-   permanent one would dim whatever the scroll ends on — in the chat that is the
-   composer, and a dimmed composer reads as a disabled one. 22 px is the
-   sidebar's number, for the same reason: the last row stays legible. */
-.ui-content.is-more {
+   permanent one dims whatever the scroll ends on — in the chat that is the
+   composer, and a dimmed composer reads as a disabled one; in the sidebar it was
+   the last item in the list. Both boxes on one rule, because it is one rule and
+   22 px is one number: enough that the last row stays legible when you reach it.
+   `is-more` is written by `initScrollHint`, which watches both. */
+.ui-content.is-more,
+.ui-side.is-more {
   mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent);
 }
 

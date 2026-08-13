@@ -680,6 +680,112 @@ test('the demo window says when it has more below', async ({ page }) => {
   expect(fits.says, 'a pane that fits still says it has more below').toBe(false);
 });
 
+test('nothing fades its own bottom edge with nothing under it', async ({ page }) => {
+  /*
+   * The same rule as the test above, asked of the page instead of of one class
+   * name — which is the point, because the defect it was written for was next
+   * door the whole time.
+   *
+   * `.ui-side` was given a bottom fade in cf16eee, and for a good reason: the
+   * list was taller than its window and was being sliced through the middle of
+   * its own letters, which reads as a broken render in the one section whose
+   * claim is that this is the real product. The layout moved on. Measured now,
+   * the sidebar's content is exactly the height of its box — 544 of 544, at
+   * 1024, 1280, 1440 and 1536, in all three locales — so it never scrolls, and
+   * the fade is a promise of more below that is never once true. What it does
+   * instead is dim its own bottom band, which is where the last item of the list
+   * is: 3 467 pixels of the frame move when it is removed, by up to 25 of 255.
+   *
+   * Nothing else could have caught it. `no box hides its own content` looks for
+   * content *cut off*, and this is not cut off, it is faded — present, reachable
+   * and dimmed, which is a different way to hide something. The pixel baselines
+   * have the band in frame in six shots and cannot see it either: the whole
+   * change is below `toHaveScreenshot`'s per-pixel `threshold`, which is left at
+   * its default deliberately. Dropped to 0.02 one baseline notices 274 px of it.
+   *
+   * Swept whole-document once per viewport and then per pane inside the demo,
+   * for the reason the neighbouring test gives: a full `getComputedStyle` walk
+   * per pane is minutes of re-measuring sections no pane switch can move.
+   */
+  await page.goto('./?intro=off&motion=off');
+  await ready(page);
+  await openTheProduct(page);
+
+  const lying: string[] = [];
+  const sweep = (root: string | null) =>
+    page.evaluate((rootSel: string | null) => {
+      const out: string[] = [];
+      const host = rootSel ? document.querySelector(rootSel) : document.documentElement;
+      if (!host) return out;
+      for (const el of [host, ...host.querySelectorAll('*')]) {
+        const cs = getComputedStyle(el);
+        if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+        if (cs.overflowY !== 'auto' && cs.overflowY !== 'scroll') continue;
+        if (!cs.maskImage || cs.maskImage === 'none') continue;
+        const below = Math.round(el.scrollHeight - el.scrollTop - el.clientHeight);
+        if (below > 1) continue;
+        const cls =
+          typeof el.className === 'string' && el.className.trim()
+            ? '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.')
+            : '';
+        out.push(`${el.tagName.toLowerCase()}${cls} fades its bottom with ${below}px below it`);
+      }
+      return out;
+    }, root);
+
+  for (const [w, h] of [
+    [1440, 900],
+    [390, 844],
+  ] as const) {
+    await page.setViewportSize({ width: w, height: h });
+    await page.waitForTimeout(200);
+    for (const found of await sweep(null)) lying.push(`${w}px: ${found}`);
+    for (const pane of PANES) {
+      await showPane(page, pane);
+      await page.evaluate(
+        () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
+      );
+      for (const found of await sweep('.prod__stage')) lying.push(`${w}px, ${pane} pane: ${found}`);
+    }
+  }
+
+  expect([...new Set(lying)]).toEqual([]);
+
+  /*
+   * And the other half, which matters more than the first: the affordance has to
+   * still be there for the case it was built for. Removing a fade that is never
+   * true and removing the fade are the same edit if nobody checks. So make the
+   * list outgrow its box the way a future edit would — by adding items to it —
+   * and require the sidebar to say so, then take them away again.
+   */
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.waitForTimeout(200);
+  const sidebar = () =>
+    page.evaluate(() => {
+      const el = document.querySelector<HTMLElement>('.ui-side')!;
+      return {
+        says: el.classList.contains('is-more'),
+        masked: getComputedStyle(el).maskImage !== 'none',
+        below: Math.round(el.scrollHeight - el.scrollTop - el.clientHeight),
+      };
+    });
+
+  expect(await sidebar()).toEqual({ says: false, masked: false, below: 0 });
+
+  await page.evaluate(() => {
+    const el = document.querySelector<HTMLElement>('.ui-side')!;
+    const last = el.querySelector('.ui-side__item')!;
+    for (let i = 0; i < 8; i++) el.append(last.cloneNode(true));
+  });
+  await page.evaluate(
+    () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
+  );
+  const grown = await sidebar();
+  expect(grown.below, 'eight more rows did not make the list outgrow its box').toBeGreaterThan(1);
+  expect(grown.says, 'the list now runs past its box and the sidebar does not say so').toBe(true);
+  expect(grown.masked, 'the fade did not come back when it became true').toBe(true);
+});
+
 /*
  * THE CURSOR IS NOT ALLOWED TO BE WRONG.
  *
